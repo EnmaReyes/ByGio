@@ -1,8 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
+import CartaDeArticulos from '../Componentes/CartaDeArticulos'
 
 const Inicio = () => {
+  
+
   return (
-    <div>Home</div>
+    <div>
+      <CartaDeArticulos/>
+    </div>
   )
 }
 
