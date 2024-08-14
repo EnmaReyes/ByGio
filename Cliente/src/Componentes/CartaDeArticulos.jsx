@@ -61,23 +61,26 @@ const CartaDeArticulos = () => {
   ];
   return (
     <Container className="mt-4">
-    <Row>
-      {articulos.map((art) => (
-        <Col key={art.id} xs={8} sm={6} md={3} className="mb-4">
-          <Card style={{ width: "16rem"}}>
-            <Card.Img src={art.imagen} variant="top" style={{ height: "22rem"}} />
-            <Card.Body>
-              <Card.Title>{art.titulo}</Card.Title>
-              <Card.Text>{art.descripcion}</Card.Text>
-              <Card.Text>{`$${art.precio}`}</Card.Text>
-              <Button variant="primary">Comprar</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      ))}
-    </Row>
-  </Container>
-    
+      <Row>
+        {articulos.map((art) => (
+          <Col key={art.id} xs={8} sm={6} md={3} className="mb-4">
+            <Card style={{ width: "16rem" }}>
+              <Card.Img
+                src={art.imagen}
+                variant="top"
+                style={{ height: "22rem" }}
+              />
+              <Card.Body>
+                <Card.Title>{art.titulo}</Card.Title>
+                <Card.Text>{art.descripcion}</Card.Text>
+                <Card.Text>{`$${art.precio}`}</Card.Text>
+                <Button variant="primary">Comprar</Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </Container>
   );
 };
 
