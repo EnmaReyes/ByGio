@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
-import "../App.css"
+import "../App.css";
 import img1 from "../assets/Articulos/1.jpg";
 import img2 from "../assets/Articulos/2.jpg";
 import img3 from "../assets/Articulos/3.jpg";
@@ -64,20 +64,76 @@ const CartaDeArticulos = () => {
     <Container className="">
       <Row>
         {articulos.map((art) => (
-          <Col key={art.id} xs={8} sm={6} md={4} className="mb-4 mx-auto ">
-            <Card style={{ width: "18rem", marginTop:"50px"}} className="card-shadow">
-              <Card.Img
-                src={art.imagen}
-                className="img-fluid"
-                variant="top"
-                style={{ height: "20rem" }}
-              />
-              <Card.Body>
-                <Card.Title>{art.titulo}</Card.Title>
-                <Card.Text>{art.descripcion}</Card.Text>
-                <Card.Text><p>S/M L/XL</p></Card.Text>
-                <Card.Text>{`$${art.precio}`}</Card.Text>
-                <Button variant="primary">Comprar</Button>
+          <Col key={art.id} xs={6} sm={6} md={4} className="mb-2">
+            <Card
+              style={{
+                width: "100%",
+                maxWidth: "18rem",
+                marginTop: "30px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+            >
+              <div style={{ height: "100%", overflow: "hidden" }}>
+                <Card.Img
+                  src={art.imagen}
+                  className="img-fluid"
+                  variant="top"
+                  style={{ height: "18rem", objectFit: "cover" }}
+                />
+              </div>
+              <Card.Body style={{ padding: "10px" }}>
+                <Card.Title
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    marginBottom: "10px",
+                    textAlign: "center",
+                  }}
+                >
+                  {art.titulo}
+                </Card.Title>
+                <Card.Text
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#555",
+                    marginBottom: "10px",
+                    textAlign: "left",
+                  }}
+                >
+                  {art.descripcion}
+                </Card.Text>
+                <Card.Text
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#555",
+                    marginBottom: "10px",
+                    textAlign: "left",
+                    fontWeight: "bold",
+                  }}
+                >
+                  <p>S/M L/XL</p>
+                </Card.Text>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Card.Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "1.2rem",
+                    }}
+                  >
+                    {`$${art.precio}`}
+                  </Card.Text>
+                  <Button variant="primary" style={{ fontSize: "0.875rem" }}>
+                    Comprar
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
           </Col>

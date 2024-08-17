@@ -5,9 +5,8 @@ const BarraNavegacion = () => {
   return (
     <Navbar
       style={{
-        background: "black",
         background:
-          "linear-gradient(90deg, rgba(57,53,53,1) 0%, rgba(18,17,17,1) 26%, black 50%, rgba(18,17,17,1) 80%, rgba(57,53,53,1) 100%)",
+          "linear-gradient(100deg, rgba(57,53,53,1) 0%, rgba(18,17,17,1) 26%, black 50%, rgba(18,17,17,1) 80%, rgba(57,53,53,1) 100%)",
       }}
     >
       <Container style={{ display: "flex", justifyContent: "center" }}>

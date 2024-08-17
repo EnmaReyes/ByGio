@@ -1,14 +1,13 @@
 .background{
-background-position: fixed;
-background: hsla(0, 0%, 0%, 1);
+    background: hsla(206, 30%, 21%, 1);
 
-background: linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
-
-background: -moz-linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
-
-background: -webkit-linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
-
-filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#000000", endColorstr="#020023", GradientType=1 );
+    background: linear-gradient(90deg, hsla(206, 30%, 21%, 1) 0%, hsla(200, 64%, 6%, 1) 1%, hsla(206, 45%, 12%, 1) 17%, hsla(206, 30%, 21%, 1) 41%, hsla(223, 30%, 42%, 1) 61%, hsla(191, 9%, 64%, 1) 88%, hsla(165, 4%, 81%, 1) 100%);
+    
+    background: -moz-linear-gradient(90deg, hsla(206, 30%, 21%, 1) 0%, hsla(200, 64%, 6%, 1) 1%, hsla(206, 45%, 12%, 1) 17%, hsla(206, 30%, 21%, 1) 41%, hsla(223, 30%, 42%, 1) 61%, hsla(191, 9%, 64%, 1) 88%, hsla(165, 4%, 81%, 1) 100%);
+    
+    background: -webkit-linear-gradient(90deg, hsla(206, 30%, 21%, 1) 0%, hsla(200, 64%, 6%, 1) 1%, hsla(206, 45%, 12%, 1) 17%, hsla(206, 30%, 21%, 1) 41%, hsla(223, 30%, 42%, 1) 61%, hsla(191, 9%, 64%, 1) 88%, hsla(165, 4%, 81%, 1) 100%);
+    
+    filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#253745", endColorstr="#06141B", GradientType=1 );
 }
 .card-shadow{
 -webkit-box-shadow: 3px 3px 8px -1px rgb(196, 186, 186);
