@@ -1,0 +1,17 @@
+.background{
+background-position: fixed;
+background: hsla(0, 0%, 0%, 1);
+
+background: linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
+
+background: -moz-linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
+
+background: -webkit-linear-gradient(135deg, hsla(0, 0%, 0%, 1) 11%, hsla(243, 100%, 7%, 1) 49%, hsla(0, 0%, 0%, 1) 83%);
+
+filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#000000", endColorstr="#020023", GradientType=1 );
+}
+.card-shadow{
+-webkit-box-shadow: 3px 3px 8px -1px rgb(196, 186, 186);
+-moz-box-shadow: 3px 3px 8px -1px rgb(177, 171, 171);
+box-shadow: 3px 3px 8px -1px rgb(155, 153, 153);
+}

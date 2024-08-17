@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
+import "../App.css"
 import img1 from "../assets/Articulos/1.jpg";
 import img2 from "../assets/Articulos/2.jpg";
 import img3 from "../assets/Articulos/3.jpg";
@@ -60,19 +61,21 @@ const CartaDeArticulos = () => {
     },
   ];
   return (
-    <Container className="mt-4">
+    <Container className="">
       <Row>
         {articulos.map((art) => (
-          <Col key={art.id} xs={8} sm={6} md={3} className="mb-4">
-            <Card style={{ width: "16rem" }}>
+          <Col key={art.id} xs={8} sm={6} md={4} className="mb-4 mx-auto ">
+            <Card style={{ width: "18rem", marginTop:"50px"}} className="card-shadow">
               <Card.Img
                 src={art.imagen}
+                className="img-fluid"
                 variant="top"
-                style={{ height: "22rem" }}
+                style={{ height: "20rem" }}
               />
               <Card.Body>
                 <Card.Title>{art.titulo}</Card.Title>
                 <Card.Text>{art.descripcion}</Card.Text>
+                <Card.Text><p>S/M L/XL</p></Card.Text>
                 <Card.Text>{`$${art.precio}`}</Card.Text>
                 <Button variant="primary">Comprar</Button>
               </Card.Body>
