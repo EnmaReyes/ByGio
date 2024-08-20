@@ -65,16 +65,7 @@ const CartaDeArticulos = () => {
       <Row>
         {articulos.map((art) => (
           <Col key={art.id} xs={6} sm={6} md={4} className="mb-2">
-            <Card
-              style={{
-                width: "100%",
-                maxWidth: "18rem",
-                marginTop: "30px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+            <Card className="mt-4 " style={{ width: "100%", }}>
               <div style={{ height: "100%", overflow: "hidden" }}>
                 <Card.Img
                   src={art.imagen}
@@ -83,54 +74,16 @@ const CartaDeArticulos = () => {
                   style={{ height: "18rem", objectFit: "cover" }}
                 />
               </div>
-              <Card.Body style={{ padding: "10px" }}>
-                <Card.Title
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: "bold",
-                    marginBottom: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  {art.titulo}
-                </Card.Title>
-                <Card.Text
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#555",
-                    marginBottom: "10px",
-                    textAlign: "left",
-                  }}
-                >
-                  {art.descripcion}
-                </Card.Text>
-                <Card.Text
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#555",
-                    marginBottom: "10px",
-                    textAlign: "left",
-                    fontWeight: "bold",
-                  }}
-                >
-                  <p>S/M L/XL</p>
-                </Card.Text>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
+              <Card.Body className="m-0 p-2 ">
+                <Card.Title className="text-center m-0">{art.titulo}</Card.Title>
+                <Card.Text className="text-center m-0">S/M L/XL</Card.Text>
+                <div className="text-center">
                   <Card.Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "1.2rem",
-                    }}
+                   className="fw-bold m-0"
                   >
                     {`$${art.precio}`}
                   </Card.Text>
-                  <Button variant="primary" style={{ fontSize: "0.875rem" }}>
+                  <Button variant="dark" className="text-warning">
                     Comprar
                   </Button>
                 </div>
