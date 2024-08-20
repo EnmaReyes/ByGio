@@ -60,12 +60,22 @@ const CartaDeArticulos = () => {
       descripcion: "camisa manga larga",
     },
   ];
+
+  const generateWhatsAppLink = (art) => {
+    const message = `${art.imagen} Estoy interesado en ${art.titulo} que cuesta $${
+      art.precio
+    }. ¿Está disponible en talla ${art.tallas.join("/")}?`;
+    const whatsappLink = `https://wa.me/573128919861?text=%C2%A1Hola%20byGio!${encodeURIComponent(
+      message
+    )}`;
+    return whatsappLink;
+  };
   return (
     <Container className="">
       <Row>
         {articulos.map((art) => (
           <Col key={art.id} xs={6} sm={6} md={4} className="mb-2">
-            <Card className="mt-4 " style={{ width: "100%", }}>
+            <Card className="mt-4 " style={{ width: "100%" }}>
               <div style={{ height: "100%", overflow: "hidden" }}>
                 <Card.Img
                   src={art.imagen}
@@ -75,15 +85,20 @@ const CartaDeArticulos = () => {
                 />
               </div>
               <Card.Body className="m-0 p-2 ">
-                <Card.Title className="text-center m-0">{art.titulo}</Card.Title>
+                <Card.Title className="text-center m-0">
+                  {art.titulo}
+                </Card.Title>
                 <Card.Text className="text-center m-0">S/M L/XL</Card.Text>
                 <div className="text-center">
-                  <Card.Text
-                   className="fw-bold m-0"
-                  >
+                  <Card.Text className="fw-bold m-0">
                     {`$${art.precio}`}
                   </Card.Text>
-                  <Button variant="dark" className="text-warning">
+                  <Button
+                    variant="dark"
+                    className="text-warning"
+                    href={generateWhatsAppLink(art)}
+                    target="_blank"
+                  >
                     Comprar
                   </Button>
                 </div>
