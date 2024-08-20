@@ -63,11 +63,11 @@ const CartaDeArticulos = () => {
   const URL = "https://bygio.onrender.com";
 
   const generateWhatsAppLink = (art) => {
-    const message = `Estoy interesado en ${art.titulo} que cuesta $${
+    const message = `¡Hola!😁 Estoy interesado en ${art.titulo} que cuesta $${
       art.precio
     }. ¿Está disponible en talla ${art.tallas.join("/")}?`;
     const imageLink = `${URL}${art.imagen}`;
-    const whatsappLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;
