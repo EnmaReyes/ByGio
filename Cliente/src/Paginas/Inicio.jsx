@@ -4,7 +4,7 @@ import "../App.css"
 import { Col } from "react-bootstrap";
 const Inicio = () => {
   return (
-    <div className="">
+    <div className="background">
       <Col>
       <CartaDeArticulos />
       </Col>
