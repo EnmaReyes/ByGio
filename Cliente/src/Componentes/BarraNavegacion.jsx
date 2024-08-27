@@ -13,7 +13,7 @@ const BarraNavegacion = () => {
         <Navbar.Brand href="/">
           <img
             src={logonegro}
-            style={{width:"150px", padding:"0px"}}
+            style={{width:"110px", padding:"0px"}}
             className="d-inline-block align-top object-fit-cover"
             alt="logo"
           />
