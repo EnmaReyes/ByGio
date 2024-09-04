@@ -9,6 +9,13 @@ import img5 from "../assets/Articulos/Mystical.png";
 import img6 from "../assets/Articulos/TheLovers.png";
 import img7 from "../assets/Articulos/TheSun.png";
 import img8 from "../assets/Articulos/Unicornio.png";
+import img9 from "../assets/Articulos/CosmicDreamer.png";
+import img10 from "../assets/Articulos/DayandNigth.png";
+import img11 from "../assets/Articulos/Eyes.png";
+import img12 from "../assets/Articulos/OjoCorazon.png";
+import img13 from "../assets/Articulos/Pantera.png";
+import img14 from "../assets/Articulos/Standout.png";
+
 const CartaDeArticulos = () => {
   const [articulo, setArticulos] = useState({});
   const articulos = [
@@ -60,6 +67,42 @@ const CartaDeArticulos = () => {
       titulo: "Unicornio",
       precio: "30.000",
     },
+    {
+      id: "9",
+      imagen: img9,
+      titulo: "Cosmic Dreamer",
+      precio: "30.000",
+    },
+    {
+      id: "10",
+      imagen: img10,
+      titulo: "Day & Nigth",
+      precio: "30.000",
+    },
+    {
+      id: "11",
+      imagen: img11,
+      titulo: "Eyes",
+      precio: "30.000",
+    },
+    {
+      id: "12",
+      imagen: img12,
+      titulo: "Ojo Corazon",
+      precio: "30.000",
+    },
+    {
+      id: "13",
+      imagen: img13,
+      titulo: "Pantera",
+      precio: "30.000",
+    },
+    {
+      id: "14",
+      imagen: img14,
+      titulo: "Stand out",
+      precio: "30.000",
+    },
   ];
   const URL = "https://bygio.onrender.com";
 
@@ -82,7 +125,7 @@ const CartaDeArticulos = () => {
                   src={art.imagen}
                   className="img-fluid"
                   variant="top"
-                  style={{ height: "18rem", objectFit: "cover" }}
+                  style={{ height: "14rem", objectFit: "cover" }}
                 />
               </div>
               <Card.Body className="m-0 p-2 ">
