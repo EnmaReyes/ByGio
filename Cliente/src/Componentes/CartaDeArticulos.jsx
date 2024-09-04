@@ -28,7 +28,7 @@ const CartaDeArticulos = () => {
     {
       id: "2",
       imagen: img2,
-      titulo: "La Vida Que Deseas",
+      titulo: "Vida Deseada",
       precio: "30.000",
     },
     {
@@ -125,7 +125,7 @@ const CartaDeArticulos = () => {
                   src={art.imagen}
                   className="img-fluid"
                   variant="top"
-                  style={{ height: "14rem", objectFit: "cover" }}
+                  style={{ height: "100%", width: "100%", objectFit: "cover" }}
                 />
               </div>
               <Card.Body className="m-0 p-2 ">
