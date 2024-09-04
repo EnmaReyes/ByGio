@@ -1,71 +1,70 @@
 import React, { useState } from "react";
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import "../App.css";
-import img1 from "../assets/Articulos/1.jpg";
-import img2 from "../assets/Articulos/2.jpg";
-import img3 from "../assets/Articulos/3.jpg";
-import img4 from "../assets/Articulos/4.jpg";
-import img5 from "../assets/Articulos/5.jpg";
-import img6 from "../assets/Articulos/6.jpeg";
-
+import img1 from "../assets/Articulos/Hypnotize.png";
+import img2 from "../assets/Articulos/Lavidaquedeseas.png";
+import img3 from "../assets/Articulos/Magic.png";
+import img4 from "../assets/Articulos/ManosdeAmor.png";
+import img5 from "../assets/Articulos/Mystical.png";
+import img6 from "../assets/Articulos/TheLovers.png";
+import img7 from "../assets/Articulos/TheSun.png";
+import img8 from "../assets/Articulos/Unicornio.png";
 const CartaDeArticulos = () => {
   const [articulo, setArticulos] = useState({});
   const articulos = [
     {
       id: "1",
       imagen: img1,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 50000,
-      descripcion: "camisa manga corta",
+      titulo: "Hypnotize",
+      precio: "30.000",
     },
     {
       id: "2",
       imagen: img2,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 50000,
-      descripcion: "camisa manga corta y larga",
+      titulo: "La Vida Que Deseas",
+      precio: "30.000",
     },
     {
       id: "3",
       imagen: img3,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 40000,
-      descripcion: "camisa manga corta",
+      titulo: "Magic",
+      precio: "30.000",
     },
     {
       id: "4",
       imagen: img4,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 60000,
-      descripcion: "camisa manga corta y larga",
+      titulo: "Manos De Amor",
+      precio: "30.000",
     },
     {
       id: "5",
       imagen: img5,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 50000,
-      descripcion: "camisa manga corta",
+      titulo: "Mystical",
+      precio: "30.000",
     },
     {
       id: "6",
       imagen: img6,
-      titulo: "Camisa",
-      tallas: ["S", "M", "L", "XL"],
-      precio: 30000,
-      descripcion: "camisa manga larga",
+      titulo: "The Lovers",
+      precio: "30.000",
+    },
+    {
+      id: "7",
+      imagen: img7,
+      titulo: "The Sun",
+      precio: "30.000",
+    },
+    {
+      id: "8",
+      imagen: img8,
+      titulo: "Unicornio",
+      precio: "30.000",
     },
   ];
   const URL = "https://bygio.onrender.com";
 
   const generateWhatsAppLink = (art) => {
-    const message = `¡Hola!😁 Estoy interesado en ${art.titulo} que cuesta $${
-      art.precio
-    }. ¿Está disponible en talla ${art.tallas.join("/")}?`;
+    const message = `¡Hola!😁 Estoy interesado en ${art.titulo} que cuesta $${art.precio}. ¿Está disponible en talla S / M / L?`;
     const imageLink = `${URL}${art.imagen}`;
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
@@ -90,7 +89,7 @@ const CartaDeArticulos = () => {
                 <Card.Title className="text-center m-0">
                   {art.titulo}
                 </Card.Title>
-                <Card.Text className="text-center m-0">S/M L/XL</Card.Text>
+                <Card.Text className="text-center m-0">S / M / L</Card.Text>
                 <div className="text-center">
                   <Card.Text className="fw-bold m-0">
                     {`$${art.precio}`}
