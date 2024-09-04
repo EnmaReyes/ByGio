@@ -37,7 +37,7 @@ const router = createBrowserRouter([
         element: <Editor />,
       },
       {
-        path: "/articulo/:id",
+        path: "/:id",
         element: <Articulo />,
       },
     ],
