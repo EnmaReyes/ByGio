@@ -49,7 +49,7 @@ const CartaDeArticulos = () => {
                 <Card.Text className="text-center m-0">S / M / L</Card.Text>
                 <div className="text-center">
                   <Card.Text className="fw-bold m-0">
-                    {`$${art.precio}`}
+                    {`$${art.precio.toLocaleString()}`}
                   </Card.Text>
                   <Button
                     variant="dark"
