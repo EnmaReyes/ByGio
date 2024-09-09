@@ -43,7 +43,7 @@ const CartaDeArticulos = () => {
               </div>
               </Link>
               <Card.Body className="m-0 p-2 ">
-                <Card.Title className="text-center m-0">
+                <Card.Title className="text-center m-0" style={{fontFamily: "Lobster, sans-serif",}}>
                   {art.titulo}
                 </Card.Title>
                 <Card.Text className="text-center m-0">S / M / L</Card.Text>
