@@ -31,7 +31,7 @@ const CartaDeArticulos = () => {
       <Row>
         {articulo?.map((art) => (
           <Col key={art.id} xs={6} sm={6} md={4} className="mb-2">
-            <Card className="mt-4 " style={{ width: "100%" }}>
+            <Card className="mt-4 " style={{ width: "100%", border:"none"}}>
               <Link to={`/${art.id}`}>
               <div style={{ height: "100%", overflow: "hidden" }}>
                 <Card.Img

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useOutletContext } from "react-router-dom";
 import { articulos } from "../Info/Data";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,7 +10,35 @@ const Articulo = () => {
   const postid = location.pathname.split("/")[1];
   const [selected, setSelected] = useState(null);
   const [mainImage, setMainImage] = useState(selected?.imagen);
-  const [cantidad, setCantidad] = useState(1);
+  const [conteo, setConteo] = useState(1);
+
+  //! carrtio \\
+  const {
+    allProducts,
+    setAllProducts,
+    total,
+    setTotal,
+    countProducts,
+    setCountProducts,
+  } = useOutletContext();
+
+  const añadirCarrito = (selected, conteo) => {
+    if (allProducts.find((item) => item.id === selected.id)) {
+      const products = allProducts.map((item) =>
+        item.id === selected.id
+          ? { ...item, cantidad: conteo + item.cantidad }
+          : item
+      );
+      setTotal(total + selected.precio * selected.cantidad);
+      setCountProducts(countProducts + conteo);
+      return setAllProducts([...products]);
+    }
+
+    setTotal(total + selected.precio * conteo);
+    setCountProducts(countProducts + conteo);
+    setAllProducts([...allProducts, { ...selected, cantidad: conteo }]);
+  };
+
   const handleThumbnailClick = (thumbnail) => {
     setMainImage(thumbnail); // Actualiza la imagen principal con la miniatura seleccionada
   };
@@ -27,9 +55,9 @@ const Articulo = () => {
   }, [postid]);
 
   return (
-    <Container className="mt-2 mb-4">
+    <Container className="mb-4" style={{ paddingTop: "90px" }}>
       <Row>
-        <Col xs={12} md={7} className="d-flex flex-column align-items-center">
+        <Col xs={12} md={6} className="d-flex flex-column align-items-center">
           <Image
             className="rounded"
             src={mainImage == null ? selected?.imagen[0] : mainImage}
@@ -107,15 +135,15 @@ const Articulo = () => {
                 <Button
                   variant="light"
                   className="ml-3 btn btn-outline-secondary btn-sm"
-                  onClick={() => cantidad >= 2 && setCantidad(cantidad - 1)}
+                  onClick={() => conteo >= 2 && setConteo(conteo - 1)}
                 >
                   <FontAwesomeIcon icon={faMinus} />
                 </Button>
-                <div className="p-4">{cantidad}</div>
+                <div className="p-4">{conteo}</div>
                 <Button
                   variant="light"
                   className="ml-3 btn btn-outline-secondary btn-sm"
-                  onClick={() => setCantidad(cantidad + 1)}
+                  onClick={() => setConteo(conteo + 1)}
                 >
                   <FontAwesomeIcon icon={faPlus} />
                 </Button>
@@ -123,7 +151,7 @@ const Articulo = () => {
 
               <div className="d-flex flex-column justify-content-center justify-content-md-start">
                 <p className="m-0">Total</p>
-                <h3>{(cantidad * selected?.precio).toLocaleString()}</h3>
+                <h3>{(conteo * selected?.precio).toLocaleString()}</h3>
               </div>
 
               <div className="d-grid gap-2">
@@ -136,6 +164,9 @@ const Articulo = () => {
                 <button
                   type="button"
                   className="btn btn-outline-dark btn-lg rounded-pill"
+                  onClick={() => {
+                    añadirCarrito(selected, conteo);
+                  }}
                 >
                   Carrito
                 </button>
