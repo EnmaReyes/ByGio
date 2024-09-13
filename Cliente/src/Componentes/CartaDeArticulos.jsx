@@ -10,7 +10,7 @@ const CartaDeArticulos = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-         setArticulo(articulos);
+        setArticulo(articulos);
       } catch (error) {}
     };
     fetchData();
@@ -19,8 +19,11 @@ const CartaDeArticulos = () => {
   const URL = "https://bygio.onrender.com";
 
   const generateWhatsAppLink = (art) => {
-    const message = `¡Hola!😁 Estoy interesado en ${art.titulo} que cuesta $${art.precio}. ¿Está disponible en talla S / M / L?`;
-    const imageLink = `${URL}${art.imagen}`;
+    const message = `¡Hola!😁 Estoy interesado en:
+     ${art.titulo}
+     Valor: $${art.precio.toLocaleString()} por unidad
+     ¿Está disponible en talla S / M / L?`;
+    const imageLink = `${URL}${art.imagen[0]}`;
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
@@ -31,22 +34,29 @@ const CartaDeArticulos = () => {
       <Row>
         {articulo?.map((art) => (
           <Col key={art.id} xs={6} sm={6} md={4} className="mb-2">
-            <Card className="mt-4 " style={{ width: "100%", border:"none"}}>
+            <Card className="mt-4 " style={{ width: "100%", border: "none" }}>
               <Link to={`/${art.id}`}>
-              <div style={{ height: "100%", overflow: "hidden" }}>
-                <Card.Img
-                  src={art.imagen[0]}
-                  className="img-fluid"
-                  variant="top"
-                  style={{ height: "100%", width: "100%", objectFit: "cover" }}
-                />
-              </div>
+                <div style={{ height: "100%", overflow: "hidden" }}>
+                  <Card.Img
+                    src={art.imagen[0]}
+                    className="img-fluid"
+                    variant="top"
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
               </Link>
               <Card.Body className="m-0 p-2 ">
-                <Card.Title className="text-center m-0" style={{fontFamily: "Lobster, sans-serif",}}>
+                <Card.Title
+                  className="text-center m-0"
+                  style={{ fontFamily: "Lobster, sans-serif" }}
+                >
                   {art.titulo}
                 </Card.Title>
-                <Card.Text className="text-center m-0">S / M / L</Card.Text>
+                <Card.Text className="text-center m-0">S/M/L</Card.Text>
                 <div className="text-center">
                   <Card.Text className="fw-bold m-0">
                     {`$${art.precio.toLocaleString()}`}

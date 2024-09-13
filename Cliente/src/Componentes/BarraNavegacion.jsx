@@ -1,5 +1,5 @@
-import React from "react";
-import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import React, { useEffect } from "react";
+import { Button, Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import logonegro from "../assets/Logo/logo-blanco.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,6 +16,7 @@ const BarraNavegacion = ({
   countProducts,
   setCountProducts,
 }) => {
+  
   const onDeleteProduct = (product) => {
     const results = allProducts
       .map((item) => {
@@ -41,6 +42,26 @@ const BarraNavegacion = ({
     setAllProducts([]);
     setTotal(0);
     setCountProducts(0);
+  };
+
+  //! Comprar articulo\\
+  const URL = "https://bygio.onrender.com";
+
+  const SendWhatsAppLink = (allProducts) => {
+    const message = `¡Hola!😁 Estoy interesado en:\n\n${allProducts
+      .map((art) => {
+        return `${art.cantidad} ${art?.titulo}\nTalla: ${
+          art?.talla
+        }\nValor: $${art.precio.toLocaleString()}\nImagen de referencia:\n${URL}${
+          art.imagen[0]
+        }`;
+      })
+      .join("\n\n")}`; // Unimos los productos con dos saltos de línea para mayor legibilidad
+
+    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
+      message
+    )}`;
+    return whatsappLink;
   };
   return (
     <Navbar
@@ -75,7 +96,7 @@ const BarraNavegacion = ({
         <ul class="navbar-nav">
           <li class="nav-item dropdown">
             <a
-              class="nav-link dropdown-toggle text-light fs-2"
+              class="nav-link dropdown-toggle text-light fs-2 p-0"
               href="#"
               id="navbarDarkDropdownMenuLink"
               role="button"
@@ -88,7 +109,8 @@ const BarraNavegacion = ({
             <div
               style={{
                 position: "relative",
-                top: "-1.8rem",
+                top: "-1.2rem",
+                left: "-0.5rem",
                 border: "solid, 1px, #fff",
                 width: "1.3rem",
                 height: "1.3rem",
@@ -100,7 +122,7 @@ const BarraNavegacion = ({
                 fontSize: "12px",
               }}
             >
-              <p className="">{countProducts}</p>
+              <p className="fw-bolder">{countProducts}</p>
             </div>
             <ul
               class="dropdown-menu dropdown-menu-dark dropdown-menu-end "
@@ -110,17 +132,19 @@ const BarraNavegacion = ({
               {allProducts.length ? (
                 <div>
                   {allProducts.map((product) => (
-                    <div className="dropdown-item">
-                      <li className="d-flex flex-row align-items-center gap-4 border-bottom p-2 my-1">
+                    <div className="dropdown-item ">
+                      <li className="w-100 d-flex flex-rowalign-items-center gap-4 border-bottom p-2 my-1">
                         <a
                           href={`/${product.id}`}
-                          className="d-flex flex-row align-items-center gap-2 text-decoration-none text-light"
+                          className="d-flex flex-row align-items-center gap-3 text-decoration-none text-light"
                         >
                           <a>{product.cantidad}</a>
                           <a>{product.titulo}</a>
-                          <a>{product.precio}</a>
+                          <a>{product.talla}</a>
+                          <a>{product.precio.toLocaleString()}</a>
                         </a>
                         <a
+                          className="w-100 d-flex flex-row justify-content-end align-items-center text-decoration-none text-light"
                           onClick={() => {
                             onDeleteProduct(product);
                           }}
@@ -130,17 +154,23 @@ const BarraNavegacion = ({
                       </li>
                     </div>
                   ))}
-                  <div className="">
-                    <p>{`Total: $${total}`}</p>
+                  <div className="d-flex flex-row justify-content-center gap-1 fs-5">
+                    <p>Total:</p>
+                    <p className="text-light">{`$${total.toLocaleString()}`}</p>
                   </div>
                   <div
                     class="btn-group d-flex flex-row align-items-center gap-4 mx-2"
                     role="group"
                     aria-label="Basic example"
                   >
-                    <button type="button" class="btn btn-dark rounded-pill">
+                    <Button
+                      type="button"
+                      class="btn btn-dark rounded-pill"
+                      href={SendWhatsAppLink(allProducts)}
+                      target="_blank"
+                    >
                       Comprar
-                    </button>
+                    </Button>
                     <button
                       type="button"
                       class="btn btn-light rounded-pill"

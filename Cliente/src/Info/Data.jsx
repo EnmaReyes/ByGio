@@ -22,6 +22,7 @@ export const articulos = [
     titulo: "Hypnotize",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "2",
@@ -29,6 +30,7 @@ export const articulos = [
     titulo: "Vida Deseada",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "3",
@@ -36,6 +38,7 @@ export const articulos = [
     titulo: "Magic",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "4",
@@ -43,6 +46,7 @@ export const articulos = [
     titulo: "Manos De Amor",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "5",
@@ -50,6 +54,7 @@ export const articulos = [
     titulo: "Mystical",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "6",
@@ -57,6 +62,7 @@ export const articulos = [
     titulo: "The Lovers",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "7",
@@ -64,6 +70,7 @@ export const articulos = [
     titulo: "The Sun",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "8",
@@ -71,6 +78,7 @@ export const articulos = [
     titulo: "Unicornio",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "9",
@@ -78,6 +86,7 @@ export const articulos = [
     titulo: "Cosmic Dreamer",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "10",
@@ -85,6 +94,7 @@ export const articulos = [
     titulo: "Day & Nigth",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "11",
@@ -92,6 +102,7 @@ export const articulos = [
     titulo: "Eyes",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "12",
@@ -99,6 +110,7 @@ export const articulos = [
     titulo: "Ojo Corazon",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "13",
@@ -106,6 +118,7 @@ export const articulos = [
     titulo: "Pantera",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
   {
     id: "14",
@@ -113,5 +126,6 @@ export const articulos = [
     titulo: "Stand out",
     precio: 30000,
     cantidad:1,
+    talla:"",
   },
 ];

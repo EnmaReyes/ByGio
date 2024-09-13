@@ -11,6 +11,7 @@ const Articulo = () => {
   const [selected, setSelected] = useState(null);
   const [mainImage, setMainImage] = useState(selected?.imagen);
   const [conteo, setConteo] = useState(1);
+  const [medidas, setMedidas] = useState("S");
 
   //! carrtio \\
   const {
@@ -21,22 +22,29 @@ const Articulo = () => {
     countProducts,
     setCountProducts,
   } = useOutletContext();
-
-  const añadirCarrito = (selected, conteo) => {
-    if (allProducts.find((item) => item.id === selected.id)) {
+  
+  const añadirCarrito = (selected, conteo, medidas) => {
+    if (
+      allProducts.find(
+        (item) => item.id === selected.id && item.talla === medidas
+      )
+    ) {
       const products = allProducts.map((item) =>
         item.id === selected.id
           ? { ...item, cantidad: conteo + item.cantidad }
           : item
       );
-      setTotal(total + selected.precio * selected.cantidad);
+      setTotal(total + selected.precio * conteo);
       setCountProducts(countProducts + conteo);
       return setAllProducts([...products]);
     }
 
     setTotal(total + selected.precio * conteo);
     setCountProducts(countProducts + conteo);
-    setAllProducts([...allProducts, { ...selected, cantidad: conteo }]);
+    setAllProducts([
+      ...allProducts,
+      { ...selected, cantidad: conteo, talla: medidas },
+    ]);
   };
 
   const handleThumbnailClick = (thumbnail) => {
@@ -53,6 +61,21 @@ const Articulo = () => {
     };
     Data();
   }, [postid]);
+
+  //! Comprar articulo\\
+  const URL = "https://bygio.onrender.com";
+
+  const WhatsAppLink = (selected, conteo, medidas) => {
+    const message = `¡Hola!😁 Estoy interesado en:
+     ${conteo} ${selected?.titulo}
+      Talla: ${medidas}
+      Valor: $${selected?.precio.toLocaleString()} por unidad`;
+    const imageLink = `${URL}${selected?.imagen[0]}`;
+    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
+      message
+    )}%0A%0A${encodeURIComponent(imageLink)}`;
+    return whatsappLink;
+  };
 
   return (
     <Container className="mb-4" style={{ paddingTop: "90px" }}>
@@ -115,20 +138,60 @@ const Articulo = () => {
                   role="group"
                   aria-label="Basic example"
                 >
-                  <button type="button" className="btn btn-light">
+                  <button
+                    type="button"
+                    className={`btn ${
+                      medidas === "S" ? "btn-secondary fw-bolder " : "btn-light"
+                    }`}
+                    style={{
+                      transform: medidas === "S" ? "scale(0.9)" : "scale(1)",
+                      transition: "transform 0.2s ease-in-out",
+                    }}
+                    onClick={() => {
+                      setMedidas("S");
+                    }}
+                  >
                     S
                   </button>
-                  <button type="button" className="btn btn-light">
+                  <button
+                    type="button"
+                    className={`btn ${
+                      medidas === "M" ? "btn-secondary fw-bolder " : "btn-light"
+                    }`}
+                    style={{
+                      transform: medidas === "M" ? "scale(0.9)" : "scale(1)",
+                      transition: "transform 0.2s ease-in-out",
+                    }}
+                    onClick={() => {
+                      setMedidas("M");
+                    }}
+                  >
                     M
                   </button>
-                  <button type="button" className="btn btn-light">
+                  <button
+                    type="button"
+                    className={`btn ${
+                      medidas === "L" ? "btn-secondary fw-bolder " : "btn-light"
+                    }`}
+                    style={{
+                      transform: medidas === "L" ? "scale(0.9)" : "scale(1)",
+                      transition: "transform 0.2s ease-in-out",
+                    }}
+                    onClick={() => {
+                      setMedidas("L");
+                    }}
+                  >
                     L
                   </button>
                 </div>
               </Form.Group>
 
               <div>
-                <p>Caracteristicas</p>
+                <p>{`Camiseta ${selected?.titulo} en piel de durazno importada.
+                 De tacto sedoso
+                 No se motea
+                 No pierde su color
+                 No sus medidad`}</p>
               </div>
 
               <div className="d-flex align-items-center justify-content-center justify-content-md-start">
@@ -155,21 +218,23 @@ const Articulo = () => {
               </div>
 
               <div className="d-grid gap-2">
-                <button
+                <Button
                   type="button"
                   className="btn btn-dark btn-lg rounded-pill"
+                  target="_blank"
+                  href={WhatsAppLink(selected, conteo, medidas)}
                 >
                   Comprar
-                </button>
-                <button
+                </Button>
+                <div
                   type="button"
                   className="btn btn-outline-dark btn-lg rounded-pill"
                   onClick={() => {
-                    añadirCarrito(selected, conteo);
+                    añadirCarrito(selected, conteo, medidas);
                   }}
                 >
                   Carrito
-                </button>
+                </div>
               </div>
             </Form>
           </div>
