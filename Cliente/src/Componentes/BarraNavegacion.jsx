@@ -68,7 +68,7 @@ const BarraNavegacion = ({
       style={{
         position: "fixed",
         width: "100%",
-        zIndex: "1",
+        zIndex: "999",
         background:
           "linear-gradient(100deg, rgba(57,53,53,1) 0%, rgba(18,17,17,1) 25%, black 50%, rgba(18,17,17,1) 75%, rgba(57,53,53,1) 100%)",
       }}

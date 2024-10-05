@@ -22,7 +22,7 @@ const Articulo = () => {
     countProducts,
     setCountProducts,
   } = useOutletContext();
-  
+
   const añadirCarrito = (selected, conteo, medidas) => {
     if (
       allProducts.find(
@@ -81,13 +81,62 @@ const Articulo = () => {
     <Container className="mb-4" style={{ paddingTop: "90px" }}>
       <Row>
         <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <Image
-            className="rounded"
-            src={mainImage == null ? selected?.imagen[0] : mainImage}
-            alt={selected?.titulo}
-            fluid
-            style={{ objectFit: "cover" }}
-          />
+          <div
+            id="carouselExampleFade"
+            class="carousel slide carousel-fade"
+            data-bs-ride="carousel"
+            data-bs-touch="true"
+          >
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img
+                  src={selected?.imagen[0]}
+                  class="d-block w-100"
+                  alt="..."
+                />
+              </div>
+              <div class="carousel-item">
+                <img
+                  src={selected?.imagen[1]}
+                  class="d-block w-100"
+                  alt="..."
+                />
+              </div>
+              {selected?.imagen[2] ? (
+                <div class="carousel-item">
+                  <img
+                    src={selected?.imagen[2]}
+                    class="d-block w-100"
+                    alt="..."
+                  />
+                </div>
+              ) : null}
+            </div>
+            <button
+              class="carousel-control-prev"
+              type="button"
+              data-bs-target="#carouselExampleFade"
+              data-bs-slide="prev"
+            >
+              <span
+                class="carousel-control-prev-icon"
+                aria-hidden="true"
+              ></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button
+              class="carousel-control-next"
+              type="button"
+              data-bs-target="#carouselExampleFade"
+              data-bs-slide="next"
+            >
+              <span
+                class="carousel-control-next-icon "
+                aria-hidden="true"
+              ></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
         </Col>
 
         {/* Columna para los detalles del producto */}
@@ -109,26 +158,6 @@ const Articulo = () => {
             <h2 className="text-success text-md-start">
               ${selected?.precio.toLocaleString()}
             </h2>
-
-            <div className="product-thumbnails w-100 d-flex justify-content-center justify-content-md-start">
-              {selected?.imagen?.map((thumb, index) => (
-                <div key={index} className="thumbnail mb-2">
-                  <Image
-                    src={thumb}
-                    fluid
-                    style={{
-                      cursor: "pointer",
-                      width: "45px",
-                      border: "1px solid white",
-                      borderRadius: "50%",
-                      margin: "2px 4px",
-                      boxShadow: "-1px -1px 8px -2px rgba(0,0,0,0.75)",
-                    }}
-                    onClick={() => handleThumbnailClick(thumb)}
-                  />
-                </div>
-              ))}
-            </div>
 
             <Form>
               <Form.Group controlId="sizeSelect" className="mb-3">
@@ -233,7 +262,7 @@ const Articulo = () => {
                     añadirCarrito(selected, conteo, medidas);
                   }}
                 >
-                  Carrito
+                  Añadir al Carrito
                 </div>
               </div>
             </Form>
