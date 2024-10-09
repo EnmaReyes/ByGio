@@ -4,7 +4,12 @@ import { articulos } from "../Info/Data";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
-
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+// Import Swiper styles
+import "../App.css";
+import "swiper/css";
+import "swiper/css/pagination";
 const Articulo = () => {
   const location = useLocation();
   const postid = location.pathname.split("/")[1];
@@ -81,62 +86,13 @@ const Articulo = () => {
     <Container className="mb-4" style={{ paddingTop: "90px" }}>
       <Row>
         <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <div
-            id="carouselExampleFade"
-            class="carousel slide carousel-fade"
-            data-bs-ride="carousel"
-            data-bs-touch="true"
-          >
-            <div class="carousel-inner">
-              <div class="carousel-item active">
-                <img
-                  src={selected?.imagen[0]}
-                  class="d-block w-100"
-                  alt="..."
-                />
-              </div>
-              <div class="carousel-item">
-                <img
-                  src={selected?.imagen[1]}
-                  class="d-block w-100"
-                  alt="..."
-                />
-              </div>
-              {selected?.imagen[2] ? (
-                <div class="carousel-item">
-                  <img
-                    src={selected?.imagen[2]}
-                    class="d-block w-100"
-                    alt="..."
-                  />
-                </div>
-              ) : null}
-            </div>
-            <button
-              class="carousel-control-prev"
-              type="button"
-              data-bs-target="#carouselExampleFade"
-              data-bs-slide="prev"
-            >
-              <span
-                class="carousel-control-prev-icon"
-                aria-hidden="true"
-              ></span>
-              <span class="visually-hidden">Previous</span>
-            </button>
-            <button
-              class="carousel-control-next"
-              type="button"
-              data-bs-target="#carouselExampleFade"
-              data-bs-slide="next"
-            >
-              <span
-                class="carousel-control-next-icon "
-                aria-hidden="true"
-              ></span>
-              <span class="visually-hidden">Next</span>
-            </button>
-          </div>
+          <Swiper pagination={true} modules={[Pagination]} className="mySwiper">
+            {selected?.imagen.map((img) => (
+              <SwiperSlide>
+                <img src={img} alt="img" />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </Col>
 
         {/* Columna para los detalles del producto */}
@@ -217,10 +173,12 @@ const Articulo = () => {
 
               <div>
                 <p>{`Camiseta ${selected?.titulo} en piel de durazno importada.
-                 De tacto sedoso
-                 No se motea
-                 No pierde su color
-                 No sus medidad`}</p>
+                 De tacto sedoso`}</p>
+                <span>No se motea</span>
+                <br />
+                <span>No pierde su color</span>
+                <br />
+                <span>No pierde sus medidad</span>
               </div>
 
               <div className="d-flex align-items-center justify-content-center justify-content-md-start">
