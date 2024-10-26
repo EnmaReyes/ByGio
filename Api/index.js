@@ -1,15 +1,29 @@
-import express from "express"
+import express from "express";
+import postRoutes from "./Rutas/posts.js";
+import authRoutes from "./Rutas/auth.js";
 import { sequelize } from "./DataBase/db.js";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { FRONTEND_URL } from "./config.js";
 const port = process.env.PORT || 3000;
 const app = express();
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("hola mundo!");
-});
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+
+app.use("/api/posts", postRoutes);
+app.use("/api/auth", authRoutes);
 
 async function main() {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     app.listen(port, () => {
       console.log(`Conected!! app listening on port ${port}`);
     });

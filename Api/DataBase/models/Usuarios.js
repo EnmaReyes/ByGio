@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
+import { DB_DIALECT } from "../../config.js";
 import { sequelize } from "../db.js";
-import { Articulos } from "./Posts.js";
-import { DB_DIALECT } from "../config.js";
+import { Articulos } from "./Articulos.js";
 
 const idConfig = {
   type: DataTypes.UUID,

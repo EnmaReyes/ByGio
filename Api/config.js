@@ -12,7 +12,7 @@ export const DB_HOST =
 export const DB_USER =
   process.env.NODE_ENV === "production" ? process.env.DB_USER : "postgres";
 export const DB_NAME =
-  process.env.NODE_ENV === "production" ? process.env.DB_NAME : "ByGio";
+  process.env.NODE_ENV === "production" ? process.env.DB_NAME : "bygio";
 export const DB_PASSWORD =
   process.env.NODE_ENV === "production" ? process.env.DB_PASSWORD : "Enma2707";
 export const DB_PORT =

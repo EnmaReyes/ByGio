@@ -12,7 +12,7 @@ import {
 // Configuración de Sequelize
 const sequelizeConfig = {
   host: DB_HOST,
-  dialect: DB_DIALECT, // Dialecto puede ser 'mysql' o 'postgres'
+  dialect: DB_DIALECT,
   port: DB_PORT,
 };
 
