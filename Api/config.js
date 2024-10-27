@@ -5,7 +5,7 @@ dotenv.config();
 export const FRONTEND_URL =
   process.env.NODE_ENV === "production"
     ? process.env.FRONTEND_URL
-    : "http://localhost:3000";
+    : "http://localhost:5173";
 
 export const DB_HOST =
   process.env.NODE_ENV === "production" ? process.env.DB_HOST : "localhost";
