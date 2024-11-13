@@ -30,7 +30,7 @@ export const Usuarios = sequelize.define(
     },
     admin: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
+      defaultValue: false,
     },
     image: {
       type: DataTypes.TEXT,

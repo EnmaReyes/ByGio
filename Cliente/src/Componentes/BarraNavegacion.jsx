@@ -92,11 +92,11 @@ const BarraNavegacion = ({
         </Navbar.Brand>
       </Container>
       {/* Carrito*/}
-      <div class="collapse navbar-collapse me-4" id="navbarNavDarkDropdown">
-        <ul class="navbar-nav">
-          <li class="nav-item dropdown">
+      <div className="collapse navbar-collapse me-4" id="navbarNavDarkDropdown">
+        <ul className="navbar-nav">
+          <li className="nav-item dropdown">
             <a
-              class="nav-link dropdown-toggle text-light fs-2 p-0"
+              className="nav-link dropdown-toggle text-light fs-2 p-0"
               href="#"
               id="navbarDarkDropdownMenuLink"
               role="button"
@@ -125,7 +125,7 @@ const BarraNavegacion = ({
               <p className="fw-bolder">{countProducts}</p>
             </div>
             <ul
-              class="dropdown-menu dropdown-menu-dark dropdown-menu-end "
+              className="dropdown-menu dropdown-menu-dark dropdown-menu-end "
               aria-labelledby="navbarDarkDropdownMenuLink"
               style={{ zIndex: "1" }}
             >
@@ -159,13 +159,13 @@ const BarraNavegacion = ({
                     <p className="text-light">{`$${total.toLocaleString()}`}</p>
                   </div>
                   <div
-                    class="btn-group d-flex flex-row align-items-center gap-4 mx-2"
+                    className="btn-group d-flex flex-row align-items-center gap-4 mx-2"
                     role="group"
                     aria-label="Basic example"
                   >
                     <Button
                       type="button"
-                      class="btn btn-dark rounded-pill"
+                      className="btn btn-dark rounded-pill"
                       href={SendWhatsAppLink(allProducts)}
                       target="_blank"
                     >
@@ -173,7 +173,7 @@ const BarraNavegacion = ({
                     </Button>
                     <button
                       type="button"
-                      class="btn btn-light rounded-pill"
+                      className="btn btn-light rounded-pill"
                       onClick={() => {
                         onClear();
                       }}
@@ -184,7 +184,7 @@ const BarraNavegacion = ({
                 </div>
               ) : (
                 <li>
-                  <a class="dropdown-item">Carrito Vacio</a>
+                  <a className="dropdown-item">Carrito Vacio</a>
                 </li>
               )}
             </ul>

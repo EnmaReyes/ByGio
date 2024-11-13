@@ -12,6 +12,8 @@ import Inicio from "./Paginas/Inicio";
 import Editor from "./Paginas/Editor";
 import Articulo from "./Paginas/Articulo";
 import { useState } from "react";
+import Registro from "./Paginas/Registro";
+import InicioSecion from "./Paginas/InicioSecion";
 
 //! Rutas de pagina\\
 const Layout = ({
@@ -80,6 +82,14 @@ function App() {
           element: <Articulo />,
         },
       ],
+    },
+    {
+      path: "/register",
+      element: <Registro />,
+    },
+    {
+      path: "/login",
+      element: <InicioSecion />,
     },
   ]);
 

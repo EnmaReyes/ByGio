@@ -4,10 +4,8 @@ import { API_URL } from "../config";
 import { Col, Container, Row, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
-import {
-  notify,
-  toastpromise,
-} from "../Componentes/toastConfig/toastconfigs.jsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -15,66 +13,76 @@ const Editor = () => {
 
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
-  const [fileImg, setFileImg] = useState(
-    state?.img || [null, null, null, null]
-  );
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [fileImg, setFileImg] = useState([null, null, null, null]);
+  const [imgUrls, setImgUrls] = useState(state?.img || []);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const [sizes, setSizes] = useState(state?.sizes || ["S", "M", "L"]);
   const [overSize, setOverSize] = useState(state?.overSize || false);
   const [cost, setCost] = useState(state?.cost || "");
   const [stock, setStock] = useState(state?.stock || true);
   const [loading, setLoading] = useState(false);
 
+  const preset_name = "bygiostore";
+  const cloud_name = "ds1xggjvm";
   const URL = API_URL;
 
-  // Manejador para actualizar una imagen en una posición específica del array
-  const handleImageChange = (e, index) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
+  const uploadImageToCloudinary = async (image) => {
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("upload_preset", preset_name);
+    formData.append("cloud_name", cloud_name);
 
-      reader.onloadend = () => {
-        const newImages = [...fileImg];
-        newImages[index] = reader.result;
-        setFileImg(newImages);
-        setSelectedImage(reader.result);
-      };
-
-      reader.readAsDataURL(file);
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        formData
+      );
+      console.log(response.data);
+      return response.data.secure_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Error al subir la imagen");
+      return null;
     }
   };
 
-  // Función para agregar nuevas tallas
-  const addSizeField = () => {
-    setSizes([...sizes, ""]);
+  const handleImageChange = async (e, index) => {
+    const file = e.target.files[0];
+    if (file) {
+      const localPreview = window.URL.createObjectURL(file);
+      const newFileImg = [...fileImg];
+      newFileImg[index] = localPreview;
+      setFileImg(newFileImg);
+      setSelectedImageIndex(index);
+    }
   };
-
-  const deleteSizeField = (index) => {
+  const addSizeField = () => setSizes([...sizes, ""]);
+  const deleteSizeField = (index) =>
     setSizes(sizes.filter((_, i) => i !== index));
-  };
-  // Manejador de envío para agregar o editar el artículo
+
   const handleClick = async (e) => {
-    e.preventDefault();
     setLoading(true);
+    e.preventDefault();
 
     try {
-      // Verificar si todos los campos obligatorios están completos
       if (!title || !description || !cost || !sizes.some((size) => size)) {
         toast.error("Falta información para subir el artículo!");
         setLoading(false);
         return;
       }
-
-      let imgUrl = state?.img;
-
-      if (fileImg && fileImg.some((img) => img !== null)) {
-        imgUrl = await UploadImg(fileImg); // Subir las imágenes a tu servidor o servicio de almacenamiento
+      // Subir imagen a Cloudinary y actualizar imgUrls con el URL resultante
+      const uploadedUrl = await uploadImageToCloudinary(file);
+      if (uploadedUrl) {
+        const newImgUrls = [...imgUrls];
+        newImgUrls[index] = uploadedUrl;
+        setImgUrls(newImgUrls);
       }
 
       const postData = {
         title,
         desc: description,
-        img: imgUrl,
+        img: imgUrls,
         sizes,
         overSize,
         cost,
@@ -89,20 +97,10 @@ const Editor = () => {
             withCredentials: true,
           });
 
-      // Notificación del estado de la solicitud
       toast.promise(promise, {
         pending: "Subiendo artículo...",
-        success: {
-          render({ data }) {
-            const responseData = JSON.parse(data.config.data);
-            return `${responseData.title} subido exitosamente`;
-          },
-        },
-        error: {
-          render({ data }) {
-            return `Error: ${data.message}`;
-          },
-        },
+        success: `${title} subido exitosamente`,
+        error: "Error al subir el artículo",
       });
 
       await promise;
@@ -125,15 +123,14 @@ const Editor = () => {
         >
           {/* Imagen principal */}
           <div className="main-image mb-3">
-            {selectedImage ? (
+            {fileImg[selectedImageIndex] ? (
               <img
-                src={selectedImage}
+                src={fileImg[selectedImageIndex]}
                 alt="Imagen seleccionada"
                 style={{ width: "100%", maxWidth: "400px" }}
               />
             ) : (
               <div
-                className="d-flex flex-row align-items-center"
                 style={{ width: "100%", maxWidth: "400px", height: "375px" }}
               >
                 <p>Sube tus imágenes</p>
@@ -143,46 +140,62 @@ const Editor = () => {
 
           {/* Subir imágenes (4 en total) */}
           <div className="thumbnail-images d-flex flex-column">
-            {fileImg.map((image, index) => (
-              <label key={index} className="mb-2" style={{ cursor: "pointer" }}>
-                <input
-                  type="file"
-                  style={{ display: "none" }}
-                  onChange={(e) => handleImageChange(e, index)}
-                />
-                {image ? (
-                  <img
-                    src={image}
-                    alt={`Imagen ${index + 1}`}
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      objectFit: "cover",
-                    }}
-                    onClick={() => setSelectedImage(image)}
+            {[0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="d-flex align-items-center justifyContent-center gap-2"
+              >
+                <label className="mb-2" style={{ cursor: "pointer" }}>
+                  <input
+                    type="file"
+                    style={{ display: "none" }}
+                    onChange={(e) => handleImageChange(e, index)}
                   />
-                ) : (
-                  <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      backgroundColor: "#eee",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                  {fileImg[index] ? (
+                    <img
+                      src={fileImg[index]}
+                      alt={`Imagen ${index + 1}`}
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        backgroundColor: "#eee",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      +
+                    </div>
+                  )}
+                </label>
+
+                {fileImg[index] && (
+                  <span
+                    className="fs-5"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      setSelectedImageIndex(index);
                     }}
                   >
-                    +
-                  </div>
+                    <FontAwesomeIcon icon={faEye} />
+                  </span>
                 )}
-              </label>
+              </div>
             ))}
           </div>
         </Col>
 
         {/* Información del producto */}
         <Col xs={12} md={6}>
-          <Form onSubmit={handleClick}>
+          <Form>
             <Form.Group className="mb-3" controlId="formTitle">
               <Form.Label>Título</Form.Label>
               <Form.Control
@@ -288,7 +301,12 @@ const Editor = () => {
               />
             </Form.Group>
 
-            <Button variant="dark" type="submit" disabled={loading} size="lg">
+            <Button
+              variant="dark"
+              disabled={loading}
+              size="lg"
+              onClick={(e) => handleClick(e)}
+            >
               {loading ? "Subiendo..." : "Agregar Producto"}
             </Button>
           </Form>
