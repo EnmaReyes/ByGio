@@ -1,4 +1,5 @@
-import { ToastContainer } from "react-bootstrap";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   createBrowserRouter,

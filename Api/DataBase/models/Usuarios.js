@@ -3,23 +3,26 @@ import { DB_DIALECT } from "../../config.js";
 import { sequelize } from "../db.js";
 import { Articulos } from "./Articulos.js";
 
+// Configuración para el campo `id`
 const idConfig = {
   type: DataTypes.UUID,
   primaryKey: true,
   allowNull: false,
 };
 
-if (DB_DIALECT === "mysql") {
-  idConfig.defaultValue = DataTypes.UUIDV4; // Para MySQL puedes usar UUID como CHAR(36)
+// Establecer valor predeterminado dependiendo del dialecto
+if (DB_DIALECT === "mysql" || DB_DIALECT === "postgres") {
+  idConfig.defaultValue = DataTypes.UUIDV4; // UUID autogenerado
 }
+
 export const Usuarios = sequelize.define(
   "usuarios",
   {
+    id: idConfig,
     username: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    id: idConfig,
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -47,6 +50,7 @@ export const Usuarios = sequelize.define(
   }
 );
 
+// Relaciones
 Usuarios.hasMany(Articulos, {
   foreignKey: "uid",
   as: "user",

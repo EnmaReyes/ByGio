@@ -4,8 +4,14 @@ import { API_URL } from "../config";
 import { Col, Container, Row, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {
+  notify,
+  toastpromise,
+} from "../Componentes/toastConfig/toastconfigs.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
+
+const URL = API_URL;
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -19,13 +25,12 @@ const Editor = () => {
 
   const [sizes, setSizes] = useState(state?.sizes || ["S", "M", "L"]);
   const [overSize, setOverSize] = useState(state?.overSize || false);
-  const [cost, setCost] = useState(state?.cost || "");
   const [stock, setStock] = useState(state?.stock || true);
+  const [cost, setCost] = useState(state?.cost || "");
   const [loading, setLoading] = useState(false);
 
   const preset_name = "bygiostore";
   const cloud_name = "ds1xggjvm";
-  const URL = API_URL;
 
   const uploadImageToCloudinary = async (image) => {
     const formData = new FormData();
@@ -38,11 +43,11 @@ const Editor = () => {
         `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
         formData
       );
-      console.log(response.data);
+
       return response.data.secure_url;
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Error al subir la imagen");
+      toast.error(`Error al Subir las imagenes: ${err.message}`);
       return null;
     }
   };
@@ -67,24 +72,39 @@ const Editor = () => {
 
     try {
       if (!title || !description || !cost || !sizes.some((size) => size)) {
-        toast.error("Falta información para subir el artículo!");
+        toast.error("Falta información para subir el artículo!", toastpromise);
         setLoading(false);
         return;
       }
-      // Subir imagen a Cloudinary y actualizar imgUrls con el URL resultante
-      const uploadedUrl = await uploadImageToCloudinary(file);
-      if (uploadedUrl) {
-        const newImgUrls = [...imgUrls];
-        newImgUrls[index] = uploadedUrl;
-        setImgUrls(newImgUrls);
+
+      // Subir imágenes a Cloudinary
+      const uploadedUrls = await Promise.all(
+        fileImg.map(async (file, index) => {
+          if (file) {
+            // Convertir URL local a archivo para Cloudinary
+            const blob = await fetch(file).then((res) => res.blob());
+            return await uploadImageToCloudinary(blob);
+          }
+          // Si no hay imagen, mantener la URL existente
+          return imgUrls[index] || null;
+        })
+      );
+
+      // Filtrar URLs válidas (puede haber `null` si alguna carga falló)
+      const validUrls = uploadedUrls.filter((url) => url !== null);
+
+      if (validUrls.length === 0) {
+        toast.error("No se pudieron subir las imágenes!");
+        setLoading(false);
+        return;
       }
 
       const postData = {
         title,
         desc: description,
-        img: imgUrls,
+        img: validUrls,
         sizes,
-        overSize,
+        oversize: overSize,
         cost,
         stock,
       };
@@ -107,7 +127,7 @@ const Editor = () => {
       navigate("/");
     } catch (err) {
       toast.error(`Error al realizar la solicitud: ${err.message}`);
-      console.log("Error al realizar la solicitud:", err);
+      console.error("Error al realizar la solicitud:", err);
     } finally {
       setLoading(false);
     }

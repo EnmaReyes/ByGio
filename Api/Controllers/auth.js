@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try {
+    console.log("Petición recibida:", req.body);
+
     //? Verificar usuarios existentes
     const existingUsers = await Usuarios.findAll({
       where: {
@@ -11,21 +13,26 @@ export const register = async (req, res) => {
         username: req.body.username,
       },
     });
+    console.log("Usuarios existentes:", existingUsers);
 
     if (existingUsers.length > 0) {
       return res.status(409).json("Usuario Existente");
     }
+
     //? Hash de contraseña y crear usuario
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(req.body.password, salt);
+    console.log("Contraseña encriptada:", hash);
 
     const newUser = await Usuarios.create({
       email: req.body.email,
       username: req.body.username,
       password: hash,
     });
+    console.log("Usuario creado:", newUser);
     return res.status(200).json("Usuario creado con éxito");
   } catch (error) {
+    console.error("Error en el servidor:", error.message);
     return res.status(500).json("Error en el servidor");
   }
 };
@@ -71,6 +78,7 @@ export const login = async (req, res) => {
     res.status(500).json("Error interno del servidor");
   }
 };
+
 export const logout = async (req, res) => {
   try {
     res

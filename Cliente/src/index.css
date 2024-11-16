@@ -2,3 +2,30 @@ body{
     margin: 0px;
     padding: 0px;
 }
+.badge-hover {
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out; /* Transición suave */
+  }
+.badge-hover:hover {
+    background-color: #f8f9fa !important; /* Cambiar color al pasar el mouse */
+    color: #343a40 !important;
+    
+  }
+  .bgcard{
+    background-image: url("./assets/Background/fondomobile.jpg");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .imgstyle{
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+  }
+  .responsive{
+    @media (max-width:768px) {
+        font-size: 12px;
+        color: #343a40;
+        span{
+            font-size: 16px;
+        }
+    }
+  }

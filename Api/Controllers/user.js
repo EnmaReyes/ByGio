@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { Usuarios } from "../DataBase/models/Usuarios";
+import { Usuarios } from "../DataBase/models/Usuarios.js";
 
 export const userById = async (req, res) => {
     try {

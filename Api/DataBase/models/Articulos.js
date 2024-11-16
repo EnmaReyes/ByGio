@@ -8,8 +8,9 @@ const idConfig = {
   allowNull: false,
 };
 
-if (DB_DIALECT === "mysql") {
-  idConfig.defaultValue = DataTypes.UUIDV4;
+// Establecer valor predeterminado dependiendo del dialecto
+if (DB_DIALECT === "mysql" || DB_DIALECT === "postgres") {
+  idConfig.defaultValue = DataTypes.UUIDV4; // UUID autogenerado
 }
 
 export const Articulos = sequelize.define(
@@ -35,16 +36,18 @@ export const Articulos = sequelize.define(
     },
     oversize: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      allowNull: false,
+      defaultValue: true,
     },
     cost: {
       type: DataTypes.FLOAT,
       allowNull: false,
+      
     },
     stock: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
       allowNull: false,
+      defaultValue: true,
     },
   },
   {

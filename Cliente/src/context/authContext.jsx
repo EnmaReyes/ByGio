@@ -2,15 +2,14 @@ import axios from "axios";
 import React, { useEffect, useState, createContext } from "react";
 import { API_URL } from "../config.js";
 
-export const AuthContext = createContext();
-
 const URL = API_URL;
+export const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
-
+  const [isUserActive, setIsUserActive] = useState(false);
   const [logoutTimer, setLogoutTimer] = useState(null);
 
   const login = async (inputs) => {
