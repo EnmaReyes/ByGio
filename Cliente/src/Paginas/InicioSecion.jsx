@@ -18,6 +18,7 @@ import {
   MDBCheckbox,
 } from "mdb-react-ui-kit";
 import { API_URL } from "../config";
+import { Button } from "react-bootstrap";
 
 const URL = API_URL;
 const InicioSecion = () => {
@@ -66,7 +67,7 @@ const InicioSecion = () => {
             <MDBCol
               md="10"
               lg="6"
-              className="order-2 order-lg-1 d-flex flex-column align-items-center"
+              className="order-2 order-lg-1 d-flex flex-column justify-content-center align-items-center"
             >
               <h1 className=" text-center fw-bold mb-5 mx-1 mx-md-4 mt-4">
                 Inicia Seción
@@ -95,13 +96,13 @@ const InicioSecion = () => {
                 />
               </div>
 
-              <MDBBtn
+              <Button
                 className="mb-4 btn btn-light"
                 size="lg"
                 onClick={handlesubmit}
               >
                 Entrar
-              </MDBBtn>
+              </Button>
               {error && <span>{error}</span>}
               <h5 className="d-flex align-items-center ">
                 ¿No Posees cuenta?

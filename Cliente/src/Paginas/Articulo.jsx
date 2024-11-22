@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
-import { articulos } from "../Info/Data";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -10,13 +9,33 @@ import { Pagination } from "swiper/modules";
 import "../App.css";
 import "swiper/css";
 import "swiper/css/pagination";
+
+import axios from "axios";
+import { API_URL } from "../config";
+const URL = API_URL;
+
 const Articulo = () => {
   const location = useLocation();
   const postid = location.pathname.split("/")[1];
-  const [selected, setSelected] = useState(null);
-  const [mainImage, setMainImage] = useState(selected?.imagen);
+  const [selected, setSelected] = useState([]);
+  const [mainImage, setMainImage] = useState(selected?.img);
   const [conteo, setConteo] = useState(1);
   const [medidas, setMedidas] = useState("S");
+  const [isloading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`${URL}/api/posts/${postid}`);
+        setSelected(res.data);
+        setIsLoading(false);
+        window.scrollTo(0, 0);
+      } catch (error) {
+        console.error("Error al obtener el post:", error);
+      }
+    };
+    fetchData();
+  }, [postid]);
 
   //! carrtio \\
   const {
@@ -39,12 +58,12 @@ const Articulo = () => {
           ? { ...item, cantidad: conteo + item.cantidad }
           : item
       );
-      setTotal(total + selected.precio * conteo);
+      setTotal(total + selected.cost * conteo);
       setCountProducts(countProducts + conteo);
       return setAllProducts([...products]);
     }
 
-    setTotal(total + selected.precio * conteo);
+    setTotal(total + selected.cost * conteo);
     setCountProducts(countProducts + conteo);
     setAllProducts([
       ...allProducts,
@@ -55,44 +74,44 @@ const Articulo = () => {
   const handleThumbnailClick = (thumbnail) => {
     setMainImage(thumbnail); // Actualiza la imagen principal con la miniatura seleccionada
   };
-  useEffect(() => {
-    const Data = async () => {
-      try {
-        const Articulo = await articulos.find((art) => art.id === postid);
-        setSelected(Articulo);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    Data();
-  }, [postid]);
 
   //! Comprar articulo\\
-  const URL = "https://bygio.onrender.com";
-
   const WhatsAppLink = (selected, conteo, medidas) => {
+    if (!selected?.title || !selected?.cost || !selected?.img?.[0]) {
+      return "#";
+    }
+  
     const message = `¡Hola!😁 Estoy interesado en:
-     ${conteo} ${selected?.titulo}
+      ${conteo} ${selected.title}
       Talla: ${medidas}
-      Valor: $${selected?.precio.toLocaleString()} por unidad`;
-    const imageLink = `${URL}${selected?.imagen[0]}`;
+      Valor: $${selected.cost.toLocaleString()} por unidad`;
+    const imageLink = selected?.img?.[0];
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;
   };
+  
 
   return (
     <Container className="mb-4" style={{ paddingTop: "90px" }}>
       <Row>
         <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          <Swiper pagination={true} modules={[Pagination]} className="mySwiper">
-            {selected?.imagen.map((img) => (
-              <SwiperSlide>
-                <img src={img} alt="img" />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {selected?.img?.length > 0 ? (
+            <Swiper
+              pagination={true}
+              modules={[Pagination]}
+              className="mySwiper"
+            >
+              {selected?.img.map((img, index) => (
+                <SwiperSlide key={index}>
+                  <img src={img} alt={`Slide ${index}`} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <p>Cargando imágenes...</p> // Mensaje de carga o un spinner
+          )}
         </Col>
 
         {/* Columna para los detalles del producto */}
@@ -109,10 +128,10 @@ const Articulo = () => {
                 fontFamily: "Lobster, sans-serif",
               }}
             >
-              {selected?.titulo}
+              {selected?.title}
             </h1>
             <h2 className="text-success text-md-start">
-              ${selected?.precio.toLocaleString()}
+              ${selected?.cost?.toLocaleString()}
             </h2>
 
             <Form>
@@ -172,13 +191,7 @@ const Articulo = () => {
               </Form.Group>
 
               <div>
-                <p>{`Camiseta ${selected?.titulo} en piel de durazno importada.
-                 De tacto sedoso`}</p>
-                <span>No se motea</span>
-                <br />
-                <span>No pierde su color</span>
-                <br />
-                <span>No pierde sus medidad</span>
+                <p>{selected?.desc}</p>
               </div>
 
               <div className="d-flex align-items-center justify-content-center justify-content-md-start">
@@ -201,7 +214,7 @@ const Articulo = () => {
 
               <div className="d-flex flex-column justify-content-center justify-content-md-start">
                 <p className="m-0">Total</p>
-                <h3>{(conteo * selected?.precio).toLocaleString()}</h3>
+                <h3>{(conteo * selected?.cost).toLocaleString()}</h3>
               </div>
 
               <div className="d-grid gap-2">

@@ -14,6 +14,7 @@ import {
 } from "mdb-react-ui-kit";
 import { API_URL } from "../config";
 import axios from "axios";
+import { Button } from "react-bootstrap";
 
 const URL = API_URL;
 
@@ -158,13 +159,13 @@ const Registro = () => {
                 />
               </div>
 
-              <MDBBtn
+              <Button
                 className="mb-4 btn btn-light"
                 size="lg"
                 onClick={handlesubmit}
               >
                 Registrar
-              </MDBBtn>
+              </Button>
               {error && <span>{error}</span>}
               <h5 className="d-flex align-items-center responsive">
                 ¿Posees cuenta?

@@ -32,11 +32,11 @@ export const addArticle = async (req, res) => {
 
 export const getArticle = async (req, res) => {
   try {
-    const Article = await Posts.findAll();
+    const Article = await Articulos.findAll();
     if (!Article || Article.length === 0) {
       return res.status(404).json("No Hay Articulos");
     }
-    res.status(200).json(posts);
+    res.status(200).json(Article);
   } catch (error) {
     res.status(500).json("Error interno del servidor");
   }
@@ -48,7 +48,7 @@ export const getArticleByTitle = async (req, res) => {
     if (!articleName) {
       return res.status(400).json("No hay artículos");
     }
-    const posts = await Posts.findAll({
+    const posts = await Articulos.findAll({
       where: {
         title: {
           [Op.iLike]: `%${articleName}%`,
@@ -135,13 +135,14 @@ export const updateArticle = async (req, res) => {
 export const getArticleByID = async (req, res) => {
   try {
     const articleId = req.params.id;
-
+    console.log("entré al try  " + articleId);
     const article = await Articulos.findByPk(articleId);
+
     if (!article) {
       return res.status(404).json("No Hay Articulos por ID");
     }
-
-    res.status(200).json(post);
+    console.log(article);
+    res.status(200).json(article);
   } catch (error) {
     console.error(err);
     res.status(500).json("Error interno del servidor");
