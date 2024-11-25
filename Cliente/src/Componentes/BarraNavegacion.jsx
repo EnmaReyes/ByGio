@@ -8,6 +8,7 @@ import {
 
 import Carrito from "./Carrito";
 import { AuthContext } from "../context/authContext";
+import { Link } from "react-router-dom";
 
 const BarraNavegacion = ({
   allProducts,
@@ -57,7 +58,6 @@ const BarraNavegacion = ({
             <li className="nav-item dropdown">
               <a
                 className="nav-link dropdown-toggle text-light"
-                href="#"
                 id="navbarDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
@@ -90,7 +90,6 @@ const BarraNavegacion = ({
               {currentUser ? (
                 <a
                   className="nav-link dropdown-toggle text-light"
-                  href="#"
                   id="navbarDropdown"
                   role="button"
                   data-bs-toggle="dropdown"
@@ -101,7 +100,6 @@ const BarraNavegacion = ({
               ) : (
                 <a
                   className="nav-link dropdown-toggle text-light"
-                  href="#"
                   id="navbarDropdown"
                   role="button"
                   data-bs-toggle="dropdown"
@@ -123,36 +121,39 @@ const BarraNavegacion = ({
                 ) : (
                   <>
                     <li>
-                      <a
+                      <Link
                         className="dropdown-item li-navbar-hover"
-                        href="/login"
+                        to="/login"
                       >
-                        Iniciar Seción
-                      </a>
+                        Iniciar Sesión
+                      </Link>
                     </li>
                     <li>
-                      <a
+                      <Link
                         className="dropdown-item li-navbar-hover"
-                        href="/register"
+                        to="/register"
                       >
                         Registrarte
-                      </a>
+                      </Link>
                     </li>
                   </>
                 )}
-                
-              {currentUser?.admin && (
-                <>
-                  <li>
-                    <hr className="dropdown-divider" />
-                  </li>
-                  <li>
-                    <a className="dropdown-item li-navbar-hover" href="/editor">
-                      Crear Articulo
-                    </a>
-                  </li>
-                </>
-              )}
+
+                {currentUser?.admin && (
+                  <>
+                    <li>
+                      <hr className="dropdown-divider" />
+                    </li>
+                    <li>
+                      <Link
+                        className="dropdown-item li-navbar-hover"
+                        to="/editor"
+                      >
+                        Crear Articulo
+                      </Link>
+                    </li>
+                  </>
+                )}
               </ul>
             </li>
           </ul>
