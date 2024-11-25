@@ -60,7 +60,7 @@ const Carrito = ({
     )}`;
     return whatsappLink;
   };
-  
+
   return (
     <div>
       <div className="collapse navbar-collapse me-4" id="navbarNavDarkDropdown">
