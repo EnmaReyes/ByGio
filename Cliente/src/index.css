@@ -37,3 +37,20 @@ body{
     font-weight: bolder;
     
   }
+
+  .navbar-toggler {
+    background-color: transparent;
+  
+    @media (max-width: 768px) {
+      background-color: #f3f0f0; 
+    }
+  }
+  .carrito-responsive{
+    position: relative;
+    
+    @media (max-width: 768px) {
+     position: relative;
+     z-index: 1050;
+     
+    }
+  }
