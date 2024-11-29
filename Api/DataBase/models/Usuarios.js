@@ -1,27 +1,16 @@
 import { DataTypes } from "sequelize";
-import { DB_DIALECT } from "../../config.js";
 import { sequelize } from "../db.js";
 import { Articulos } from "./Articulos.js";
-
-// Configuración para el campo `id`
-const idConfig = {
-  type: DataTypes.UUID,
-  primaryKey: true,
-  allowNull: false,
-};
-
-// Establecer valor predeterminado dependiendo del dialecto
-if (DB_DIALECT === "mysql" || DB_DIALECT === "postgres") {
-  idConfig.defaultValue = DataTypes.UUIDV4; // UUID autogenerado
-}
+import { v4 as uuidv4 } from "uuid";
 
 export const Usuarios = sequelize.define(
   "usuarios",
   {
-    id: idConfig,
-    username: {
-      type: DataTypes.STRING,
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: uuidv4,
       allowNull: false,
+      primaryKey: true,
     },
     email: {
       type: DataTypes.STRING,

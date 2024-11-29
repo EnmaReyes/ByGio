@@ -1,22 +1,17 @@
 import { DataTypes } from "sequelize";
-import { DB_DIALECT } from "../../config.js";
 import { sequelize } from "../db.js";
+import { v4 as uuidv4 } from 'uuid';
 
-const idConfig = {
-  type: DataTypes.UUID,
-  primaryKey: true,
-  allowNull: false,
-};
-
-// Establecer valor predeterminado dependiendo del dialecto
-if (DB_DIALECT === "mysql" || DB_DIALECT === "postgres") {
-  idConfig.defaultValue = DataTypes.UUIDV4; // UUID autogenerado
-}
 
 export const Articulos = sequelize.define(
   "articulos",
   {
-    id: idConfig,
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: uuidv4 ,
+      allowNull: false,
+      primaryKey: true,
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,
