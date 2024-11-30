@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
-import { Articulos } from "../DataBase/models/Articulos.js";
+const jwt = require("jsonwebtoken");
+const { Articulos } = require("../DataBase/models/Articulos.js");
 
-export const addArticle = async (req, res) => {
+const addArticle = async (req, res) => {
   try {
     const token = req.cookies.access_token;
 
@@ -30,7 +30,7 @@ export const addArticle = async (req, res) => {
   }
 };
 
-export const getArticle = async (req, res) => {
+const getArticle = async (req, res) => {
   try {
     const Article = await Articulos.findAll();
     if (!Article || Article.length === 0) {
@@ -42,7 +42,7 @@ export const getArticle = async (req, res) => {
   }
 };
 
-export const getArticleByTitle = async (req, res) => {
+const getArticleByTitle = async (req, res) => {
   try {
     const articleName = req.query.title.toLowerCase();
     if (!articleName) {
@@ -58,7 +58,7 @@ export const getArticleByTitle = async (req, res) => {
   } catch (error) {}
 };
 
-export const deleteArticle = async (req, res) => {
+const deleteArticle = async (req, res) => {
   const token = req.cookies.access_token;
 
   if (!token) {
@@ -91,7 +91,7 @@ export const deleteArticle = async (req, res) => {
   }
 };
 
-export const updateArticle = async (req, res) => {
+const updateArticle = async (req, res) => {
   try {
     const token = req.cookies.access_token;
 
@@ -132,7 +132,7 @@ export const updateArticle = async (req, res) => {
   }
 };
 
-export const getArticleByID = async (req, res) => {
+const getArticleByID = async (req, res) => {
   try {
     const articleId = req.params.id;
     console.log("entré al try  " + articleId);
@@ -147,4 +147,13 @@ export const getArticleByID = async (req, res) => {
     console.error(err);
     res.status(500).json("Error interno del servidor");
   }
+};
+
+module.exports = {
+  addArticle,
+  getArticle,
+  getArticleByTitle,
+  deleteArticle,
+  updateArticle,
+  getArticleByID,
 };

@@ -1,11 +1,11 @@
-import express from "express";
-import postRoutes from "./Rutas/posts.js";
-import authRoutes from "./Rutas/auth.js";
-import userRoutes from "./Rutas/user.js";
-import { sequelize } from "./DataBase/db.js";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import { FRONTEND_URL } from "./config.js";
+const express = require("express");
+const postRoutes = require ("./Rutas/posts.js");
+const authRoutes = require ("./Rutas/auth.js";)
+const userRoutes = require ("./Rutas/user.js";)
+const { sequelize } = require("./DataBase/db.js");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const { FRONTEND_URL } = require("./config.js");
 
 const port = process.env.PORT || 3000;
 const app = express();

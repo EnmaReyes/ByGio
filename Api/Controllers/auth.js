@@ -1,8 +1,8 @@
-import bcrypt from "bcryptjs";
-import { Usuarios } from "../DataBase/models/Usuarios.js";
-import jwt from "jsonwebtoken";
+const bcrypt = require("bcryptjs");
+const { Usuarios } = require("../DataBase/models/Usuarios.js");
+const jwt = require("jsonwebtoken");
 
-export const register = async (req, res) => {
+const register = async (req, res) => {
   try {
     console.log("Petición recibida:", req.body);
 
@@ -37,7 +37,7 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const existingUser = await Usuarios.findOne({
       where: {
@@ -79,7 +79,7 @@ export const login = async (req, res) => {
   }
 };
 
-export const logout = async (req, res) => {
+const logout = async (req, res) => {
   try {
     res
       .clearCookie("access_token", {
@@ -91,4 +91,9 @@ export const logout = async (req, res) => {
   } catch (error) {
     res.status(500).json("Error interno del servidor");
   }
+};
+module.exports = {
+  register,
+  login,
+  logout,
 };

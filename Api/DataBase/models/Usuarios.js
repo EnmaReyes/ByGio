@@ -1,7 +1,7 @@
-import { DataTypes } from "sequelize";
-import { sequelize } from "../db.js";
-import { Articulos } from "./Articulos.js";
-import { v4 as uuidv4 } from "uuid";
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../db.js");
+const { Articulos } = require("./Articulos.js");
+const { v4: uuidv4 } = require("uuid");
 
 export const Usuarios = sequelize.define(
   "usuarios",
@@ -11,6 +11,10 @@ export const Usuarios = sequelize.define(
       defaultValue: uuidv4,
       allowNull: false,
       primaryKey: true,
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -51,3 +55,4 @@ Articulos.belongsTo(Usuarios, {
   as: "user",
   targetKey: "id",
 });
+module.exports = { Usuarios };

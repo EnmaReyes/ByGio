@@ -1,14 +1,13 @@
-import { DataTypes } from "sequelize";
-import { sequelize } from "../db.js";
-import { v4 as uuidv4 } from 'uuid';
-
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../db.js");
+const { v4: uuidv4 } = require("uuid");
 
 export const Articulos = sequelize.define(
   "articulos",
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: uuidv4 ,
+      defaultValue: uuidv4,
       allowNull: false,
       primaryKey: true,
     },
@@ -37,7 +36,6 @@ export const Articulos = sequelize.define(
     cost: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      
     },
     stock: {
       type: DataTypes.BOOLEAN,
@@ -49,3 +47,4 @@ export const Articulos = sequelize.define(
     timestamps: false,
   }
 );
+module.exports = { Articulos };

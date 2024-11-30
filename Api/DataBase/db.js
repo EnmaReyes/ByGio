@@ -1,13 +1,12 @@
-import { Sequelize } from "sequelize";
-
-import {
+const { Sequelize } = require("sequelize");
+const {
   DB_NAME,
   DB_USER,
   DB_PASSWORD,
   DB_HOST,
   DB_PORT,
   DB_DIALECT,
-} from "../config.js";
+} = require("../config.js");
 
 // Configuración de Sequelize
 const sequelizeConfig = {
@@ -17,7 +16,7 @@ const sequelizeConfig = {
 };
 
 // Instancia de Sequelize
-export const sequelize = new Sequelize(
+const sequelize = new Sequelize(
   DB_NAME,
   DB_USER,
   DB_PASSWORD,
@@ -29,3 +28,4 @@ sequelize
   .authenticate()
   .then(() => console.log("Conexión exitosa con la base de datos"))
   .catch((err) => console.error("Error conectando con la base de datos:", err));
+  module.exports = { sequelize };
