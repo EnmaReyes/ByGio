@@ -3,7 +3,7 @@ const { sequelize } = require("../db.js");
 const { Articulos } = require("./Articulos.js");
 const { v4: uuidv4 } = require("uuid");
 
-export const Usuarios = sequelize.define(
+const Usuarios = sequelize.define(
   "usuarios",
   {
     id: {

@@ -1,7 +1,7 @@
 const express = require("express");
-const postRoutes = require ("./Rutas/posts.js");
-const authRoutes = require ("./Rutas/auth.js";)
-const userRoutes = require ("./Rutas/user.js";)
+const postRoutes = require("./Rutas/posts.js");
+const authRoutes = require("./Rutas/auth.js");
+const userRoutes = require("./Rutas/user.js");
 const { sequelize } = require("./DataBase/db.js");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");

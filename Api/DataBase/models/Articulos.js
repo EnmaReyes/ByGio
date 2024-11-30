@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../db.js");
 const { v4: uuidv4 } = require("uuid");
 
-export const Articulos = sequelize.define(
+const Articulos = sequelize.define(
   "articulos",
   {
     id: {
