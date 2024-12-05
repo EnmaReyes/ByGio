@@ -34,7 +34,7 @@ const Articulos = sequelize.define(
       defaultValue: true,
     },
     cost: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     stock: {

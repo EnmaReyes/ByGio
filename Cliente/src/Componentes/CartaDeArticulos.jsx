@@ -4,6 +4,7 @@ import "../App.css";
 import { Link, useLocation } from "react-router-dom";
 import { API_URL } from "../config";
 import axios from "axios";
+import Spinner from "react-bootstrap/Spinner";
 
 const URL = API_URL;
 
@@ -15,7 +16,20 @@ const CartaDeArticulos = () => {
     const fetchData = async () => {
       try {
         const res = await axios.get(`${URL}/api/posts/${location}`);
-        setArticulo(res.data);
+        const data = res.data;
+        // Verificar y transformar los datos de `img` y `size`
+        const formattedData = Array.isArray(data)
+          ? data.map((art) => ({
+              ...art,
+              img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
+              sizes:
+                typeof art.sizes === "string"
+                  ? JSON.parse(art.sizes)
+                  : art.sizes,
+            }))
+          : [];
+
+        setArticulo(formattedData);
       } catch (error) {
         console.log(error);
       }
@@ -23,26 +37,7 @@ const CartaDeArticulos = () => {
     fetchData();
   }, [location]);
 
-  const nuevosPosts = () => {
-    // Si 'links' es una cadena JSON, la transformamos; si ya es un objeto, lo dejamos igual
-    const parsedImg =
-      typeof articulo?.img === "string"
-        ? JSON.parse(articulo?.img)
-        : articulo?.img;
-
-    const parsedSize =
-      typeof articulo?.size === "string"
-        ? JSON.parse(articulo?.size)
-        : articulo?.size;
-    return [
-      {
-        ...articulo,
-        img: parsedImg,
-        size: parsedSize,
-      },
-    ];
-  };
-  nuevosPosts();
+  console.log(articulo);
 
   const generateWhatsAppLink = (art) => {
     const message = `¡Hola!😁 Estoy interesado en:
@@ -55,7 +50,7 @@ const CartaDeArticulos = () => {
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;
   };
-  
+
   return (
     <Container className="">
       <Row>
@@ -64,16 +59,25 @@ const CartaDeArticulos = () => {
             <Card className="mt-4 " style={{ width: "100%", border: "none" }}>
               <Link to={`/${art.id}`}>
                 <div style={{ height: "100%", overflow: "hidden" }}>
-                  <Card.Img
-                    src={art?.img[0]}
-                    className="img-fluid"
-                    variant="top"
-                    style={{
-                      height: "100%",
-                      width: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  {art.img ? (
+                    <Card.Img
+                      src={art?.img[0]}
+                      className="img-fluid"
+                      variant="top"
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="d-flex flex-column justify-content-center  align-items-center"
+                      style={{ width: "100%", height: "100%" }}
+                    >
+                      <Spinner animation="border" variant="dark" />
+                    </div>
+                  )}
                 </div>
               </Link>
               <Card.Body className="m-0 p-2 ">

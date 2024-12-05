@@ -9,7 +9,8 @@ import {
   toastpromise,
 } from "../Componentes/toastConfig/toastconfigs.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faImage, faPlus } from "@fortawesome/free-solid-svg-icons";
+import Spinner from "react-bootstrap/Spinner";
 
 const URL = API_URL;
 
@@ -151,8 +152,10 @@ const Editor = () => {
               />
             ) : (
               <div
-                style={{ width: "100%", maxWidth: "400px", height: "375px" }}
+                style={{ width: "100%", height: "auto", fontSize: "20px" }}
+                className="d-flex flex-column align-items-center gap-2 p-md-5"
               >
+                <FontAwesomeIcon icon={faImage} className="fs-1"/>
                 <p>Sube tus imágenes</p>
               </div>
             )}
@@ -173,6 +176,7 @@ const Editor = () => {
                   />
                   {fileImg[index] ? (
                     <img
+                      className="add-img"
                       src={fileImg[index]}
                       alt={`Imagen ${index + 1}`}
                       style={{
@@ -182,17 +186,8 @@ const Editor = () => {
                       }}
                     />
                   ) : (
-                    <div
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        backgroundColor: "#eee",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      +
+                    <div className="add-hover">
+                      <FontAwesomeIcon icon={faPlus} />
                     </div>
                   )}
                 </label>
@@ -214,10 +209,14 @@ const Editor = () => {
         </Col>
 
         {/* Información del producto */}
-        <Col xs={12} md={6}>
-          <Form>
+        <Col
+          xs={12}
+          md={6}
+          className="p-md-5"
+        >
+          <Form className=" align-items-center justify-content-center">
             <Form.Group className="mb-3" controlId="formTitle">
-              <Form.Label>Título</Form.Label>
+              <Form.Label className="fontFamilyTitle">Titulo</Form.Label>
               <Form.Control
                 type="text"
                 value={title}
@@ -227,7 +226,7 @@ const Editor = () => {
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formDescription">
-              <Form.Label>Descripción</Form.Label>
+              <Form.Label className="fontFamilyTitle">Descripción</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -238,7 +237,7 @@ const Editor = () => {
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formPrice">
-              <Form.Label>Precio</Form.Label>
+              <Form.Label className="fontFamilyTitle">Precio</Form.Label>
               <Form.Control
                 type="number"
                 value={cost}
@@ -251,7 +250,7 @@ const Editor = () => {
               className="d-flex align-items-center justifyContent-center mb-3 gap-3"
               controlId="formStock"
             >
-              <Form.Label className="d-flex align-items-center">
+              <Form.Label className="d-flex align-items-center fontFamilyTitle">
                 Stock
               </Form.Label>
               <Form.Switch
@@ -261,6 +260,14 @@ const Editor = () => {
               />
             </Form.Group>
 
+            <Form.Group className="d-flex align-items-center mb-3 gap-3">
+              <Form.Label className="fontFamilyTitle">Oversize</Form.Label>
+              <Form.Switch
+                className="fs-5"
+                checked={overSize}
+                onChange={() => setOverSize(!overSize)}
+              />
+            </Form.Group>
             <Form.Label className="mb-3 d-flex justify-content-center align-items-center">
               Tallas
             </Form.Label>
@@ -312,22 +319,29 @@ const Editor = () => {
                 + Talla
               </Button>
             </div>
-            <Form.Group className="d-flex align-items-center mb-3 gap-3">
-              <Form.Label className="">Oversize</Form.Label>
-              <Form.Switch
-                className="fs-5"
-                checked={overSize}
-                onChange={() => setOverSize(!overSize)}
-              />
-            </Form.Group>
 
             <Button
+              style={{ width: "100%", textAlign: "center" }}
               variant="dark"
               disabled={loading}
               size="lg"
               onClick={(e) => handleClick(e)}
             >
-              {loading ? "Subiendo..." : "Agregar Producto"}
+              {loading ? (
+                <>
+                  <Spinner
+                    className="mx-2 "
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  Loading
+                </>
+              ) : (
+                "Crear Articulo"
+              )}
             </Button>
           </Form>
         </Col>

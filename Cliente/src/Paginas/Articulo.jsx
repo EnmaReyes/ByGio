@@ -9,6 +9,7 @@ import { Pagination } from "swiper/modules";
 import "../App.css";
 import "swiper/css";
 import "swiper/css/pagination";
+import Spinner from "react-bootstrap/Spinner";
 
 import axios from "axios";
 import { API_URL } from "../config";
@@ -18,24 +19,29 @@ const Articulo = () => {
   const location = useLocation();
   const postid = location.pathname.split("/")[1];
   const [selected, setSelected] = useState([]);
-  const [mainImage, setMainImage] = useState(selected?.img);
   const [conteo, setConteo] = useState(1);
   const [medidas, setMedidas] = useState("S");
-  const [isloading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.get(`${URL}/api/posts/${postid}`);
         setSelected(res.data);
-        setIsLoading(false);
         window.scrollTo(0, 0);
+        console.log(selected);
       } catch (error) {
         console.error("Error al obtener el post:", error);
       }
     };
     fetchData();
   }, [postid]);
+
+  const sizes =
+    typeof selected.sizes === "string"
+      ? JSON.parse(selected.sizes)
+      : selected.sizes;
+  const imagens =
+    typeof selected.img === "string" ? JSON.parse(selected.img) : selected.img;
 
   //! carrtio \\
   const {
@@ -71,46 +77,51 @@ const Articulo = () => {
     ]);
   };
 
-  const handleThumbnailClick = (thumbnail) => {
-    setMainImage(thumbnail); // Actualiza la imagen principal con la miniatura seleccionada
-  };
-
   //! Comprar articulo\\
   const WhatsAppLink = (selected, conteo, medidas) => {
-    if (!selected?.title || !selected?.cost || !selected?.img?.[0]) {
+    if (!selected?.title || !selected?.cost || !imagens?.[0]) {
       return "#";
     }
-  
+
     const message = `¡Hola!😁 Estoy interesado en:
       ${conteo} ${selected.title}
       Talla: ${medidas}
       Valor: $${selected.cost.toLocaleString()} por unidad`;
-    const imageLink = selected?.img?.[0];
+    const imageLink = imagens?.[0];
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;
   };
-  
 
   return (
     <Container className="mb-4" style={{ paddingTop: "90px" }}>
       <Row>
         <Col xs={12} md={6} className="d-flex flex-column align-items-center">
-          {selected?.img?.length > 0 ? (
+          {imagens?.length > 0 ? (
             <Swiper
               pagination={true}
               modules={[Pagination]}
               className="mySwiper"
             >
-              {selected?.img.map((img, index) => (
+              {imagens.map((img, index) => (
                 <SwiperSlide key={index}>
                   <img src={img} alt={`Slide ${index}`} />
                 </SwiperSlide>
               ))}
             </Swiper>
           ) : (
-            <p>Cargando imágenes...</p> // Mensaje de carga o un spinner
+            <div
+              className="d-flex flex-column justify-content-center  align-items-center"
+              style={{ width: "100%", height: "100%", padding: "1rem" }}
+            >
+              <div
+                className="d-flex flex-column justify-content-center align-items-center"
+                style={{ width: "100%" }}
+              >
+                <Spinner animation="border" variant="dark" />
+              </div>
+            </div>
           )}
         </Col>
 
@@ -118,11 +129,11 @@ const Articulo = () => {
         <Col
           xs={12}
           md={4}
-          className="d-flex flex-column text-center text-md-start xs-center"
+          className="d-flex flex-column text-center justify-content-center align-items-center  xs-center"
         >
           <div className="w-100">
             <h1
-              className="text-center text-md-start"
+              
               style={{
                 fontSize: "2.8rem",
                 fontFamily: "Lobster, sans-serif",
@@ -130,7 +141,7 @@ const Articulo = () => {
             >
               {selected?.title}
             </h1>
-            <h2 className="text-success text-md-start">
+            <h2 className="text-success ">
               ${selected?.cost?.toLocaleString()}
             </h2>
 
@@ -155,7 +166,7 @@ const Articulo = () => {
                       setMedidas("S");
                     }}
                   >
-                    S
+                    {sizes?.[0]}
                   </button>
                   <button
                     type="button"
@@ -170,7 +181,7 @@ const Articulo = () => {
                       setMedidas("M");
                     }}
                   >
-                    M
+                    {sizes?.[1]}
                   </button>
                   <button
                     type="button"
@@ -185,8 +196,28 @@ const Articulo = () => {
                       setMedidas("L");
                     }}
                   >
-                    L
+                    {sizes?.[2]}
                   </button>
+
+                  {sizes?.[3] && (
+                    <button
+                      type="button"
+                      className={`btn ${
+                        medidas === "XL"
+                          ? "btn-secondary fw-bolder "
+                          : "btn-light"
+                      }`}
+                      style={{
+                        transform: medidas === "XL" ? "scale(0.9)" : "scale(1)",
+                        transition: "transform 0.2s ease-in-out",
+                      }}
+                      onClick={() => {
+                        setMedidas("L");
+                      }}
+                    >
+                      {sizes?.[3]}
+                    </button>
+                  )}
                 </div>
               </Form.Group>
 
@@ -194,7 +225,7 @@ const Articulo = () => {
                 <p>{selected?.desc}</p>
               </div>
 
-              <div className="d-flex align-items-center justify-content-center justify-content-md-start">
+              <div className="d-flex align-items-center justify-content-center">
                 <Button
                   variant="light"
                   className="ml-3 btn btn-outline-secondary btn-sm"

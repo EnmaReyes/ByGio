@@ -15,6 +15,8 @@ import {
 import { API_URL } from "../config";
 import axios from "axios";
 import { Button } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const URL = API_URL;
 
@@ -88,10 +90,10 @@ const Registro = () => {
   return (
     <MDBContainer fluid>
       <MDBCard
-        className="m-5 bgcard"
+        className="m-4 bgcard"
         style={{
           borderRadius: "25px",
-          boxShadow: "0px 3px 2px -2px",
+          boxShadow: "-1px 2px 7px 3px rgba(0, 0, 0, 0.35)",
           color: "#fff",
         }}
       >
@@ -144,6 +146,13 @@ const Registro = () => {
                   onChange={handlechange}
                 />
               </div>
+                <a onClick={togglePasswordVisibility} className="show-hide">
+                {showPassword ? (
+                  <FontAwesomeIcon icon={faEye} />
+                ) : (
+                  <FontAwesomeIcon icon={faEyeSlash} />
+                )}
+              </a>
 
               <div className="d-flex flex-row align-items-center mb-4">
                 <MDBIcon fas icon="key me-3" size="lg" />
