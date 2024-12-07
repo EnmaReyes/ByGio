@@ -129,9 +129,9 @@ const Articulo = () => {
   };
 
   return (
-    <Container className="mb-4" style={{ paddingTop: "90px" }}>
-      <Row>
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center">
+    <Container className="m-auto" style={{ paddingTop: "90px" }}>
+      <Row className="m-0">
+        <Col xs={12} md={6} className="d-flex flex-column align-items-center ">
           {imagens?.length > 0 ? (
             <Swiper
               pagination={true}
@@ -139,7 +139,7 @@ const Articulo = () => {
               className="mySwiper"
             >
               {imagens.map((img, index) => (
-                <SwiperSlide key={index}>
+                <SwiperSlide key={index} className="p-md-2 imgSwiper">
                   <img src={img} alt={`Slide ${index}`} />
                 </SwiperSlide>
               ))}
@@ -162,8 +162,8 @@ const Articulo = () => {
         {/* Columna para los detalles del producto */}
         <Col
           xs={12}
-          md={4}
-          className="d-flex flex-column text-center justify-content-center align-items-center  xs-center"
+          md={5}
+          className="d-flex flex-column justify-content-xs-start text-center align-items-center  p-2"
         >
           <div className="w-100">
             <h1

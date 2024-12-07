@@ -136,4 +136,15 @@ body{
   }
 }
  
+.mySwiper{
+  height: 70%;
   
+  @media (max-width:768px) {
+    padding-top: 1rem;
+    height: 100%;
+  }
+ 
+}
+.imgSwiper{
+  object-fit: contain;
+}
