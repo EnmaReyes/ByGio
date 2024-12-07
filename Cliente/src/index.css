@@ -2,6 +2,10 @@ body{
     margin: 0px;
     padding: 0px;
 }
+.links{
+  text-decoration: none;
+  color: inherit;
+}
 .badge-hover {
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out; /* Transición suave */
   }
@@ -46,12 +50,12 @@ body{
     }
   }
   .carrito-responsive{
-    position: relative;
-    
+   
     @media (max-width: 768px) {
-     position: relative;
-     z-index: 1050;
-     
+      position: relative;
+      right: 5rem;
+      background-color: #eee;
+      
     }
   }
 
@@ -89,3 +93,47 @@ body{
     cursor: pointer;
     color: #343a40;
   }
+
+  .actions-articulo{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    gap:1rem;
+    padding: 1rem;
+    font-size: 1.5rem;
+    @media (max-width:768px) {
+      justify-content: center;
+    }
+    }
+    .edit, .delete{
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    .fonticon{
+      color: #000;
+      transition: all ease-in-out 0.5s;
+    }
+    .fonticon:hover{
+      color: #313131;
+     } 
+   
+  .actions-articulo-span{
+   align-items: center;
+   text-align: center;
+   font-size: 10px; 
+   visibility: hidden;
+   transition: visibility ease-in-out 0.3s ;
+  }
+.edit:hover .actions-articulo-span,
+.delete:hover .actions-articulo-span {
+  visibility: visible;
+
+  @media (max-width:768px) {
+    visibility: hidden;
+  }
+}
+ 
+  

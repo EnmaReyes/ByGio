@@ -63,7 +63,7 @@ const Carrito = ({
 
   return (
     <div className="">
-      <div className="collapse navbar-collapse me-4" id="navbarNavDarkDropdown">
+      <div className="navbar-collapse me-4" id="navbarNavDarkDropdown">
         <ul className="navbar-nav">
           <li className="nav-item dropdown">
             <a

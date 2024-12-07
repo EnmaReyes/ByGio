@@ -32,6 +32,7 @@ export const toastComments = {
 export const notify = (handleClick, texto) => {
   Swal.fire({
     title: texto,
+    autoClose: 700,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Aceptar",

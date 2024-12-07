@@ -1,10 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useOutletContext } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMinus,
+  faPenToSquare,
+  faPlus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
+import { toast } from "react-toastify";
+import {
+  notify,
+  toastComments,
+  toastpromise,
+} from "../Componentes/toastConfig/toastconfigs.jsx";
 // Import Swiper styles
 import "../App.css";
 import "swiper/css";
@@ -13,6 +29,7 @@ import Spinner from "react-bootstrap/Spinner";
 
 import axios from "axios";
 import { API_URL } from "../config";
+import { AuthContext } from "../context/authContext.jsx";
 const URL = API_URL;
 
 const Articulo = () => {
@@ -21,7 +38,8 @@ const Articulo = () => {
   const [selected, setSelected] = useState([]);
   const [conteo, setConteo] = useState(1);
   const [medidas, setMedidas] = useState("S");
-
+  const { currentUser } = useContext(AuthContext);
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -35,6 +53,22 @@ const Articulo = () => {
     };
     fetchData();
   }, [postid]);
+
+  // delete post
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${URL}/api/posts/${postid}`, {
+        withCredentials: true,
+      });
+      toast.success(
+        "Eliminado con Exito",
+        toastComments // estilo del toast
+      );
+      navigate("/");
+    } catch (error) {
+      console.error("Error al eliminar el post:", error);
+    }
+  };
 
   const sizes =
     typeof selected.sizes === "string"
@@ -133,7 +167,6 @@ const Articulo = () => {
         >
           <div className="w-100">
             <h1
-              
               style={{
                 fontSize: "2.8rem",
                 fontFamily: "Lobster, sans-serif",
@@ -269,6 +302,28 @@ const Articulo = () => {
               </div>
             </Form>
           </div>
+          {currentUser?.admin === true && (
+            <div className="actions-articulo">
+              <Link
+                className="links edit"
+                to={`/editor?edit=2`}
+                state={selected}
+              >
+                <FontAwesomeIcon className="fonticon" icon={faPenToSquare} />
+                <span className="actions-articulo-span">editar</span>
+              </Link>
+
+              <div
+                onClick={() =>
+                  notify(handleDelete, "¿Deseas eliminar el Articulo?")
+                }
+                className="delete"
+              >
+                <FontAwesomeIcon className="fonticon" icon={faTrash} />
+                <span className="actions-articulo-span">eliminar</span>
+              </div>
+            </div>
+          )}
         </Col>
       </Row>
     </Container>

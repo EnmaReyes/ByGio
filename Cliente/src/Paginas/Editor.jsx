@@ -21,7 +21,7 @@ const Editor = () => {
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
   const [fileImg, setFileImg] = useState([null, null, null, null]);
-  const [imgUrls, setImgUrls] = useState(state?.img || []);
+  const [imgUrls, setImgUrls] = useState(state?.img || ["", "", "", ""]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [sizes, setSizes] = useState(state?.sizes || ["S", "M", "L"]);
@@ -57,9 +57,9 @@ const Editor = () => {
     const file = e.target.files[0];
     if (file) {
       const localPreview = window.URL.createObjectURL(file);
-      const newFileImg = [...fileImg];
+      const newFileImg = [...imgUrls];
       newFileImg[index] = localPreview;
-      setFileImg(newFileImg);
+      setImgUrls(newFileImg);
       setSelectedImageIndex(index);
     }
   };
@@ -80,7 +80,7 @@ const Editor = () => {
 
       // Subir imágenes a Cloudinary
       const uploadedUrls = await Promise.all(
-        fileImg.map(async (file, index) => {
+        imgUrls.map(async (file, index) => {
           if (file) {
             // Convertir URL local a archivo para Cloudinary
             const blob = await fetch(file).then((res) => res.blob());
@@ -144,9 +144,9 @@ const Editor = () => {
         >
           {/* Imagen principal */}
           <div className="main-image mb-3">
-            {fileImg[selectedImageIndex] ? (
+            {imgUrls[selectedImageIndex] ? (
               <img
-                src={fileImg[selectedImageIndex]}
+                src={imgUrls[selectedImageIndex]}
                 alt="Imagen seleccionada"
                 style={{ width: "100%", maxWidth: "400px" }}
               />
@@ -155,7 +155,7 @@ const Editor = () => {
                 style={{ width: "100%", height: "auto", fontSize: "20px" }}
                 className="d-flex flex-column align-items-center gap-2 p-md-5"
               >
-                <FontAwesomeIcon icon={faImage} className="fs-1"/>
+                <FontAwesomeIcon icon={faImage} className="fs-1" />
                 <p>Sube tus imágenes</p>
               </div>
             )}
@@ -174,10 +174,10 @@ const Editor = () => {
                     style={{ display: "none" }}
                     onChange={(e) => handleImageChange(e, index)}
                   />
-                  {fileImg[index] ? (
+                  {imgUrls[index] ? (
                     <img
                       className="add-img"
-                      src={fileImg[index]}
+                      src={imgUrls[index]}
                       alt={`Imagen ${index + 1}`}
                       style={{
                         width: "60px",
@@ -192,7 +192,7 @@ const Editor = () => {
                   )}
                 </label>
 
-                {fileImg[index] && (
+                {imgUrls[index] && (
                   <span
                     className="fs-5"
                     style={{ cursor: "pointer" }}
@@ -209,11 +209,7 @@ const Editor = () => {
         </Col>
 
         {/* Información del producto */}
-        <Col
-          xs={12}
-          md={6}
-          className="p-md-5"
-        >
+        <Col xs={12} md={6} className="p-md-5">
           <Form className=" align-items-center justify-content-center">
             <Form.Group className="mb-3" controlId="formTitle">
               <Form.Label className="fontFamilyTitle">Titulo</Form.Label>
@@ -282,7 +278,7 @@ const Editor = () => {
                       value={size}
                       onChange={(e) => {
                         const newSizes = [...sizes];
-                        newSizes[index] = e.target.value;
+                        newSizes[index] = e.target.value.toUpperCase();
                         setSizes(newSizes);
                       }}
                       placeholder={size}

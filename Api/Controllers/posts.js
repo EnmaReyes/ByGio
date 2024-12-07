@@ -81,8 +81,8 @@ const deleteArticle = async (req, res) => {
     }
 
     await Article.destroy();
-
     return res.json("Post eliminado con éxito!");
+    
   } catch (error) {
     if (err.name === "JsonWebTokenError") {
       return res.status(403).json("Token no válido");
@@ -94,7 +94,7 @@ const deleteArticle = async (req, res) => {
 const updateArticle = async (req, res) => {
   try {
     const token = req.cookies.access_token;
-
+  
     if (!token) {
       return res
         .status(401)
@@ -117,7 +117,7 @@ const updateArticle = async (req, res) => {
 
     const [rowsUpdated] = await Articulos.update(updatedArticle, {
       where: {
-        id: postId,
+        id: articletId,
         uid: userInfo.id,
       },
     });
@@ -125,7 +125,7 @@ const updateArticle = async (req, res) => {
     if (rowsUpdated === 0) {
       return res.status(404).json("No se encontró el post para actualizar");
     }
-
+    
     res.json("Post actualizado con éxito!");
   } catch (error) {
     res.status(500).json("Error interno del servidor");
@@ -135,13 +135,11 @@ const updateArticle = async (req, res) => {
 const getArticleByID = async (req, res) => {
   try {
     const articleId = req.params.id;
-    console.log("entré al try  " + articleId);
     const article = await Articulos.findByPk(articleId);
 
     if (!article) {
       return res.status(404).json("No Hay Articulos por ID");
     }
-    console.log(article);
     res.status(200).json(article);
   } catch (error) {
     console.error(err);
