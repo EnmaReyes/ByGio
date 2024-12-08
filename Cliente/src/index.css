@@ -111,6 +111,8 @@ body{
     color: #343a40;
   }
 
+  /* articulos details */
+
   .actions-articulo{
     width: 100%;
     display: flex;
@@ -154,7 +156,7 @@ body{
 }
  
 .mySwiper{
-  height: 70%;
+  height: 90%;
   
   @media (max-width:768px) {
     padding-top: 1rem;

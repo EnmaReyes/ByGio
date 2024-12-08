@@ -129,9 +129,9 @@ const Articulo = () => {
   };
 
   return (
-    <Container className="m-auto" style={{ paddingTop: "90px" }}>
+    <Container className="" style={{ paddingTop: "90px" }}>
       <Row className="m-0">
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center justify-content-center ">
+        <Col xs={12} md={5} className="d-flex flex-column align-items-center ">
           {imagens?.length > 0 ? (
             <Swiper
               pagination={true}
@@ -146,7 +146,7 @@ const Articulo = () => {
             </Swiper>
           ) : (
             <div
-              className="d-flex flex-column justify-content-center  align-items-center"
+              className="d-flex flex-column justify-content-center align-items-center"
               style={{ width: "100%", height: "100%", padding: "1rem" }}
             >
               <div
