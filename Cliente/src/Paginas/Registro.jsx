@@ -175,7 +175,7 @@ const Registro = () => {
               >
                 Registrar
               </Button>
-              {error && <span>{error}</span>}
+              {error && <span className="error" >{error}</span>}
               <h5 className="d-flex align-items-center responsive">
                 ¿Posees cuenta?
                 <Link to={"/login"}>
@@ -193,7 +193,7 @@ const Registro = () => {
               className="order-1 order-lg-2 d-flex justify-content-center align-items-center"
             >
               <MDBCardImage
-                className="imgstyle w-100 h-100"
+                className="imgstyle"
                 src="https://i.pinimg.com/736x/b6/6e/d0/b66ed0a538c06d6ef2189487e22aaa2d.jpg"
                 fluid
               />

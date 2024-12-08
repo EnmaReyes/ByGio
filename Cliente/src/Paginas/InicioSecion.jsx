@@ -109,7 +109,7 @@ const InicioSecion = () => {
               >
                 Entrar
               </Button>
-              {error && <span>{error}</span>}
+              {error && <span className="error" >{error}</span>}
               <h5 className="d-flex align-items-center ">
                 ¿No Posees cuenta?
                 <Link to={"/register"}>
@@ -123,7 +123,7 @@ const InicioSecion = () => {
             <MDBCol
               md="10"
               lg="6"
-              className="order-1 order-lg-2 d-flex align-items-center"
+              className="order-1 order-lg-2 d-flex align-items-center justify-content-center"
             >
               <MDBCardImage
                 className="imgstyle"

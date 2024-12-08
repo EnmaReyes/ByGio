@@ -131,7 +131,7 @@ const Articulo = () => {
   return (
     <Container className="m-auto" style={{ paddingTop: "90px" }}>
       <Row className="m-0">
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center ">
+        <Col xs={12} md={6} className="d-flex flex-column align-items-center justify-content-center ">
           {imagens?.length > 0 ? (
             <Swiper
               pagination={true}
@@ -140,7 +140,7 @@ const Articulo = () => {
             >
               {imagens.map((img, index) => (
                 <SwiperSlide key={index} className="p-md-2 imgSwiper">
-                  <img src={img} alt={`Slide ${index}`} />
+                  <img src={img} alt={`Slide ${index}`} className="" />
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -181,80 +181,100 @@ const Articulo = () => {
             <Form>
               <Form.Group controlId="sizeSelect" className="mb-3">
                 <h3>Medidas</h3>
-                <div
-                  className="btn-group"
-                  role="group"
-                  aria-label="Basic example"
-                >
-                  <button
-                    type="button"
-                    className={`btn ${
-                      medidas === "S" ? "btn-secondary fw-bolder " : "btn-light"
-                    }`}
-                    style={{
-                      transform: medidas === "S" ? "scale(0.9)" : "scale(1)",
-                      transition: "transform 0.2s ease-in-out",
-                    }}
-                    onClick={() => {
-                      setMedidas("S");
-                    }}
+                {selected.oversize ? (
+                  <div>
+                    <h2
+                      style={{
+                        fontSize: "2rem",
+                        fontFamily: "Lobster, sans-serif",
+                      }}
+                    >
+                      Over Sizes
+                    </h2>
+                  </div>
+                ) : (
+                  <div
+                    className="btn-group"
+                    role="group"
+                    aria-label="Basic example"
                   >
-                    {sizes?.[0]}
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ${
-                      medidas === "M" ? "btn-secondary fw-bolder " : "btn-light"
-                    }`}
-                    style={{
-                      transform: medidas === "M" ? "scale(0.9)" : "scale(1)",
-                      transition: "transform 0.2s ease-in-out",
-                    }}
-                    onClick={() => {
-                      setMedidas("M");
-                    }}
-                  >
-                    {sizes?.[1]}
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ${
-                      medidas === "L" ? "btn-secondary fw-bolder " : "btn-light"
-                    }`}
-                    style={{
-                      transform: medidas === "L" ? "scale(0.9)" : "scale(1)",
-                      transition: "transform 0.2s ease-in-out",
-                    }}
-                    onClick={() => {
-                      setMedidas("L");
-                    }}
-                  >
-                    {sizes?.[2]}
-                  </button>
-
-                  {sizes?.[3] && (
                     <button
                       type="button"
                       className={`btn ${
-                        medidas === "XL"
+                        medidas === "S"
                           ? "btn-secondary fw-bolder "
                           : "btn-light"
                       }`}
                       style={{
-                        transform: medidas === "XL" ? "scale(0.9)" : "scale(1)",
+                        transform: medidas === "S" ? "scale(0.9)" : "scale(1)",
+                        transition: "transform 0.2s ease-in-out",
+                      }}
+                      onClick={() => {
+                        setMedidas("S");
+                      }}
+                    >
+                      {sizes?.[0]}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${
+                        medidas === "M"
+                          ? "btn-secondary fw-bolder "
+                          : "btn-light"
+                      }`}
+                      style={{
+                        transform: medidas === "M" ? "scale(0.9)" : "scale(1)",
+                        transition: "transform 0.2s ease-in-out",
+                      }}
+                      onClick={() => {
+                        setMedidas("M");
+                      }}
+                    >
+                      {sizes?.[1]}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${
+                        medidas === "L"
+                          ? "btn-secondary fw-bolder "
+                          : "btn-light"
+                      }`}
+                      style={{
+                        transform: medidas === "L" ? "scale(0.9)" : "scale(1)",
                         transition: "transform 0.2s ease-in-out",
                       }}
                       onClick={() => {
                         setMedidas("L");
                       }}
                     >
-                      {sizes?.[3]}
+                      {sizes?.[2]}
                     </button>
-                  )}
-                </div>
+
+                    {sizes?.[3] && (
+                      <button
+                        type="button"
+                        className={`btn ${
+                          medidas === "XL"
+                            ? "btn-secondary fw-bolder "
+                            : "btn-light"
+                        }`}
+                        style={{
+                          transform:
+                            medidas === "XL" ? "scale(0.9)" : "scale(1)",
+                          transition: "transform 0.2s ease-in-out",
+                        }}
+                        onClick={() => {
+                          setMedidas("L");
+                        }}
+                      >
+                        {sizes?.[3]}
+                      </button>
+                    )}
+                  </div>
+                )}
               </Form.Group>
 
-              <div>
+              <div style={{ fontFamily: "sans-serif" }}>
                 <p>{selected?.desc}</p>
               </div>
 
@@ -276,12 +296,18 @@ const Articulo = () => {
                 </Button>
               </div>
 
-              <div className="d-flex flex-column justify-content-center justify-content-md-start">
+              <div
+                className="d-flex flex-column justify-content-center justify-content-md-start"
+                style={{ fontFamily: "sans-serif" }}
+              >
                 <p className="m-0">Total</p>
                 <h3>{(conteo * selected?.cost).toLocaleString()}</h3>
               </div>
 
-              <div className="d-grid gap-2">
+              <div
+                className="d-grid gap-2"
+                style={{ fontFamily: "sans-serif" }}
+              >
                 <Button
                   type="button"
                   className="btn btn-dark btn-lg rounded-pill"
