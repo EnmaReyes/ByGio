@@ -6,6 +6,8 @@ body{
   text-decoration: none;
   color: inherit;
 }
+
+/* registro y login */
 .badge-hover {
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out; /* Transición suave */
   }
@@ -15,7 +17,6 @@ body{
     
   }
 
-  /* registro y login */
   .bgcard{
     background-image: url("./assets/Background/fondomobile.jpg");
     background-repeat: no-repeat;
@@ -51,6 +52,8 @@ body{
     border-radius: 5px;
   }
 
+
+/* navbar */
 .li-navbar-hover {
     transition: all 0.3s ease-in-out; /* Transición suave */
   }
@@ -168,4 +171,15 @@ body{
   object-fit: contain;
 }
 
-/* componente de inicio */
+/* componente articulo del inicio */
+
+.agotado-site{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: #343a40;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 1.2rem;
+  color: #eee;
+}

@@ -20,10 +20,8 @@ const Editor = () => {
 
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
-  const [fileImg, setFileImg] = useState([null, null, null, null]);
   const [imgUrls, setImgUrls] = useState(state?.img || ["", "", "", ""]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
   const [sizes, setSizes] = useState(state?.sizes || ["S", "M", "L"]);
   const [overSize, setOverSize] = useState(state?.overSize || false);
   const [stock, setStock] = useState(state?.stock || true);

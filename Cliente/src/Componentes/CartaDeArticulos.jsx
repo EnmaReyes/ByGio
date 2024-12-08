@@ -36,13 +36,12 @@ const CartaDeArticulos = () => {
     fetchData();
   }, [location]);
 
-  console.log(articulo);
-
   const generateWhatsAppLink = (art) => {
+    const tallaSlected = art.oversize ? "Over size" : "S/M/L";
     const message = `¡Hola!😁 Estoy interesado en:
      ${art.title}
      Valor: $${art.cost.toLocaleString()} por unidad
-     ¿Está disponible en talla S / M / L?`;
+     ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
       message
@@ -82,6 +81,8 @@ const CartaDeArticulos = () => {
                   )}
                 </div>
               </Link>
+              {!art.stock && <div className="agotado-site">AGOTADO</div>}
+
               <Card.Body className="m-0 p-2 ">
                 <Card.Title
                   className="text-center m-0"
@@ -106,7 +107,7 @@ const CartaDeArticulos = () => {
                   <Button
                     variant="dark"
                     className="text-warning"
-                    href={generateWhatsAppLink(art)}
+                    href={!art.stock ? generateWhatsAppLink(art) : null}
                     target="_blank"
                   >
                     Comprar

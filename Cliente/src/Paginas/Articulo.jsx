@@ -46,7 +46,6 @@ const Articulo = () => {
         const res = await axios.get(`${URL}/api/posts/${postid}`);
         setSelected(res.data);
         window.scrollTo(0, 0);
-        console.log(selected);
       } catch (error) {
         console.error("Error al obtener el post:", error);
       }
@@ -116,10 +115,10 @@ const Articulo = () => {
     if (!selected?.title || !selected?.cost || !imagens?.[0]) {
       return "#";
     }
-
+    const tallaSelected = selected.oversize ? "Over Size" : medidas;
     const message = `¡Hola!😁 Estoy interesado en:
       ${conteo} ${selected.title}
-      Talla: ${medidas}
+      Talla: ${tallaSelected}
       Valor: $${selected.cost.toLocaleString()} por unidad`;
     const imageLink = imagens?.[0];
     const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
