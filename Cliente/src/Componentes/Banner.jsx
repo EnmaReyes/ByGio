@@ -62,13 +62,15 @@ const Banner = () => {
               banner.img.map((bann, index) => (
                 <div
                   key={index}
-                  className={`carousel-item previewBanner ${index === 0 ? "active" : ""}`}
+                  className={`carousel-item previewBanner ${
+                    index === 0 ? "active" : ""
+                  }`}
                 >
                   <img
                     src={bann}
                     className="d-block w-100"
                     alt={`Banner ${index + 1}`}
-                    style={{ objectFit: "cover", height: "100%" }}
+                    style={{ objectFit: "inherit", height: "100%" }}
                   />
                 </div>
               ))

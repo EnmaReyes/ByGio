@@ -20,7 +20,7 @@ const EditBanner = ({ banner }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const preset_name = "bygiostore";
+  const preset_name = "bygioBanners";
   const cloud_name = "ds1xggjvm";
 
   const uploadImageToCloudinary = async (image) => {
@@ -113,6 +113,7 @@ const EditBanner = ({ banner }) => {
       console.error("Error al realizar la solicitud:", err);
     } finally {
       setLoading(false);
+      window.location.reload(); // Recarga la página
     }
   };
   return (
@@ -186,23 +187,21 @@ const EditBanner = ({ banner }) => {
           <button
             type="button"
             class="btn btn-dark btn-lg fs-4 d-flex align-items-center justify-content-center"
-            style={{ width: "6rem", height: "3rem", marginLeft: "2rem" }}
+            style={{ width: "6rem", height: "3rem",}}
             onClick={(e) => handleClick(e)}
           >
             {loading ? (
-              <>
-                <Spinner
-                  className="mx-2 "
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                />
-                Loading
-              </>
-            ) : (
-              <FontAwesomeIcon icon={faUpload} />
+              <Spinner
+              
+              className="p-2"
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />
+            ) : (  
+              <FontAwesomeIcon icon={faUpload} />        
             )}
           </button>
         </div>
