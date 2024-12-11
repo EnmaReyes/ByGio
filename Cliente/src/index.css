@@ -79,6 +79,34 @@ body{
     }
   }
 
+  /* Banner */
+  .upload-img{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 5%;
+    position: relative;
+    border-radius: 1px solid #ffff;
+    border-radius: 0px 0px 17px 17px;
+    background-color: #000;
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.7);
+    padding: 1rem;
+    font-size: 1.5rem;
+    color: #ffff;
+    cursor: pointer;
+    transition: all ease-in-out 0.3s;
+  }
+  .upload-img:hover{
+    color: #000;
+    background-color: #fff;
+  }
+
+  .previewBanner{
+    width: 100%;
+    height: 550px;
+    object-fit:inherit;
+  }
+  
   .add-img{
     box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.7);
   }

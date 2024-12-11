@@ -29,7 +29,7 @@ const InicioSecion = () => {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const {login} = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const handlechange = (e) => {
     setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -42,11 +42,7 @@ const InicioSecion = () => {
   const handlesubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log("entraré al context");
-      
       await login(inputs);
-      console.log("pasé por el context");
-      
       navigate("/");
     } catch (err) {
       setError(err.response.data);
@@ -109,7 +105,7 @@ const InicioSecion = () => {
               >
                 Entrar
               </Button>
-              {error && <span className="error" >{error}</span>}
+              {error && <span className="error">{error}</span>}
               <h5 className="d-flex align-items-center ">
                 ¿No Posees cuenta?
                 <Link to={"/register"}>

@@ -82,7 +82,6 @@ const deleteArticle = async (req, res) => {
 
     await Article.destroy();
     return res.json("Post eliminado con éxito!");
-    
   } catch (error) {
     if (err.name === "JsonWebTokenError") {
       return res.status(403).json("Token no válido");
@@ -94,7 +93,7 @@ const deleteArticle = async (req, res) => {
 const updateArticle = async (req, res) => {
   try {
     const token = req.cookies.access_token;
-  
+
     if (!token) {
       return res
         .status(401)
@@ -125,7 +124,7 @@ const updateArticle = async (req, res) => {
     if (rowsUpdated === 0) {
       return res.status(404).json("No se encontró el post para actualizar");
     }
-    
+
     res.json("Post actualizado con éxito!");
   } catch (error) {
     res.status(500).json("Error interno del servidor");

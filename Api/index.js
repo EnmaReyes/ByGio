@@ -2,6 +2,8 @@ const express = require("express");
 const postRoutes = require("./Rutas/posts.js");
 const authRoutes = require("./Rutas/auth.js");
 const userRoutes = require("./Rutas/user.js");
+const bannerRoutes = require("./Rutas/banner.js");
+
 const { sequelize } = require("./DataBase/db.js");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -23,9 +25,11 @@ app.use(cookieParser());
 app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/banner", bannerRoutes);
+
 async function main() {
   try {
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     app.listen(port, () => {
       console.log(`Conected!! app listening on port ${port}`);
     });
