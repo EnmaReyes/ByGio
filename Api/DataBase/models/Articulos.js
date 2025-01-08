@@ -26,7 +26,7 @@ const Articulos = sequelize.define(
     },
     sizes: {
       type: DataTypes.JSON,
-      defaultValue: ["S", "M", "L"],
+      defaultValue: [],
     },
     oversize: {
       type: DataTypes.BOOLEAN,

@@ -95,9 +95,19 @@ const CartaDeArticulos = () => {
                     <span>Oversize</span>
                   </Card.Text>
                 ) : (
-                  <Card.Text className="text-center m-0">
-                    {`${art?.sizes[0]}/${art?.sizes[1]}/${art?.sizes[2]}`}
-                    {art?.sizes[3] && `/${art?.sizes[3]}`}
+                  <Card.Text className="tallas-box">
+                    {!art?.sizes[0] == "" && (
+                      <p className="tallas">{art?.sizes[0]+"/"}</p>
+                    )}
+                    {!art?.sizes[1] == "" && (
+                      <p className="tallas"> {art?.sizes[1]}</p>
+                    )}
+                    {!art?.sizes[2] == "" && (
+                      <p className="tallas"> {"/"+ art?.sizes[2]}</p>
+                    )}
+                    {!art?.sizes[3] == "" && (
+                      <p className="tallas"> {"/"+ art?.sizes[3]}</p>
+                    )}
                   </Card.Text>
                 )}
                 <div className="text-center">

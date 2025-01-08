@@ -151,6 +151,7 @@ body{
     color: #343a40;
   }
 
+
   /* articulos details */
 
   .actions-articulo{
@@ -219,4 +220,21 @@ body{
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: 1.2rem;
   color: #eee;
+}
+.tallas-box{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  text-align: center;
+  box-shadow: inset 1px 0px 11px -5px rgba(0, 0, 0, 0.87);
+  border-radius: 10px;
+  gap: 1.5px;
+  margin: 0px;
+  padding: 2px;
+}
+.tallas{
+  font-size: small;
+  font-weight: bold;
+  margin: 0px;
+  padding: 0px;
 }
