@@ -217,7 +217,7 @@ body{
   justify-content: space-between;
   border: none;
   @media (max-width:768px) {
-    height: 400px;
+    height: 300px;
     padding: auto;
   }
 }
@@ -228,6 +228,7 @@ body{
   flex-direction: column;
   justify-content: space-between;
   @media (max-width:768px) {
+    height: auto;
     padding: auto;
   }
 }
