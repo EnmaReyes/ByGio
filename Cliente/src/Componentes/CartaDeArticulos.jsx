@@ -80,11 +80,9 @@ const CartaDeArticulos = () => {
               </Link>
               {!art.stock && <div className="agotado-site">AGOTADO</div>}
 
-              <Card.Body className="m-0 p-2 text-center d-flex flex-column justify-content-between">
+              <Card.Body className="m-0 p-2 text-center d-flex flex-column justify-content-between card-body">
                 <Card.Title
-                  className="text-center m-0"
-                  style={{ fontFamily: "Lobster, sans-serif" }}
-                >
+                  className="text-center m-0 card-title">
                   {art?.title}
                 </Card.Title>
                 {art.oversize ? (
@@ -92,7 +90,7 @@ const CartaDeArticulos = () => {
                     <span>Oversize</span>
                   </Card.Text>
                 ) : (
-                  <Card.Text className="tallas-box">
+                  <Card.Text className=" m-0 tallas-box">
                     {!art?.sizes[0] == "" && (
                       <p className="tallas">{art?.sizes[0] + "/"}</p>
                     )}

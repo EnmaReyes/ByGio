@@ -217,21 +217,12 @@ body{
   justify-content: space-between;
   border: none;
   @media (max-width:768px) {
-    height: 300px;
+    height: 24rem;
     padding: auto;
   }
 }
 
-.fixed-size-card .card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  @media (max-width:768px) {
-    height: auto;
-    padding: auto;
-  }
-}
+
 .agotado-site{
   display: flex;
   justify-content: center;
@@ -243,7 +234,16 @@ body{
   color: #eee;
 }
 
-
+.fixed-size-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+}
+.card-title{
+  font-family: Lobster, sans-serif;
+}
 .tallas-box{
   display: flex;
   flex-direction: row;
@@ -252,9 +252,7 @@ body{
   gap: 1.5px;
   margin: 0px;
   padding: 0px;
-  @media (max-width:768px) {
-    width: auto;
-  }
+  
 }
 .tallas{
   font-size: small;
