@@ -211,6 +211,26 @@ body{
 
 /* componente articulo del inicio */
 
+.fixed-size-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: none;
+  @media (max-width:768px) {
+    height: 400px;
+    padding: auto;
+  }
+}
+
+.fixed-size-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  @media (max-width:768px) {
+    padding: auto;
+  }
+}
 .agotado-site{
   display: flex;
   justify-content: center;
@@ -221,16 +241,19 @@ body{
   font-size: 1.2rem;
   color: #eee;
 }
+
+
 .tallas-box{
   display: flex;
   flex-direction: row;
   justify-content: center;
   text-align: center;
-  box-shadow: inset 1px 0px 11px -5px rgba(0, 0, 0, 0.87);
-  border-radius: 10px;
   gap: 1.5px;
   margin: 0px;
-  padding: 2px;
+  padding: 0px;
+  @media (max-width:768px) {
+    width: auto;
+  }
 }
 .tallas{
   font-size: small;

@@ -53,27 +53,24 @@ const CartaDeArticulos = () => {
     <Container className="">
       <Row>
         {articulo.map((art) => (
-          <Col key={art?.id} xs={6} sm={6} md={4} className="mb-2">
-            <Card
-              className="mt-4 align-items-center "
-              style={{ width: "100%", border: "none" }}
-            >
+          <Col key={art?.id} xs={6} sm={6} md={3} className="mb-2">
+            <Card className="mt-4 align-items-center fixed-size-card">
               <Link to={`/${art.id}`}>
-                <div style={{ height: "100%", overflow: "hidden" }}>
+                <div>
                   {art.img ? (
                     <Card.Img
                       src={art?.img[0]}
                       className="img-fluid"
                       variant="top"
                       style={{
-                        height: "60%",
+                        height: "auto",
                         width: "100%",
                         objectFit: "cover",
                       }}
                     />
                   ) : (
                     <div
-                      className="d-flex flex-column justify-content-center  align-items-center"
+                      className="d-flex flex-column justify-content-center align-items-center"
                       style={{ width: "100%", height: "100%" }}
                     >
                       <Spinner animation="border" variant="dark" />
@@ -83,7 +80,7 @@ const CartaDeArticulos = () => {
               </Link>
               {!art.stock && <div className="agotado-site">AGOTADO</div>}
 
-              <Card.Body className="m-0 p-2 ">
+              <Card.Body className="m-0 p-2 text-center d-flex flex-column justify-content-between">
                 <Card.Title
                   className="text-center m-0"
                   style={{ fontFamily: "Lobster, sans-serif" }}
@@ -97,20 +94,20 @@ const CartaDeArticulos = () => {
                 ) : (
                   <Card.Text className="tallas-box">
                     {!art?.sizes[0] == "" && (
-                      <p className="tallas">{art?.sizes[0]+"/"}</p>
+                      <p className="tallas">{art?.sizes[0] + "/"}</p>
                     )}
                     {!art?.sizes[1] == "" && (
                       <p className="tallas"> {art?.sizes[1]}</p>
                     )}
                     {!art?.sizes[2] == "" && (
-                      <p className="tallas"> {"/"+ art?.sizes[2]}</p>
+                      <p className="tallas"> {"/" + art?.sizes[2]}</p>
                     )}
                     {!art?.sizes[3] == "" && (
-                      <p className="tallas"> {"/"+ art?.sizes[3]}</p>
+                      <p className="tallas"> {"/" + art?.sizes[3]}</p>
                     )}
                   </Card.Text>
                 )}
-                <div className="text-center">
+                <div>
                   <Card.Text className="fw-bold m-0">
                     {`$${art?.cost.toLocaleString()}`}
                   </Card.Text>
