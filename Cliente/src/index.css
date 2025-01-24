@@ -214,11 +214,11 @@ body{
 .fixed-size-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   border: none;
   @media (max-width:768px) {
     height: 24rem;
-    padding: auto;
+    padding: 0px;
   }
 }
 
@@ -238,8 +238,14 @@ body{
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 5px; 
+ 
+  @media (max-width: 768px) {
+    gap: 3px; 
+  }
 }
 .card-title{
   font-family: Lobster, sans-serif;
@@ -252,7 +258,7 @@ body{
   gap: 1.5px;
   margin: 0px;
   padding: 0px;
-  
+  height: auto;
 }
 .tallas{
   font-size: small;

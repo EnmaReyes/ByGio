@@ -62,9 +62,9 @@ const CartaDeArticulos = () => {
                       src={art?.img[0]}
                       className="img-fluid"
                       variant="top"
-                      style={{
-                        height: "auto",
+                      style={{ 
                         width: "100%",
+                        height:"100%",
                         objectFit: "cover",
                       }}
                     />
@@ -80,7 +80,7 @@ const CartaDeArticulos = () => {
               </Link>
               {!art.stock && <div className="agotado-site">AGOTADO</div>}
 
-              <Card.Body className="m-0 p-2 text-center d-flex flex-column justify-content-between card-body">
+              <Card.Body className="m-0 p-2 card-body">
                 <Card.Title
                   className="text-center m-0 card-title">
                   {art?.title}
