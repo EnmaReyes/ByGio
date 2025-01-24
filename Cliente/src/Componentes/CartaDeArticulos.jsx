@@ -50,11 +50,11 @@ const CartaDeArticulos = () => {
   };
 
   return (
-    <Container className="">
+    <Container className="container-card">
       <Row>
         {articulo.map((art) => (
           <Col key={art?.id} xs={6} sm={6} md={3} className="mb-2">
-            <Card className="mt-4 align-items-center fixed-size-card">
+            <Card className="mt-4 mb-4 align-items-center fixed-size-card">
               <Link to={`/${art.id}`}>
                 <div>
                   {art.img ? (
