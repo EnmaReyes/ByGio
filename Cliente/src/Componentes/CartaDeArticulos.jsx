@@ -62,9 +62,9 @@ const CartaDeArticulos = () => {
                       src={art?.img[0]}
                       className="img-fluid"
                       variant="top"
-                      style={{ 
+                      style={{
                         width: "100%",
-                        height:"100%",
+                        height: "100%",
                         objectFit: "cover",
                       }}
                     />
@@ -81,8 +81,7 @@ const CartaDeArticulos = () => {
               {!art.stock && <div className="agotado-site">AGOTADO</div>}
 
               <Card.Body className="m-0 p-2 card-body">
-                <Card.Title
-                  className="text-center m-0 card-title">
+                <Card.Title className="text-center m-0 card-title">
                   {art?.title}
                 </Card.Title>
                 {art.oversize ? (
@@ -112,7 +111,7 @@ const CartaDeArticulos = () => {
                   <Button
                     variant="dark"
                     className="text-warning"
-                    href={!art.stock ? generateWhatsAppLink(art) : null}
+                    href={art.stock ? generateWhatsAppLink(art) : null}
                     target="_blank"
                   >
                     Comprar
