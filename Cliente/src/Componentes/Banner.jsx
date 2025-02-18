@@ -13,6 +13,7 @@ const Banner = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useContext(AuthContext);
   const [editorVisible, setEditorVisible] = useState(false);
+  
 
   useEffect(() => {
     const fetchData = async () => {

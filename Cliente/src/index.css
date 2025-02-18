@@ -270,3 +270,42 @@ body{
   margin: 0px;
   padding: 0px;
 }
+
+/*articulos detallados*/
+.deleteimg{
+  width: 1rem;
+  height: 60px;
+  margin-right:5px;
+  margin-bottom:8px;
+  font-size: 15px;
+  font-family: monospace;
+  border-radius: 0px 6px 6px 0px;
+  background-color: #000;
+  cursor: pointer;
+  color: #fff;
+  transition: 0.5s ease-in-out;
+}
+.delete:hover{
+  color: #000;
+  background-color: rgb(202, 202, 199);
+  font-weight: 900;
+}
+.deletesizes{
+  width: 17px;
+  height: 17px;
+  font-size: 14px;
+  font-family: monospace;
+  border-radius: 50%;
+  background: #000;
+  cursor: pointer;
+  position: relative;
+  top: -0.9rem;
+  left: -1.3rem;
+  color: #fff;
+  transition: 0.5s ease-in-out;
+}
+.deletesizes:hover{
+  color: #000;
+  background-color: rgb(202, 202, 199);
+  font-weight: 900;
+}

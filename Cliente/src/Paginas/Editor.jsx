@@ -73,9 +73,14 @@ const Editor = () => {
       setSelectedImageIndex(index);
     }
   };
+
   const addSizeField = () => setSizes([...sizes, ""]);
+
   const deleteSizeField = (index) =>
     setSizes(sizes.filter((_, i) => i !== index));
+
+  const deleteImgArticule = (index) =>
+    setImgUrls(imgUrls.filter((_, i) => i !== index));
 
   const handleClick = async (e) => {
     setLoading(true);
@@ -176,7 +181,7 @@ const Editor = () => {
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
-                className="d-flex align-items-center justifyContent-center gap-2"
+                className="d-flex align-items-center justifyContent-center"
               >
                 <label className="mb-2" style={{ cursor: "pointer" }}>
                   <input
@@ -202,6 +207,14 @@ const Editor = () => {
                   )}
                 </label>
 
+                {imgUrls[index] && (
+                  <div
+                    className=" d-flex text-center align-items-center justify-content-center deleteimg"
+                    onClick={() => deleteImgArticule(index)}
+                  >
+                    x
+                  </div>
+                )}
                 {imgUrls[index] && (
                   <span
                     className="fs-5"
@@ -294,20 +307,8 @@ const Editor = () => {
                       placeholder={size}
                     />
                     <div
-                      className=" d-flex text-center align-items-center justify-content-center"
-                      style={{
-                        width: "17px",
-                        height: "17px",
-                        fontSize: "14px",
-                        fontFamily: "monospace",
-                        borderRadius: "50%",
-                        background: "#000",
-                        cursor: "pointer",
-                        position: "relative",
-                        top: "-0.9rem",
-                        left: "-1.3rem",
-                        color: "#fff",
-                      }}
+                      className=" d-flex text-center align-items-center justify-content-center deletesizes"
+                      
                       onClick={() => deleteSizeField(index)}
                     >
                       x

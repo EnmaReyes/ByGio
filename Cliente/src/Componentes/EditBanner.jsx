@@ -54,6 +54,9 @@ const EditBanner = ({ banner }) => {
     }
   };
 
+  const deleteImgBanner = (index) =>
+    setBannerImg(banerImg.filter((_, i) => i !== index));
+
   const handleClick = async (e) => {
     setLoading(true);
     e.preventDefault();
@@ -147,6 +150,26 @@ const EditBanner = ({ banner }) => {
               key={index}
               className="d-flex flex-column align-items-center justify-content-center m-2"
             >
+              {banerImg[index] && <div
+                className=" d-flex text-center align-items-center justify-content-center"
+                style={{
+                  width: "1.3rem",
+                  height: "1.3rem",
+                  fontSize: "14px",
+                  fontFamily: "monospace",
+                  borderRadius: "50%",
+                  background: "#000",
+                  cursor: "pointer",
+                  position: "relative",
+                  top: "0.95rem",
+                  left: "1.8rem",
+                  color: "#fff",
+                  
+                }}
+                onClick={() => deleteImgBanner(index)}
+              >
+                x
+              </div>}
               <label className="mb-2" style={{ cursor: "pointer" }}>
                 <input
                   type="file"
@@ -154,16 +177,18 @@ const EditBanner = ({ banner }) => {
                   onChange={(e) => handleImageChange(e, index)}
                 />
                 {banerImg[index] ? (
-                  <img
-                    className="add-img"
-                    src={banerImg[index]}
-                    alt={`Imagen ${index + 1}`}
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      objectFit: "cover",
-                    }}
-                  />
+                  <div>
+                    <img
+                      className="add-img"
+                      src={banerImg[index]}
+                      alt={`Imagen ${index + 1}`}
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="add-hover">
                     <FontAwesomeIcon icon={faPlus} />
@@ -187,21 +212,20 @@ const EditBanner = ({ banner }) => {
           <button
             type="button"
             class="btn btn-dark btn-lg fs-4 d-flex align-items-center justify-content-center"
-            style={{ width: "6rem", height: "3rem",}}
+            style={{ width: "6rem", height: "3rem", marginLeft:"1rem", marginBottom:"1rem" }}
             onClick={(e) => handleClick(e)}
           >
             {loading ? (
               <Spinner
-              
-              className="p-2"
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-            />
-            ) : (  
-              <FontAwesomeIcon icon={faUpload} />        
+                className="p-2"
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              <FontAwesomeIcon icon={faUpload} />
             )}
           </button>
         </div>
