@@ -20,9 +20,17 @@ const Editor = () => {
 
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
-  const [imgUrls, setImgUrls] = useState(state?.img || ["", "", "", ""]);
+  const [imgUrls, setImgUrls] = useState(
+    typeof state?.img === "string"
+      ? JSON.parse(state?.img)
+      : state?.img || ["", "", "", ""]
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [sizes, setSizes] = useState(state?.sizes || ["S", "M", "L"]);
+  const [sizes, setSizes] = useState(
+    typeof state?.sizes === "string"
+      ? JSON.parse(state?.sizes)
+      : state?.sizes || ["S", "M", "L"]
+  );
   const [overSize, setOverSize] = useState(state?.overSize || false);
   const [stock, setStock] = useState(state?.stock || true);
   const [cost, setCost] = useState(state?.cost || "");
@@ -30,6 +38,10 @@ const Editor = () => {
 
   const preset_name = "bygiostore";
   const cloud_name = "ds1xggjvm";
+
+  console.log("State recibido en Editor:", state);
+  console.log("Sizes:", sizes);
+  console.log("ImgUrls:", imgUrls);
 
   const uploadImageToCloudinary = async (image) => {
     const formData = new FormData();
@@ -78,7 +90,7 @@ const Editor = () => {
 
       // Subir imágenes a Cloudinary
       const uploadedUrls = await Promise.all(
-        imgUrls?.map(async (file, index) => {
+        imgUrls.map(async (file, index) => {
           if (file) {
             // Convertir URL local a archivo para Cloudinary
             const blob = await fetch(file).then((res) => res.blob());
@@ -267,7 +279,7 @@ const Editor = () => {
             </Form.Label>
             <div className="mb-3 d-flex flex-column justify-content-center align-items-center">
               <Form.Group className="d-flex flex-row align-items-center justify-content-center gap-2">
-                {sizes?.map((size, index) => (
+                {sizes.map((size, index) => (
                   <div key={index} className="d-flex align-items-center gap-2">
                     <Form.Control
                       className="text-center"
