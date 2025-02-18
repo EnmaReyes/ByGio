@@ -41,8 +41,6 @@ const Banner = () => {
     fetchData();
   }, [location]);
 
-  console.log(banner);
-
   return (
     <div>
       {editorVisible ? (

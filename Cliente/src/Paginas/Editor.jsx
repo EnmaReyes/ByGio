@@ -78,7 +78,7 @@ const Editor = () => {
 
       // Subir imágenes a Cloudinary
       const uploadedUrls = await Promise.all(
-        imgUrls.map(async (file, index) => {
+        imgUrls?.map(async (file, index) => {
           if (file) {
             // Convertir URL local a archivo para Cloudinary
             const blob = await fetch(file).then((res) => res.blob());
