@@ -267,7 +267,7 @@ const Editor = () => {
             </Form.Label>
             <div className="mb-3 d-flex flex-column justify-content-center align-items-center">
               <Form.Group className="d-flex flex-row align-items-center justify-content-center gap-2">
-                {sizes.map((size, index) => (
+                {sizes?.map((size, index) => (
                   <div key={index} className="d-flex align-items-center gap-2">
                     <Form.Control
                       className="text-center"
