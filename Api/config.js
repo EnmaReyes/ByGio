@@ -12,7 +12,7 @@ const DB_HOST =
 const DB_USER =
   process.env.NODE_ENV === "production" ? process.env.DB_USER : "postgres";
 const DB_NAME =
-  process.env.NODE_ENV === "production" ? process.env.DB_NAME : "bygio";
+  process.env.NODE_ENV === "production" ? process.env.DB_NAME : "ByGio";
 const DB_PASSWORD =
   process.env.NODE_ENV === "production" ? process.env.DB_PASSWORD : "Enma2707";
 const DB_PORT =

@@ -20,6 +20,7 @@ const addArticle = async (req, res) => {
       oversize: req.body.oversize,
       cost: req.body.cost,
       stock: req.body.stock,
+      descuento: req.body.descuento,
       uid: userInfo.id,
     };
     const createdArt = await Articulos.create(newArticule);
@@ -112,6 +113,7 @@ const updateArticle = async (req, res) => {
       oversize: req.body.oversize,
       cost: req.body.cost,
       stock: req.body.stock,
+      descuento: req.body.descuento,
     };
 
     const [rowsUpdated] = await Articulos.update(updatedArticle, {

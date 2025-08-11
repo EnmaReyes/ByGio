@@ -11,9 +11,16 @@ const Banner = sequelize.define("banner", {
     primaryKey: true,
   },
   img: {
-    type: DataTypes.JSON,
-    defaultValue: {},
+    type: DataTypes.TEXT("long"),
     allowNull: false,
+    get() {
+      const rawValue = this.getDataValue("img");
+      try {
+        return JSON.parse(rawValue); // devolver como array
+      } catch {
+        return rawValue;
+      }
+    },
   },
 });
 

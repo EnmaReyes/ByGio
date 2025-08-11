@@ -7,13 +7,13 @@ import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import EditBanner from "./EditBanner";
 import { API_URL } from "../config";
 const URL = API_URL;
+
 const Banner = () => {
   const [banner, setBanner] = useState([]);
   const location = useLocation().search;
   const [loading, setLoading] = useState(true);
   const { currentUser } = useContext(AuthContext);
   const [editorVisible, setEditorVisible] = useState(false);
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,16 +43,20 @@ const Banner = () => {
   }, [location]);
 
   return (
-    <div>
+    <div className="w-100 h-100 p-0" style={{ paddingTop: "3%", position: "relative" }}>
       {editorVisible ? (
         <EditBanner banner={banner} />
       ) : (
         <div
           id="carouselExampleControls"
-          className="carousel slide"
+          className="carousel slide carrusel-banner"
           data-bs-ride="carousel"
+          
         >
-          <div className="carousel-inner">
+          <div
+            className="carousel-inner"
+            style={{ width: "100%", height: "100%" }}
+          >
             {loading ? (
               <div className="d-flex justify-content-center p-4 m-4">
                 <div className="spinner-border" role="status"></div>
@@ -61,15 +65,20 @@ const Banner = () => {
               banner.img.map((bann, index) => (
                 <div
                   key={index}
-                  className={`carousel-item previewBanner ${
-                    index === 0 ? "active" : ""
+                  className={`carousel-item previewBanner${
+                    index === 0 ? " active" : ""
                   }`}
+                  style={{ width: "100%", height: "100%" }}
                 >
                   <img
                     src={bann}
-                    className="d-block w-100"
+                    className="d-flex w-100 h-100"
                     alt={`Banner ${index + 1}`}
-                    style={{ objectFit: "inherit", height: "100%" }}
+                    style={{
+                      width: "100vw",
+                      height: "100vh",
+                      objectFit: "inherit",
+                    }}
                   />
                 </div>
               ))

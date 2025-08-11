@@ -165,15 +165,8 @@ const Articulo = () => {
           className="d-flex flex-column justify-content-xs-start text-center align-items-center  p-2"
         >
           <div className="w-100">
-            <h1
-              style={{
-                fontSize: "2.8rem",
-                fontFamily: "Lobster, sans-serif",
-              }}
-            >
-              {selected?.title}
-            </h1>
-            <h2 className="text-success ">
+            <h1 className="text-center titulos">{selected?.title}</h1>
+            <h2 className="text-success parrafos">
               ${selected?.cost?.toLocaleString()}
             </h2>
 
@@ -193,7 +186,7 @@ const Articulo = () => {
                   </div>
                 ) : (
                   <div
-                    className="btn-group"
+                    className="btn-group parrafos"
                     role="group"
                     aria-label="Basic example"
                   >
@@ -273,43 +266,39 @@ const Articulo = () => {
                 )}
               </Form.Group>
 
-              <div style={{ fontFamily: "sans-serif" }}>
-                <p>{selected?.desc}</p>
+              <div className="d-flex flex-column justify-content-center justify-content-md-start parrafos">
+                <p className="m-0 ">{selected?.desc}</p>
               </div>
 
               <div className="d-flex align-items-center justify-content-center">
                 <Button
                   variant="light"
-                  className="ml-3 btn btn-outline-secondary btn-sm"
+                  className="ml-3 btn btn-outline-secondary btn-sm parrafos"
                   onClick={() => conteo >= 2 && setConteo(conteo - 1)}
                 >
                   <FontAwesomeIcon icon={faMinus} />
                 </Button>
-                <div className="p-4">{conteo}</div>
+                <div className="p-4 titulos">{conteo}</div>
                 <Button
                   variant="light"
-                  className="ml-3 btn btn-outline-secondary btn-sm"
+                  className="ml-3 btn btn-outline-secondary btn-sm parrafos"
                   onClick={() => setConteo(conteo + 1)}
                 >
-                  <FontAwesomeIcon icon={faPlus} />
+                  <FontAwesomeIcon icon={faPlus}/>
                 </Button>
               </div>
 
-              <div
-                className="d-flex flex-column justify-content-center justify-content-md-start"
-                style={{ fontFamily: "sans-serif" }}
-              >
-                <p className="m-0">Total</p>
-                <h3>{(conteo * selected?.cost).toLocaleString()}</h3>
+              <div className="d-flex flex-column justify-content-center justify-content-md-start">
+                <p className="m-0 mt-2 titulos">Total</p>
+                <h3 className="mb-2 titulos">
+                  {(conteo * selected?.cost).toLocaleString()}
+                </h3>
               </div>
 
-              <div
-                className="d-grid gap-2"
-                style={{ fontFamily: "sans-serif" }}
-              >
+              <div className="d-grid gap-2">
                 <Button
                   type="button"
-                  className="btn btn-dark btn-lg rounded-pill"
+                  className="btn btn-dark btn-lg rounded-pill parrafos"
                   target="_blank"
                   href={WhatsAppLink(selected, conteo, medidas)}
                 >
@@ -317,7 +306,7 @@ const Articulo = () => {
                 </Button>
                 <div
                   type="button"
-                  className="btn btn-outline-dark btn-lg rounded-pill"
+                  className="btn btn-outline-dark btn-lg rounded-pill parrafos"
                   onClick={() => {
                     añadirCarrito(selected, conteo, medidas);
                   }}

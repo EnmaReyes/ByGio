@@ -42,6 +42,11 @@ const Articulos = sequelize.define(
       allowNull: false,
       defaultValue: true,
     },
+    descuento: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     timestamps: false,

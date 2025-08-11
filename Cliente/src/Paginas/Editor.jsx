@@ -34,14 +34,11 @@ const Editor = () => {
   const [overSize, setOverSize] = useState(state?.overSize || false);
   const [stock, setStock] = useState(state?.stock || true);
   const [cost, setCost] = useState(state?.cost || "");
+  const [descuento, setDescuento] = useState(state?.descuento || 0);
   const [loading, setLoading] = useState(false);
 
   const preset_name = "bygiostore";
   const cloud_name = "ds1xggjvm";
-
-  console.log("State recibido en Editor:", state);
-  console.log("Sizes:", sizes);
-  console.log("ImgUrls:", imgUrls);
 
   const uploadImageToCloudinary = async (image) => {
     const formData = new FormData();
@@ -123,6 +120,7 @@ const Editor = () => {
         oversize: overSize,
         cost,
         stock,
+        descuento,
       };
 
       const promise = state
@@ -168,7 +166,7 @@ const Editor = () => {
             ) : (
               <div
                 style={{ width: "100%", height: "auto", fontSize: "20px" }}
-                className="d-flex flex-column align-items-center gap-2 p-md-5"
+                className="d-flex flex-column align-items-center gap-2 p-md-5 parrafos"
               >
                 <FontAwesomeIcon icon={faImage} className="fs-1" />
                 <p>Sube tus imágenes</p>
@@ -235,7 +233,7 @@ const Editor = () => {
         <Col xs={12} md={6} className="p-md-5">
           <Form className=" align-items-center justify-content-center">
             <Form.Group className="mb-3" controlId="formTitle">
-              <Form.Label className="fontFamilyTitle">Titulo</Form.Label>
+              <Form.Label className="titulos">Titulo</Form.Label>
               <Form.Control
                 type="text"
                 value={title}
@@ -245,7 +243,7 @@ const Editor = () => {
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formDescription">
-              <Form.Label className="fontFamilyTitle">Descripción</Form.Label>
+              <Form.Label className="titulos">Descripción</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -254,22 +252,37 @@ const Editor = () => {
                 placeholder="Descripción del producto"
               />
             </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3" controlId="formPrice">
+                  <Form.Label className="titulos">Precio</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                    placeholder="Precio"
+                  />
+                </Form.Group>
+              </Col>
 
-            <Form.Group className="mb-3" controlId="formPrice">
-              <Form.Label className="fontFamilyTitle">Precio</Form.Label>
-              <Form.Control
-                type="number"
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
-                placeholder="Precio"
-              />
-            </Form.Group>
+              <Col md={6}>
+                <Form.Group className="mb-3" controlId="formDescuento">
+                  <Form.Label className="titulos">Precio anterior</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={descuento}
+                    onChange={(e) => setDescuento(e.target.value)}
+                    placeholder="Descuento"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
             <Form.Group
               className="d-flex align-items-center justifyContent-center mb-3 gap-3"
               controlId="formStock"
             >
-              <Form.Label className="d-flex align-items-center fontFamilyTitle">
+              <Form.Label className="d-flex align-items-center titulos">
                 Stock
               </Form.Label>
               <Form.Switch
@@ -280,14 +293,14 @@ const Editor = () => {
             </Form.Group>
 
             <Form.Group className="d-flex align-items-center mb-3 gap-3">
-              <Form.Label className="fontFamilyTitle">Oversize</Form.Label>
+              <Form.Label className="titulos">Oversize</Form.Label>
               <Form.Switch
                 className="fs-5"
                 checked={overSize}
                 onChange={() => setOverSize(!overSize)}
               />
             </Form.Group>
-            <Form.Label className="mb-3 d-flex justify-content-center align-items-center">
+            <Form.Label className="mb-3 d-flex justify-content-center align-items-center titulos">
               Tallas
             </Form.Label>
             <div className="mb-3 d-flex flex-column justify-content-center align-items-center">
@@ -295,7 +308,7 @@ const Editor = () => {
                 {sizes.map((size, index) => (
                   <div key={index} className="d-flex align-items-center gap-2">
                     <Form.Control
-                      className="text-center"
+                      className="text-center parrafos"
                       style={{ width: "50px" }}
                       type="text"
                       value={size}
@@ -308,7 +321,6 @@ const Editor = () => {
                     />
                     <div
                       className=" d-flex text-center align-items-center justify-content-center deletesizes"
-                      
                       onClick={() => deleteSizeField(index)}
                     >
                       x
@@ -318,7 +330,7 @@ const Editor = () => {
               </Form.Group>
 
               <Button
-                className="mt-3"
+                className="mt-3 parrafos"
                 variant="dark"
                 size="sm"
                 onClick={addSizeField}
@@ -328,7 +340,7 @@ const Editor = () => {
             </div>
 
             <Button
-              style={{ width: "100%", textAlign: "center" }}
+              className="w-100 mt-3 titulos"
               variant="dark"
               disabled={loading}
               size="lg"

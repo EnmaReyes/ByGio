@@ -1,40 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Button, Card, Col, Container, Row } from "react-bootstrap";
+import React from "react";
+import { Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import "../App.css";
-import { Link, useLocation } from "react-router-dom";
-import { API_URL } from "../config";
-import axios from "axios";
-import Spinner from "react-bootstrap/Spinner";
-const URL = API_URL;
+import { useArticulos } from "./UseArticulos";
 
-const CartaDeArticulos = () => {
-  const [articulo, setArticulo] = useState([]);
-  const location = useLocation().search;
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`${URL}/api/posts/${location}`);
-        const data = res.data;
-        // Verificar y transformar los datos de `img` y `size`
-        const formattedData = Array.isArray(data)
-          ? data.map((art) => ({
-              ...art,
-              img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
-              sizes:
-                typeof art.sizes === "string"
-                  ? JSON.parse(art.sizes)
-                  : art.sizes,
-            }))
-          : [];
-
-        setArticulo(formattedData);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, [location]);
+export const CartaDeArticulos = () => {
+  const articulo = useArticulos();
 
   const generateWhatsAppLink = (art) => {
     const tallaSlected = art.oversize ? "Over size" : "S/M/L";
@@ -43,87 +14,205 @@ const CartaDeArticulos = () => {
      Valor: $${art.cost.toLocaleString()} por unidad
      ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
-    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
+    return `https://wa.me/573128919861?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
-    return whatsappLink;
   };
 
   return (
-    <Container className="container-card">
+    <Container className="container-card" id="articulos">
       <Row>
-        {articulo.map((art) => (
-          <Col key={art?.id} xs={6} sm={6} md={3} className="mb-2">
-            <Card className="mt-4 mb-4 align-items-center fixed-size-card">
-              <Link to={`/${art.id}`}>
-                <div>
-                  {art.img ? (
-                    <Card.Img
-                      src={art?.img[0]}
-                      className="img-fluid"
-                      variant="top"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className="d-flex flex-column justify-content-center align-items-center"
-                      style={{ width: "100%", height: "100%" }}
-                    >
-                      <Spinner animation="border" variant="dark" />
-                    </div>
-                  )}
-                </div>
-              </Link>
-              {!art.stock && <div className="agotado-site">AGOTADO</div>}
-
-              <Card.Body className="m-0 p-2 card-body">
-                <Card.Title className="text-center m-0 card-title">
-                  {art?.title}
-                </Card.Title>
-                {art.oversize ? (
-                  <Card.Text className="text-center m-0">
-                    <span>Oversize</span>
-                  </Card.Text>
-                ) : (
-                  <Card.Text className=" m-0 tallas-box">
-                    {!art?.sizes[0] == "" && (
-                      <p className="tallas">{art?.sizes[0] + "/"}</p>
+        {articulo
+          .filter((art) => art.descuento <= 0)
+          .slice(0, -4)
+          .map((art) => (
+            <Col key={art?.id} xs={6} sm={6} md={3} className="mb-2">
+              <Card className="mt-4 mb-4 align-items-center fixed-size-card">
+                <Link to={`/${art.id}`}>
+                  <div>
+                    {art.img ? (
+                      <Card.Img
+                        src={art?.img[0]}
+                        className="img-fluid"
+                        variant="top"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="d-flex flex-column justify-content-center align-items-center"
+                        style={{ width: "100%", height: "100%" }}
+                      >
+                        <Spinner animation="border" variant="dark" />
+                      </div>
                     )}
-                    {!art?.sizes[1] == "" && (
-                      <p className="tallas"> {art?.sizes[1]}</p>
-                    )}
-                    {!art?.sizes[2] == "" && (
-                      <p className="tallas"> {"/" + art?.sizes[2]}</p>
-                    )}
-                    {!art?.sizes[3] == "" && (
-                      <p className="tallas"> {"/" + art?.sizes[3]}</p>
-                    )}
-                  </Card.Text>
+                  </div>
+                </Link>
+                {!art.stock && (
+                  <div className="agotado-site parrafos">AGOTADO</div>
                 )}
-                <div>
-                  <Card.Text className="fw-bold m-0">
-                    {`$${art?.cost.toLocaleString()}`}
-                  </Card.Text>
-                  <Button
-                    variant="dark"
-                    className="text-warning"
-                    href={art.stock ? generateWhatsAppLink(art) : null}
-                    target="_blank"
-                  >
-                    Comprar
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
+
+                <Card.Body className="m-0 p-2 card-body">
+                  <Card.Title className="text-center m-0 titulos">
+                    {art?.title}
+                  </Card.Title>
+                  {art.oversize ? (
+                    <Card.Text className="text-center m-0 parrafos">
+                      <span>Oversize</span>
+                    </Card.Text>
+                  ) : (
+                    <Card.Text className=" m-0 tallas-box parrafos">
+                      {!art?.sizes[0] == "" && (
+                        <p className="tallas">{art?.sizes[0] + "/"}</p>
+                      )}
+                      {!art?.sizes[1] == "" && (
+                        <p className="tallas"> {art?.sizes[1]}</p>
+                      )}
+                      {!art?.sizes[2] == "" && (
+                        <p className="tallas"> {"/" + art?.sizes[2]}</p>
+                      )}
+                      {!art?.sizes[3] == "" && (
+                        <p className="tallas"> {"/" + art?.sizes[3]}</p>
+                      )}
+                    </Card.Text>
+                  )}
+                  <div>
+                    <Col>
+                      <Card.Text className="m-0 parrafos">
+                        {`$${art?.cost.toLocaleString()}`}
+                      </Card.Text>
+                    </Col>
+
+                    <Button
+                      variant="dark"
+                      className="text-light parrafos"
+                      href={art.stock ? generateWhatsAppLink(art) : null}
+                      target="_blank"
+                    >
+                      Comprar
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
       </Row>
     </Container>
   );
 };
 
-export default CartaDeArticulos;
+export const ArtiulosOferta = () => {
+  const articulo = useArticulos();
+
+  const generateWhatsAppLink = (art) => {
+    const tallaSlected = art.oversize ? "Over size" : "S/M/L";
+    const message = `¡Hola!😁 Estoy interesado en:
+     ${art.title}
+     Valor: $${art.cost.toLocaleString()} por unidad
+     ¿Está disponible en ${tallaSlected}?`;
+    const imageLink = art?.img[0];
+    return `https://wa.me/573128919861?text=${encodeURIComponent(
+      message
+    )}%0A%0A${encodeURIComponent(imageLink)}`;
+  };
+
+  return (
+    <Container className="container-card" id="articulos">
+      <Row>
+        {articulo
+          .filter((art) => art.descuento > 0)
+          .map((art) => (
+            <Col key={art?.id} xs={6} sm={6} md={3} className="mb-2">
+              <Card className="mt-4 mb-4 align-items-center fixed-size-card">
+                <Link to={`/${art.id}`}>
+                  <div>
+                    {art.img ? (
+                      <Card.Img
+                        src={art?.img[0]}
+                        className="img-fluid"
+                        variant="top"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="d-flex flex-column justify-content-center align-items-center"
+                        style={{ width: "100%", height: "100%" }}
+                      >
+                        <Spinner animation="border" variant="dark" />
+                      </div>
+                    )}
+                  </div>
+                </Link>
+                {!art.stock && (
+                  <div className="agotado-site parrafos">AGOTADO</div>
+                )}
+
+                <Card.Body className="m-0 p-2 card-body">
+                  <Card.Title className="text-center m-0 titulos">
+                    {art?.title}
+                  </Card.Title>
+                  {art.oversize ? (
+                    <Card.Text className="text-center m-0 parrafos">
+                      <span>Oversize</span>
+                    </Card.Text>
+                  ) : (
+                    <Card.Text className=" m-0 tallas-box parrafos">
+                      {!art?.sizes[0] == "" && (
+                        <p className="tallas">{art?.sizes[0] + "/"}</p>
+                      )}
+                      {!art?.sizes[1] == "" && (
+                        <p className="tallas"> {art?.sizes[1]}</p>
+                      )}
+                      {!art?.sizes[2] == "" && (
+                        <p className="tallas"> {"/" + art?.sizes[2]}</p>
+                      )}
+                      {!art?.sizes[3] == "" && (
+                        <p className="tallas"> {"/" + art?.sizes[3]}</p>
+                      )}
+                    </Card.Text>
+                  )}
+                  <div>
+                    <Row>
+                      {art?.descuento > 0 && (
+                        <Col>
+                          <Card.Text className="m-0 parrafos descuento">
+                            {`$${art?.descuento.toLocaleString()}`}
+                          </Card.Text>
+                        </Col>
+                      )}
+                      <Col>
+                        <Card.Text
+                          className={
+                            art?.descuento > 0
+                              ? "color-des m-0 parrafos"
+                              : "m-0 parrafos"
+                          }
+                        >
+                          {`$${art?.cost.toLocaleString()}`}
+                        </Card.Text>
+                      </Col>
+                    </Row>
+                    <Button
+                      variant="dark"
+                      className="text-light parrafos"
+                      href={art.stock ? generateWhatsAppLink(art) : null}
+                      target="_blank"
+                    >
+                      Comprar
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+      </Row>
+    </Container>
+  );
+};

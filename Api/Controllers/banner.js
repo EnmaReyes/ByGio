@@ -3,7 +3,7 @@ const { Banner } = require("../DataBase/models/Banner.js");
 
 const getBanner = async (req, res) => {
   console.log("entré al get");
-  
+
   try {
     const Banners = await Banner.findAll();
     if (!Banners || Banners.length === 0) {
@@ -49,11 +49,13 @@ const EditBanner = async (req, res) => {
     }
 
     const userInfo = jwt.verify(token, "jwtkey");
-
     const bannerId = req.params.id;
 
+    // Si viene un array, convertirlo a string JSON
     const updateBanner = {
-      img: req.body.img,
+      img: Array.isArray(req.body.img)
+        ? JSON.stringify(req.body.img)
+        : req.body.img,
     };
 
     const [rowsUpdated] = await Banner.update(updateBanner, {
@@ -69,9 +71,11 @@ const EditBanner = async (req, res) => {
 
     res.json("Banner actualizado con éxito!");
   } catch (error) {
+    console.error(error);
     res.status(500).json("Error interno del servidor");
   }
 };
+
 const deleteBanner = async (req, res) => {
   const token = req.cookies.access_token;
 
