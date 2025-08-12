@@ -81,7 +81,7 @@ export const ListonMayorista = () => {
         </div>
         <div className="explora-liston">
           {" "}
-          <a href="#most-seller">Explorar</a>
+          <a href="#articulos">Explorar</a>
         </div>
         <div className="span-liston">
           <span>

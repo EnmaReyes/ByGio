@@ -72,13 +72,8 @@ const Banner = () => {
                 >
                   <img
                     src={bann}
-                    className="d-flex w-100 h-100"
+                    className="banner-img"
                     alt={`Banner ${index + 1}`}
-                    style={{
-                      width: "100vw",
-                      height: "100vh",
-                      objectFit: "inherit",
-                    }}
                   />
                 </div>
               ))

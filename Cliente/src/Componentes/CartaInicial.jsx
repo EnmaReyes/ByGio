@@ -109,7 +109,9 @@ const CartaInicial = () => {
                   )}
                 </div>
                 <div className="mt-3">
-                  <a className="text-muted parrafos pointer" href={`/${art.id}`}>Explorar</a>
+                  <Link to={`/${art.id}`}>
+                    <span className="text-muted parrafos pointer">Explorar</span>
+                  </Link>
                 </div>
               </div>
             </div>
