@@ -33,7 +33,9 @@ const addArticle = async (req, res) => {
 
 const getArticle = async (req, res) => {
   try {
-    const Article = await Articulos.findAll();
+    const Article = await Articulos.findAll({
+      order: [["createdAt", "DESC"]],
+    });
     if (!Article || Article.length === 0) {
       return res.status(404).json("No Hay Articulos");
     }
