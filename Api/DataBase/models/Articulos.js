@@ -47,7 +47,13 @@ const Articulos = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
   },
+
   {
     timestamps: false,
   }
