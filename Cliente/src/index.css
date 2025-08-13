@@ -26,6 +26,42 @@ a{
 .pointer {
   cursor: pointer;
 }
+.buttons {
+  background-color: #000;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  font-weight: bold;
+  color: #fff;
+  transition: all ease-in-out 0.3s;
+  font-size: 1rem;
+}
+
+/* Hover */
+.buttons:hover {
+  background-color: #ffffff;
+  text-decoration: none;
+  color: #000;
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.7);
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+  .buttons {
+    font-size: 0.9rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 12px;
+  }
+}
+
+/* Móviles */
+@media (max-width: 576px) {
+  .buttons {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+  }
+}
+
 /* registro y login */
 .badge-hover {
   transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
@@ -398,8 +434,29 @@ a{
   text-shadow: 0px 8px 7px rgba(202,197,182,0.68);
 }
 .tallasCartainicial {
-  font-weight: 500;
-  font-size: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #000;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  min-width: 40px;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+  margin: 0;
+}
+@media (max-width: 576px) {
+  .tallasCartainicial {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 35px;
+  }
 }
 .parrafo-inicial {
   font-family: "Space Grotesk", sans-serif;
@@ -411,6 +468,19 @@ a{
   color: #504D50;
   font-weight: 400;
   font-size: 1rem;
+}
+.explorar-inicial{
+  background-color: #FFC23B;
+  padding: 0.5rem 1rem;
+  border-radius: 15px 15px;
+  font-weight: bold;
+  color: #000;
+  transition: all ease-in-out 0.3s;
+}
+.explorar-inicial:hover{
+  background-color: #e6b233;
+  color: #000;
+  text-decoration: none;
 }
 @media (min-width: 577px) and (max-width: 992px) {
   padding: 0;
@@ -425,6 +495,37 @@ a{
 }
 
 /*carta Articulos */
+
+.porcentaje {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  width: 35%;
+  background-color: #FFC23B;
+  padding: 0.5rem 1rem;
+  border-radius: 17px 5px;
+  font-weight: bold;
+  color: #000;
+  text-align: center;
+  font-size: 1rem;
+}
+/* Tablets */
+@media (max-width: 992px) {
+  .porcentaje {
+    width: 40%;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Móviles */
+@media (max-width: 576px) {
+  .porcentaje {
+    width: 50%;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
 .color-des{
   color: #dc0202;
 }
@@ -537,15 +638,25 @@ img {
 
 
 .agotado-site {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  background-color: #343a40;
-  font-size: 1.2rem;
-  color: #eee;
+  position: absolute;
+  bottom: 10.5rem;
+  right: 1rem;
+  width: 35%;
+  background-color: #FFC23B;
+  padding: 0.5rem 1rem;
+  border-radius: 17px 5px;
+  font-weight: bold;
+  color: #000;
+  text-align: center;
+  font-size: 1rem;
 }
-
+@media (max-width: 992px) {
+  .agotado-site{
+    width: 80%;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
 .card-body {
   display: flex;
   flex-direction: column;
@@ -560,23 +671,40 @@ img {
   }
 }
 
+/* Contenedor de tallas */
 .tallas-box {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  text-align: center;
-  gap: 1.5px;
-  margin: 0px;
-  padding: 0px;
-  height: auto;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
+/* Cada talla como una cajita */
 .tallas {
-  font-size: small;
+  background-color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
   font-weight: bold;
-  margin: 0px;
-  padding: 0px;
+  font-size: 0.9rem;
+  color: #000;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  min-width: 40px;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+  margin: 0;
 }
+
+
+/* Responsive */
+@media (max-width: 576px) {
+  .tallas {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 35px;
+  }
+}
+
 
 /*articulos detallados*/
 .deleteimg {

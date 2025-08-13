@@ -83,7 +83,6 @@ const CartaInicial = () => {
                       (size, i) =>
                         size !== "" && (
                           <span key={i} className="tallasCartainicial">
-                            {i !== 0 ? "/" : ""}
                             {size}
                           </span>
                         )
@@ -96,21 +95,8 @@ const CartaInicial = () => {
                 <p className="parrafo-inicial mt-3">No te lo pierdas!</p>
 
                 <div className="mt-3">
-                  <Button
-                    variant="dark"
-                    className="text-light"
-                    href={art.stock ? generateWhatsAppLink(art) : null}
-                    target="_blank"
-                  >
-                    Comprar
-                  </Button>
-                  {!art.stock && (
-                    <div className="mt-2 text-danger fw-bold parrafos">AGOTADO</div>
-                  )}
-                </div>
-                <div className="mt-3">
                   <Link to={`/${art.id}`}>
-                    <span className="text-muted parrafos pointer">Explorar</span>
+                    <span className="text-muted parrafos pointer explorar-inicial">Explorar</span>
                   </Link>
                 </div>
               </div>

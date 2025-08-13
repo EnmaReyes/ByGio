@@ -54,7 +54,6 @@ export const CartaDeArticulos = () => {
                 {!art.stock && (
                   <div className="agotado-site parrafos">AGOTADO</div>
                 )}
-
                 <Card.Body className="m-0 p-2 card-body">
                   <Card.Title className="text-center m-0 titulos">
                     {art?.title}
@@ -66,16 +65,16 @@ export const CartaDeArticulos = () => {
                   ) : (
                     <Card.Text className=" m-0 tallas-box parrafos">
                       {!art?.sizes[0] == "" && (
-                        <p className="tallas">{art?.sizes[0] + "/"}</p>
+                        <p className="tallas">{art?.sizes[0]}</p>
                       )}
                       {!art?.sizes[1] == "" && (
                         <p className="tallas"> {art?.sizes[1]}</p>
                       )}
                       {!art?.sizes[2] == "" && (
-                        <p className="tallas"> {"/" + art?.sizes[2]}</p>
+                        <p className="tallas"> {art?.sizes[2]}</p>
                       )}
                       {!art?.sizes[3] == "" && (
-                        <p className="tallas"> {"/" + art?.sizes[3]}</p>
+                        <p className="tallas"> {art?.sizes[3]}</p>
                       )}
                     </Card.Text>
                   )}
@@ -86,14 +85,14 @@ export const CartaDeArticulos = () => {
                       </Card.Text>
                     </Col>
 
-                    <Button
+                    <button
                       variant="dark"
-                      className="text-light parrafos"
+                      className="parrafos buttons mt-2"
                       href={art.stock ? generateWhatsAppLink(art) : null}
                       target="_blank"
                     >
                       Comprar
-                    </Button>
+                    </button>
                   </div>
                 </Card.Body>
               </Card>
@@ -129,17 +128,28 @@ export const ArtiulosOferta = () => {
               <Card className="mt-4 mb-4 align-items-center fixed-size-card">
                 <Link to={`/${art.id}`}>
                   <div>
+                    <div className="porcentaje">
+                      <span>
+                        {Math.round(
+                          ((art.cost - art.descuento) / art.cost) * 100
+                        )}
+                        % OFF
+                      </span>
+                    </div>
+
                     {art.img ? (
-                      <Card.Img
-                        src={art?.img[0]}
-                        className="img-fluid"
-                        variant="top"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
+                      <div>
+                        <Card.Img
+                          src={art?.img[0]}
+                          className="img-fluid"
+                          variant="top"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </div>
                     ) : (
                       <div
                         className="d-flex flex-column justify-content-center align-items-center"
@@ -165,16 +175,16 @@ export const ArtiulosOferta = () => {
                   ) : (
                     <Card.Text className=" m-0 tallas-box parrafos">
                       {!art?.sizes[0] == "" && (
-                        <p className="tallas">{art?.sizes[0] + "/"}</p>
+                        <p className="tallas">{art?.sizes[0]}</p>
                       )}
                       {!art?.sizes[1] == "" && (
                         <p className="tallas"> {art?.sizes[1]}</p>
                       )}
                       {!art?.sizes[2] == "" && (
-                        <p className="tallas"> {"/" + art?.sizes[2]}</p>
+                        <p className="tallas"> {art?.sizes[2]}</p>
                       )}
                       {!art?.sizes[3] == "" && (
-                        <p className="tallas"> {"/" + art?.sizes[3]}</p>
+                        <p className="tallas"> {art?.sizes[3]}</p>
                       )}
                     </Card.Text>
                   )}
@@ -199,14 +209,14 @@ export const ArtiulosOferta = () => {
                         </Card.Text>
                       </Col>
                     </Row>
-                    <Button
+                    <button
                       variant="dark"
-                      className="text-light parrafos"
+                      className="parrafos buttons mt-2"
                       href={art.stock ? generateWhatsAppLink(art) : null}
                       target="_blank"
                     >
                       Comprar
-                    </Button>
+                    </button>
                   </div>
                 </Card.Body>
               </Card>
