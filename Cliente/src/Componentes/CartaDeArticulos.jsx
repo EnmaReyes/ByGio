@@ -35,11 +35,6 @@ export const CartaDeArticulos = () => {
                         src={art?.img[0]}
                         className="img-fluid"
                         variant="top"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
                       />
                     ) : (
                       <div
@@ -143,11 +138,6 @@ export const ArtiulosOferta = () => {
                           src={art?.img[0]}
                           className="img-fluid"
                           variant="top"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
                         />
                       </div>
                     ) : (
