@@ -119,13 +119,16 @@ a{
 
 /* navbar */
 .li-navbar-hover {
+  width: auto;
+  color: #6C6868;
   transition: all 0.3s ease-in-out;
+  cursor: pointer;
   /* Transición suave */
 }
 
 .li-navbar-hover:hover {
-  font-weight: bolder;
-
+  background-color: #c6bcbc ;
+  color: #ffff;
 }
 
 .navbar-toggler {
@@ -136,14 +139,21 @@ a{
   }
 }
 
-.carrito-responsive {
-
-  @media (max-width: 768px) {
-    position: relative;
-    right: 5rem;
-    background-color: #eee;
-
+@media (max-width: 768px) {
+  .carrito-responsive {
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    margin-left: 0 !important; /* para que no se desplace */
+    display: block; /* ocupa toda la línea */
   }
+}
+.carrito-dropdown {
+  position: absolute; /* flota encima */
+  right: 0;
+  top: 100%; /* justo debajo del botón del carrito */
+  z-index: 2000;
+  min-width: 200px; /* ajusta según tu diseño */
 }
 .counter {
   position: absolute;

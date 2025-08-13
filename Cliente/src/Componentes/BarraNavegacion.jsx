@@ -23,7 +23,6 @@ const BarraNavegacion = ({
         height: "auto",
         zIndex: 1000,
         backgroundColor: "#FFFBF5",
-
       }}
     >
       <div className="container-fluid">
@@ -65,15 +64,15 @@ const BarraNavegacion = ({
                 ]}
               />
               <UserDropdown currentUser={currentUser} logout={logout} />
+              <Carrito
+                allProducts={allProducts}
+                setAllProducts={setAllProducts}
+                total={total}
+                setTotal={setTotal}
+                countProducts={countProducts}
+                setCountProducts={setCountProducts}
+              />
             </ul>
-            <Carrito
-              allProducts={allProducts}
-              setAllProducts={setAllProducts}
-              total={total}
-              setTotal={setTotal}
-              countProducts={countProducts}
-              setCountProducts={setCountProducts}
-            />
           </div>
         </div>
       </div>
@@ -83,7 +82,7 @@ const BarraNavegacion = ({
 
 const NavItem = ({ href, label }) => (
   <li className="nav-item">
-    <a className="nav-link" style={{ color: "#6C6868" }} href={href}>
+    <a className="nav-link" href={href}>
       {label}
     </a>
   </li>
@@ -106,7 +105,6 @@ const Dropdown = ({ label, items }) => (
         <li key={index}>
           <a
             className="dropdown-item li-navbar-hover"
-            style={{ color: "#6C6868" }}
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
@@ -123,7 +121,6 @@ const UserDropdown = ({ currentUser, logout }) => (
   <li className="nav-item dropdown">
     <a
       className="nav-link dropdown-toggle"
-      style={{ color: "#6C6868" }}
       id="userDropdown"
       role="button"
       data-bs-toggle="dropdown"
@@ -134,31 +131,19 @@ const UserDropdown = ({ currentUser, logout }) => (
     <ul className="dropdown-menu" aria-labelledby="userDropdown">
       {currentUser ? (
         <li>
-          <button
-            className="dropdown-item li-navbar-hover"
-            onClick={logout}
-            style={{ color: "#6C6868" }}
-          >
+          <button className="dropdown-item li-navbar-hover" onClick={logout}>
             Cerrar Sesión
           </button>
         </li>
       ) : (
         <>
           <li>
-            <Link
-              className="dropdown-item li-navbar-hover"
-              to="/login"
-              style={{ color: "#6C6868" }}
-            >
+            <Link className="dropdown-item li-navbar-hover" to="/login">
               Iniciar Sesión
             </Link>
           </li>
           <li>
-            <Link
-              className="dropdown-item li-navbar-hover"
-              to="/register"
-              style={{ color: "#6C6868" }}
-            >
+            <Link className="dropdown-item li-navbar-hover" to="/register">
               Registrarte
             </Link>
           </li>
@@ -170,11 +155,7 @@ const UserDropdown = ({ currentUser, logout }) => (
             <hr className="dropdown-divider" />
           </li>
           <li>
-            <Link
-              className="dropdown-item li-navbar-hover"
-              to="/editor"
-              style={{ color: "#6C6868" }}
-            >
+            <Link className="dropdown-item li-navbar-hover" to="/editor">
               Crear Artículo
             </Link>
           </li>
