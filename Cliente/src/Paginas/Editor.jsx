@@ -36,7 +36,7 @@ const Editor = () => {
   const [cost, setCost] = useState(state?.cost || "");
   const [descuento, setDescuento] = useState(state?.descuento || 0);
   const [loading, setLoading] = useState(false);
-
+  const [destacadas, setDestacadas] = useState(state?.destacadas || false);
   const preset_name = "bygiostore";
   const cloud_name = "ds1xggjvm";
 
@@ -121,6 +121,7 @@ const Editor = () => {
         cost,
         stock,
         descuento,
+        destacadas,
       };
 
       const promise = state
@@ -289,6 +290,14 @@ const Editor = () => {
                 className="fs-5"
                 checked={stock}
                 onChange={() => setStock(!stock)}
+              />
+              <Form.Label className="d-flex align-items-center titulos">
+                Destacadas
+              </Form.Label>
+              <Form.Switch
+                className="fs-5"
+                checked={destacadas}
+                onChange={() => setDestacadas(!destacadas)}
               />
             </Form.Group>
 

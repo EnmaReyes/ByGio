@@ -24,9 +24,8 @@ export const CartaDeArticulos = () => {
       <Row>
         {articulo
           .filter((art) => art.descuento <= 0)
-          .slice(0, -4)
           .map((art) => (
-            <Col key={art?.id} xs={6} sm={6} md={6} lg={3}  className="mb-2">
+            <Col key={art?.id} xs={6} sm={6} md={6} lg={3} className="mb-2">
               <Card className="mt-4 mb-4 align-items-center fixed-size-card">
                 <Link to={`/${art.id}`}>
                   <div>
@@ -137,7 +136,7 @@ export const ArtiulosOferta = () => {
                         <Card.Img
                           src={art?.img[0]}
                           className="img-fluid"
-                          variant="top"  
+                          variant="top"
                         />
                       </div>
                     ) : (

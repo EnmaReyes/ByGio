@@ -47,6 +47,11 @@ const Articulos = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    destacadas: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,

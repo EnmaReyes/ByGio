@@ -52,61 +52,60 @@ const CartaInicial = () => {
   return (
     <div className="inital-Container" id="most-seller">
       <Carousel controls indicators fade interval={1500}>
-        {articulo.slice(-4).map((art, index) => (
-          <Carousel.Item key={art.id}>
-            <div
-              className="d-flex flex-column flex-md-row align-items-center justify-content-center carousel-items">
-              
-              <div className="w-100 w-md-50 text-center">
-                {art.img ? (
-                  <img
-                    className="img-fluid img-carousel"
-                    src={art.img[0]}
-                    alt={art.title}               
-                  />
-                ) : (
-                  <div className="d-flex justify-content-center align-items-center h-100">
-                    <Spinner animation="border" variant="dark" />
+        {articulo
+          .filter((art) => art.destacadas === true).slice(0, 4)
+          .map((art, index) => (
+            <Carousel.Item key={art.id}>
+              <div className="d-flex flex-column flex-md-row align-items-center justify-content-center carousel-items">
+                <div className="w-100 w-md-50 text-center">
+                  {art.img ? (
+                    <img
+                      className="img-fluid img-carousel"
+                      src={art.img[0]}
+                      alt={art.title}
+                    />
+                  ) : (
+                    <div className="d-flex justify-content-center align-items-center h-100">
+                      <Spinner animation="border" variant="dark" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Contenido */}
+                <div className="w-100 w-md-50 text-md-start text-center p-4">
+                  <h2 className="fw-bold titulo-inicial">{art.title}</h2>
+
+                  {art.oversize ? (
+                    <p className="m-0">Oversize</p>
+                  ) : (
+                    <div className="d-flex gap-1 justify-content-center justify-content-md-start">
+                      {art.sizes.map(
+                        (size, i) =>
+                          size !== "" && (
+                            <span key={i} className="tallasCartainicial">
+                              {size}
+                            </span>
+                          )
+                      )}
+                    </div>
+                  )}
+                  <p className="des-inicial mt-3">{art.desc}</p>
+                  <p className="parrafo-inicial mt-3">No te lo pierdas!</p>
+
+                  <div className="mt-3">
+                    <Link to={`/${art.id}`}>
+                      <span className="text-muted parrafos pointer explorar-inicial">
+                        Explorar
+                      </span>
+                    </Link>
                   </div>
-                )}
-              </div>
-
-              {/* Contenido */}
-              <div className="w-100 w-md-50 text-md-start text-center p-4">
-                <h2 className="fw-bold titulo-inicial">{art.title}</h2>
-
-                {art.oversize ? (
-                  <p className="m-0">Oversize</p>
-                ) : (
-                  <div className="d-flex gap-1 justify-content-center justify-content-md-start">
-                    {art.sizes.map(
-                      (size, i) =>
-                        size !== "" && (
-                          <span key={i} className="tallasCartainicial">
-                            {size}
-                          </span>
-                        )
-                    )}
-                  </div>
-                )}
-                <p className="des-inicial mt-3">
-                  {art.desc}
-                </p>
-                <p className="parrafo-inicial mt-3">No te lo pierdas!</p>
-
-                <div className="mt-3">
-                  <Link to={`/${art.id}`}>
-                    <span className="text-muted parrafos pointer explorar-inicial">Explorar</span>
-                  </Link>
                 </div>
               </div>
-            </div>
-          </Carousel.Item>
-        ))}
+            </Carousel.Item>
+          ))}
       </Carousel>
     </div>
   );
 };
-
 
 export default CartaInicial;
