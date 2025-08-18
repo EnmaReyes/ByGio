@@ -83,7 +83,7 @@ const Registro = () => {
         <h4>Crea tu cuenta</h4>
 
         {/* Username */}
-        <div className="mb-3 input-wrapper">
+        <div className="mb-3 input-wrapper parrafos">
           <FontAwesomeIcon icon={faUser} className="input-icon" />
           <Form.Control
             type="text"
@@ -95,7 +95,7 @@ const Registro = () => {
         </div>
 
         {/* Email */}
-        <div className="mb-3 input-wrapper">
+        <div className="mb-3 input-wrapper parrafos">
           <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
           <Form.Control
             type="email"
@@ -107,7 +107,7 @@ const Registro = () => {
         </div>
 
         {/* Password */}
-        <div className="mb-3 input-wrapper">
+        <div className="mb-3 input-wrapper parrafos">
           <FontAwesomeIcon icon={faLock} className="input-icon" />
           <Form.Control
             type={showPassword ? "text" : "password"}
@@ -124,7 +124,7 @@ const Registro = () => {
         </div>
 
         {/* Confirm Password */}
-        <div className="mb-3 input-wrapper">
+        <div className="mb-3 input-wrapper parrafos">
           <FontAwesomeIcon icon={faKey} className="input-icon" />
           <Form.Control
             type={showPassword ? "text" : "password"}
@@ -137,20 +137,23 @@ const Registro = () => {
         </div>
 
         {/* Error */}
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message parrafos">{error}</div>}
 
         {/* Register Button */}
-        <button onClick={handlesubmit} className="login-btn">
+        <button onClick={handlesubmit} className="login-btn titulos">
           Registrar
         </button>
 
         {/* Login Link */}
-        <p className="signup-text">
+        <p className="signup-text parrafos">
           ¿Ya tienes cuenta?{" "}
-          <Link to="/login" className="signup-link">
+          <Link to="/login" className="signup-link titulos">
             Inicia sesión
           </Link>
         </p>
+          <Link to="/" className="home-link parrafos">
+            ir al inicio
+          </Link>
       </div>
     </div>
   );

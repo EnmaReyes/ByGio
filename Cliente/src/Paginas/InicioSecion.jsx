@@ -43,64 +43,66 @@ const InicioSecion = () => {
   };
 
   return (
-  <div className="login-container">
-    <div className="mural-box">
-      <h1 className="mural parrafos">BYGIO</h1>
-    </div>
-
-    <div className="login-card">
-      {/* Logo */}
-      <h1 className="bygiotext">ByGio</h1>
-      <h4>Bienvenido</h4>
-
-      {/* Username */}
-      <div className="mb-3 input-wrapper">
-        <FontAwesomeIcon icon={faUser} className="input-icon" />
-        <Form.Control
-          type="text"
-          name="username"
-          placeholder="Username"
-          onChange={handlechange}
-          className="input-field"
-        />
+    <div className="login-container ">
+      <div className="mural-box">
+        <h1 className="mural parrafos">BYGIO</h1>
       </div>
 
-      {/* Password */}
-      <div className="mb-3 input-wrapper">
-        <FontAwesomeIcon icon={faLock} className="input-icon" />
-        <Form.Control
-          type={showPassword ? "text" : "password"}
-          name="password"
-          placeholder="Password"
-          onChange={handlechange}
-          className="input-field"
-        />
-        <FontAwesomeIcon
-          icon={showPassword ? faEye : faEyeSlash}
-          onClick={togglePasswordVisibility}
-          className="toggle-password"
-        />
-      </div>
+      <div className="login-card">
+        {/* Logo */}
+        <h1 className="bygiotext">ByGio</h1>
+        <h4>Bienvenido</h4>
 
-      {/* Error */}
-      {error && <div className="error-message">{error}</div>}
+        {/* Username */}
+        <div className="mb-3 input-wrapper parrafos">
+          <FontAwesomeIcon icon={faUser} className="input-icon" />
+          <Form.Control
+            type="text"
+            name="username"
+            placeholder="Username"
+            onChange={handlechange}
+            className="input-field"
+          />
+        </div>
 
-      {/* Login Button */}
-      <button onClick={handlesubmit} className="login-btn">
-        Iniciar Sesión
-      </button>
+        {/* Password */}
+        <div className="mb-3 input-wrapper parrafos">
+          <FontAwesomeIcon icon={faLock} className="input-icon" />
+          <Form.Control
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Password"
+            onChange={handlechange}
+            className="input-field"
+          />
+          <FontAwesomeIcon
+            icon={showPassword ? faEye : faEyeSlash}
+            onClick={togglePasswordVisibility}
+            className="toggle-password"
+          />
+        </div>
 
-      {/* Sign Up */}
-      <p className="signup-text">
-        Nuevo Usuario?{" "}
-        <Link to="/register" className="signup-link">
-          Registrate
+        {/* Error */}
+        {error && <div className="error-message parrafos">{error}</div>}
+
+        {/* Login Button */}
+        <button onClick={handlesubmit} className="login-btn titulos">
+          Iniciar Sesión
+        </button>
+
+        {/* Sign Up */}
+        <p className="signup-text">
+          Nuevo Usuario?{" "}
+          <Link to="/register" className="signup-link parrafos">
+            Registrate
+          </Link>
+        </p>
+        <Link to="/" className="home-link parrafos">
+          ir al inicio
         </Link>
-      </p>
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default InicioSecion;

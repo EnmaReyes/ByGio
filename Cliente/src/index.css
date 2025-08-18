@@ -179,7 +179,23 @@ a{
   font-weight: bold;
   cursor: pointer;
 }
-
+.home-link{
+  width: 100%;
+  border-radius: 15px;
+  background-color: #fff;
+  border: none;
+  padding: 0.3rem 1rem;
+  font-weight: bold;
+  color: #FFC23B;
+  transition: all ease-in-out 0.3s;
+  font-size: 1rem;
+}
+.home-link:hover {
+  background-color: #FFC23B;
+  text-decoration: none;
+  color: #fff;
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.7);
+}
 /* Error */
 .error-message {
   margin-bottom: 0.8rem;
