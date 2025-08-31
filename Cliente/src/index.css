@@ -267,35 +267,36 @@ a{
   }
 }
 
-@media (max-width: 768px) {
-  .carrito-responsive {
-    position: relative !important;
-    top: 0 !important;
-    right: 0 !important;
-    margin-left: 0 !important; /* para que no se desplace */
-    display: block; /* ocupa toda la línea */
-  }
+
+/* wrapper del icono: ancla fija para el punto rojo */
+.icon-badge {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  /* opcional si querés tamaño consistente del icono */
+  width: 1.5em;
+  height: 1.5em;
 }
-.carrito-dropdown {
-  position: absolute; /* flota encima */
-  right: 0;
-  top: 100%; /* justo debajo del botón del carrito */
-  z-index: 2000;
-  min-width: 200px; /* ajusta según tu diseño */
-}
-.counter {
+
+/* el punto rojo, pegado a la esquina superior derecha del icono */
+.icon-badge .counter {
   position: absolute;
-  top: 19px;
-  right: 55%;
-  width: 20px;
-  text-align: center;
-  background-color: transparent; 
-  color: #fff;
+  top: 0;
+  right: 0;
+  transform: translate(-130%, 225%); /* saca un poco el punto hacia afuera */
+  width: 10px;
+  height: 10px;
+  background: #ff1212;
   border-radius: 50%;
-  padding: 0px;
-  font-size: 0.60rem;
-  font-weight: bold;
-  box-shadow: 0 0 5px rgba(2, 2, 2, 0.5);
+}
+
+/* Si quieres ajustar en mobile, hacelo sobre el wrapper, no sobre el <a> */
+@media (max-width: 768px) {
+  .icon-badge .counter {
+    width: 8px;
+    height: 8px;
+    
+  }
 }
 
 

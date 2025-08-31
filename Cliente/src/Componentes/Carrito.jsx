@@ -16,19 +16,28 @@ const Carrito = ({
   setCountProducts,
 }) => {
   const onDeleteProduct = (product) => {
+    // Restar cantidad o eliminar si es el último
     const updatedProducts = allProducts
       .map((item) =>
-        item.id === product.id
-          ? item.cantidad > 1
-            ? { ...item, cantidad: item.cantidad - 1 }
-            : null
-          : item
+        item.id === product.id ? { ...item, cantidad: item.cantidad - 1 } : item
       )
-      .filter(Boolean);
+      .filter((item) => item.cantidad > 0);
+
+    // Recalcular total desde la lista actualizada
+    const newTotal = updatedProducts.reduce(
+      (acc, item) => acc + item.cantidad * item.cost,
+      0
+    );
+
+    // Recalcular cantidad total de productos
+    const newCount = updatedProducts.reduce(
+      (acc, item) => acc + item.cantidad,
+      0
+    );
 
     setAllProducts(updatedProducts);
-    setTotal(total - product.precio);
-    setCountProducts(countProducts - 1);
+    setTotal(newTotal);
+    setCountProducts(newCount);
   };
 
   const onClear = () => {
@@ -56,26 +65,22 @@ const Carrito = ({
       <ul className="navbar-nav">
         <li className="nav-item dropdown">
           <a
-            className="nav-link dropdown-toggle fs-3 p-0"
+            className="nav-link dropdown-toggle fs-3 p-0 d-inline-flex align-items-center"
             href="#"
             role="button"
             data-bs-toggle="dropdown"
             data-bs-auto-close="false"
             aria-expanded="false"
-            style={{ color: "#6C6868", position: "relative" }}
+            style={{ color: "#6C6868" }}
           >
-            <FontAwesomeIcon icon={faBagShopping} />
-            {countProducts > 0 && (
-              <span
-                className="counter"
-              >
-                {countProducts}
-              </span>
-            )}
+            <span className="icon-badge">
+              <FontAwesomeIcon icon={faBagShopping} />
+              {countProducts > 0 && <span className="counter" />}
+            </span>
           </a>
 
           <ul
-            className="dropdown-menu dropdown-menu-end"
+            className="dropdown-menu dropdown-menu-end parrafos"
             style={{ backgroundColor: "#FFFBF5" }}
           >
             {allProducts.length > 0 ? (
@@ -90,7 +95,7 @@ const Carrito = ({
                       style={{ color: "#6C6868" }}
                     >
                       <small>
-                        {product.cantidad} x {product.title}
+                        {product.cantidad}-{product.title}
                       </small>
                       <small>Talla: {product.talla}</small>
                       <small>Valor: ${product.cost?.toLocaleString()}</small>
@@ -104,7 +109,7 @@ const Carrito = ({
                   </li>
                 ))}
                 <li
-                  className="dropdown-item text-center py-2"
+                  className="dropdown-item text-center py-2 parrafos"
                   style={{ color: "#6C6868" }}
                 >
                   <strong>Total: ${total.toLocaleString()}</strong>
@@ -113,7 +118,7 @@ const Carrito = ({
                   <Button
                     variant="dark"
                     size="sm"
-                    className="rounded-pill"
+                    className="rounded-pill titulos"
                     href={generateWhatsAppLink()}
                     target="_blank"
                   >
@@ -122,7 +127,7 @@ const Carrito = ({
                   <Button
                     variant="outline-dark"
                     size="sm"
-                    className="rounded-pill"
+                    className="rounded-pill titulos"
                     onClick={onClear}
                   >
                     Vaciar
@@ -131,7 +136,7 @@ const Carrito = ({
               </>
             ) : (
               <li
-                className="dropdown-item text-center"
+                className="dropdown-item text-center parrafos"
                 style={{ color: "#6C6868" }}
               >
                 Carrito vacío

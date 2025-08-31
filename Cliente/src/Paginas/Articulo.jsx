@@ -202,7 +202,7 @@ const Articulo = () => {
                         transition: "transform 0.2s ease-in-out",
                       }}
                       onClick={() => {
-                        setMedidas("S");
+                        setMedidas(sizes?.[0]);
                       }}
                     >
                       {sizes?.[0]}
@@ -219,7 +219,7 @@ const Articulo = () => {
                         transition: "transform 0.2s ease-in-out",
                       }}
                       onClick={() => {
-                        setMedidas("M");
+                        setMedidas(sizes?.[1]);
                       }}
                     >
                       {sizes?.[1]}
@@ -236,7 +236,7 @@ const Articulo = () => {
                         transition: "transform 0.2s ease-in-out",
                       }}
                       onClick={() => {
-                        setMedidas("L");
+                        setMedidas(sizes?.[2]);
                       }}
                     >
                       {sizes?.[2]}
@@ -256,7 +256,7 @@ const Articulo = () => {
                           transition: "transform 0.2s ease-in-out",
                         }}
                         onClick={() => {
-                          setMedidas("L");
+                          setMedidas(sizes?.[3]);
                         }}
                       >
                         {sizes?.[3]}
@@ -284,7 +284,7 @@ const Articulo = () => {
                   className="ml-3 btn btn-outline-secondary btn-sm parrafos"
                   onClick={() => setConteo(conteo + 1)}
                 >
-                  <FontAwesomeIcon icon={faPlus}/>
+                  <FontAwesomeIcon icon={faPlus} />
                 </Button>
               </div>
 
