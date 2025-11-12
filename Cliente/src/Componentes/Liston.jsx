@@ -77,7 +77,7 @@ export const ListonMayorista = () => {
         <div className="promosubtitulo-liston m-0 p-0 titulos">
           {" "}
           <span className="numero">6</span> <span className="letra">X</span>{" "}
-          <span className="numero">$150.000</span>
+          <span className="numero">$100.000</span>
         </div>
         <div className="explora-liston">
           {" "}

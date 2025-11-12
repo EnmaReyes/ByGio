@@ -19,7 +19,7 @@ const Inicio = () => {
   return (
     <div>
       <Banner />
-      <ListonMostSeller />
+      <ListonMayorista />
       <CartaInicial />
       <ListonOffer />
       <ArtiulosOferta />
@@ -27,7 +27,7 @@ const Inicio = () => {
       <Col>
         <CartaDeArticulos />
       </Col>
-      <ListonMayorista />
+      <ListonMostSeller />
     </div>
   );
 };
