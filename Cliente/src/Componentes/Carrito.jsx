@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   faBagShopping,
   faCircleXmark,
@@ -6,6 +6,57 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "react-bootstrap";
 import { API_URL } from "../config";
+
+const STYLES = {
+  navLink: { color: "#6C6868" },
+  dropdown: { backgroundColor: "#FFFBF5" },
+  text: { color: "#6C6868" },
+};
+
+const ProductItem = ({ product, onDelete }) => (
+  <li className="dropdown-item d-flex justify-content-between align-items-center border-bottom py-2">
+    <div className="d-flex flex-column" style={STYLES.text}>
+      <small>
+        {product.cantidad}-{product.title}
+      </small>
+      <small>Talla: {product.talla}</small>
+      <small>Valor: ${product.cost?.toLocaleString()}</small>
+    </div>
+    <FontAwesomeIcon
+      icon={faCircleXmark}
+      className="ms-2"
+      style={{ cursor: "pointer", ...STYLES.text }}
+      onClick={() => onDelete(product)}
+    />
+  </li>
+);
+
+const CartSummary = ({ total, onBuy, onClear }) => (
+  <>
+    <li className="dropdown-item text-center py-2 parrafos" style={STYLES.text}>
+      <strong>Total: ${total.toLocaleString()}</strong>
+    </li>
+    <li className="dropdown-item d-flex justify-content-center gap-2 py-2">
+      <a
+        href={onBuy()}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn-dark btn-sm rounded-pill titulos"
+        style={{ textDecoration: "none" }}
+      >
+        Comprar
+      </a>
+      <Button
+        variant="outline-dark"
+        size="sm"
+        className="rounded-pill titulos"
+        onClick={onClear}
+      >
+        Vaciar
+      </Button>
+    </li>
+  </>
+);
 
 const Carrito = ({
   allProducts,
@@ -15,24 +66,13 @@ const Carrito = ({
   countProducts,
   setCountProducts,
 }) => {
-  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
-  const onDeleteProduct = (product) => {
-    // Restar cantidad o eliminar si es el último
-    const updatedProducts = allProducts
-      .map((item) =>
-        item.id === product.id
-          ? { ...item, cantidad: item.cantidad - 1 }
-          : item,
-      )
-      .filter((item) => item.cantidad > 0);
+  const phoneNumber = import.meta.env.VITE_NUMBER_PHONE;
 
-    // Recalcular total desde la lista actualizada
+  const updateCart = (updatedProducts) => {
     const newTotal = updatedProducts.reduce(
       (acc, item) => acc + item.cantidad * item.cost,
       0,
     );
-
-    // Recalcular cantidad total de productos
     const newCount = updatedProducts.reduce(
       (acc, item) => acc + item.cantidad,
       0,
@@ -43,25 +83,31 @@ const Carrito = ({
     setCountProducts(newCount);
   };
 
-  const onClear = () => {
-    setAllProducts([]);
-    setTotal(0);
-    setCountProducts(0);
+  const onDeleteProduct = (product) => {
+    const updatedProducts = allProducts
+      .map((item) =>
+        item.id === product.id
+          ? { ...item, cantidad: item.cantidad - 1 }
+          : item,
+      )
+      .filter((item) => item.cantidad > 0);
+
+    updateCart(updatedProducts);
   };
 
-  const generateWhatsAppLink = () => {
-    const message = `¡Hola!😁 Estoy interesado en:\n\n${allProducts
-      .map(
-        (p) =>
-          `${p.cantidad} ${p.title}\nTalla: ${
-            p.talla
-          }\nValor: $${p.cost?.toLocaleString()}\nImagen:\n${API_URL}${
-            p.img[0]
-          }`,
-      )
-      .join("\n\n")}`;
-    return `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(message)}`;
+  const onClear = () => {
+    updateCart([]);
   };
+
+  const generateWhatsAppLink = useMemo(() => {
+    const message = `¡Hola!😁 Estoy interesado en:\n\n${allProducts
+      .map((p) => {
+        const imageUrl = p.img?.[0] ? `${p.img[0]}` : "";
+        return `${p.cantidad} ${p.title}\nTalla: ${p.talla}\nValor: $${p.cost?.toLocaleString()}${imageUrl ? `\nImagen:\n${imageUrl}` : ""}`;
+      })
+      .join("\n\n")}`;
+    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  }, [allProducts, phoneNumber]);
 
   return (
     <div className="navbar-collapse me-4 carrito-responsive">
@@ -74,7 +120,7 @@ const Carrito = ({
             data-bs-toggle="dropdown"
             data-bs-auto-close="false"
             aria-expanded="false"
-            style={{ color: "#6C6868" }}
+            style={STYLES.navLink}
           >
             <span className="icon-badge">
               <FontAwesomeIcon icon={faBagShopping} />
@@ -84,63 +130,27 @@ const Carrito = ({
 
           <ul
             className="dropdown-menu dropdown-menu-end parrafos"
-            style={{ backgroundColor: "#FFFBF5" }}
+            style={STYLES.dropdown}
           >
             {allProducts.length > 0 ? (
               <>
                 {allProducts.map((product, idx) => (
-                  <li
+                  <ProductItem
                     key={idx}
-                    className="dropdown-item d-flex justify-content-between align-items-center border-bottom py-2"
-                  >
-                    <div
-                      className="d-flex flex-column"
-                      style={{ color: "#6C6868" }}
-                    >
-                      <small>
-                        {product.cantidad}-{product.title}
-                      </small>
-                      <small>Talla: {product.talla}</small>
-                      <small>Valor: ${product.cost?.toLocaleString()}</small>
-                    </div>
-                    <FontAwesomeIcon
-                      icon={faCircleXmark}
-                      className="ms-2"
-                      style={{ cursor: "pointer", color: "#6C6868" }}
-                      onClick={() => onDeleteProduct(product)}
-                    />
-                  </li>
+                    product={product}
+                    onDelete={onDeleteProduct}
+                  />
                 ))}
-                <li
-                  className="dropdown-item text-center py-2 parrafos"
-                  style={{ color: "#6C6868" }}
-                >
-                  <strong>Total: ${total.toLocaleString()}</strong>
-                </li>
-                <li className="dropdown-item d-flex justify-content-center gap-2 py-2">
-                  <Button
-                    variant="dark"
-                    size="sm"
-                    className="rounded-pill titulos"
-                    href={generateWhatsAppLink()}
-                    target="_blank"
-                  >
-                    Comprar
-                  </Button>
-                  <Button
-                    variant="outline-dark"
-                    size="sm"
-                    className="rounded-pill titulos"
-                    onClick={onClear}
-                  >
-                    Vaciar
-                  </Button>
-                </li>
+                <CartSummary
+                  total={total}
+                  onBuy={() => generateWhatsAppLink}
+                  onClear={onClear}
+                />
               </>
             ) : (
               <li
                 className="dropdown-item text-center parrafos"
-                style={{ color: "#6C6868" }}
+                style={STYLES.text}
               >
                 Carrito vacío
               </li>
