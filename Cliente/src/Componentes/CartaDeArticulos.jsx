@@ -6,7 +6,8 @@ import { useArticulos } from "./UseArticulos";
 
 export const CartaDeArticulos = () => {
   const articulo = useArticulos();
-
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+  
   const generateWhatsAppLink = (art) => {
     const tallaSlected = art.oversize ? "Over size" : "S/M/L";
     const message = `¡Hola!😁 Estoy interesado en:
@@ -14,8 +15,8 @@ export const CartaDeArticulos = () => {
      Valor: $${art.cost.toLocaleString()} por unidad
      ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
-    return `https://wa.me/573128919861?text=${encodeURIComponent(
-      message
+    return `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(
+      message,
     )}%0A%0A${encodeURIComponent(imageLink)}`;
   };
 
@@ -108,7 +109,7 @@ export const ArtiulosOferta = () => {
      ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
     return `https://wa.me/573128919861?text=${encodeURIComponent(
-      message
+      message,
     )}%0A%0A${encodeURIComponent(imageLink)}`;
   };
 
@@ -125,7 +126,7 @@ export const ArtiulosOferta = () => {
                     <div className="porcentaje">
                       <span>
                         {Math.round(
-                          ((art.cost - art.descuento) / art.cost) * 100
+                          ((art.cost - art.descuento) / art.cost) * 100,
                         )}
                         % OFF
                       </span>

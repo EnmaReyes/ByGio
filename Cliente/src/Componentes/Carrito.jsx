@@ -15,24 +15,27 @@ const Carrito = ({
   countProducts,
   setCountProducts,
 }) => {
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
   const onDeleteProduct = (product) => {
     // Restar cantidad o eliminar si es el último
     const updatedProducts = allProducts
       .map((item) =>
-        item.id === product.id ? { ...item, cantidad: item.cantidad - 1 } : item
+        item.id === product.id
+          ? { ...item, cantidad: item.cantidad - 1 }
+          : item,
       )
       .filter((item) => item.cantidad > 0);
 
     // Recalcular total desde la lista actualizada
     const newTotal = updatedProducts.reduce(
       (acc, item) => acc + item.cantidad * item.cost,
-      0
+      0,
     );
 
     // Recalcular cantidad total de productos
     const newCount = updatedProducts.reduce(
       (acc, item) => acc + item.cantidad,
-      0
+      0,
     );
 
     setAllProducts(updatedProducts);
@@ -54,10 +57,10 @@ const Carrito = ({
             p.talla
           }\nValor: $${p.cost?.toLocaleString()}\nImagen:\n${API_URL}${
             p.img[0]
-          }`
+          }`,
       )
       .join("\n\n")}`;
-    return `https://wa.me/573128919861?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (

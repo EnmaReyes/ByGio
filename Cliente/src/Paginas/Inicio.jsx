@@ -13,7 +13,6 @@ import {
   ListonMayorista,
   ListonTendencia,
 } from "../Componentes/Liston";
-import { useArticulos } from "../Componentes/UseArticulos";
 
 const Inicio = () => {
   return (

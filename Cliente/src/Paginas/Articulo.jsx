@@ -39,6 +39,7 @@ const Articulo = () => {
   const [conteo, setConteo] = useState(1);
   const [medidas, setMedidas] = useState("S");
   const { currentUser } = useContext(AuthContext);
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
   const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +122,7 @@ const Articulo = () => {
       Talla: ${tallaSelected}
       Valor: $${selected.cost.toLocaleString()} por unidad`;
     const imageLink = imagens?.[0];
-    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
+    const whatsappLink = `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;

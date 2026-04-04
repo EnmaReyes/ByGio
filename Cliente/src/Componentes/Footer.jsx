@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import "../App.css";
 const Footer = () => {
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+
   return (
     <div className="bg-black">
       <Container>
@@ -29,7 +31,7 @@ const Footer = () => {
                 <FontAwesomeIcon icon={faInstagram} />
               </a>
               <a
-                href="https://wa.me/573128919861?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido"
+                href={`https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`}
                 target="_blank"
                 className="display-6 m-2 text-light"
               >

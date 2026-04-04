@@ -10,7 +10,7 @@ const URL = API_URL;
 const CartaInicial = () => {
   const [articulo, setArticulo] = useState([]);
   const location = useLocation().search;
-
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -43,7 +43,7 @@ const CartaInicial = () => {
      Valor: $${art.cost.toLocaleString()} por unidad
      ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
-    const whatsappLink = `https://wa.me/573128919861?text=${encodeURIComponent(
+    const whatsappLink = `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(
       message
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;

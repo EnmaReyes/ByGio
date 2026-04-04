@@ -13,7 +13,7 @@ const BarraNavegacion = ({
   setCountProducts,
 }) => {
   const { currentUser, logout } = useContext(AuthContext);
-
+  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
   return (
     <nav
       className="navbar navbar-expand-sm pb-0 m-0"
@@ -54,7 +54,7 @@ const BarraNavegacion = ({
                 label="Links"
                 items={[
                   {
-                    href: "https://wa.me/573128919861?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido",
+                    href: `https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`,
                     label: "Whats'up",
                   },
                   {
