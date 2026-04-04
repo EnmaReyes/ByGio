@@ -301,7 +301,7 @@ const Articulo = () => {
                   type="button"
                   className="btn btn-dark btn-lg rounded-pill parrafos"
                   target="_blank"
-                  href={WhatsAppLink(selected, conteo, medidas)}
+                  onClick={WhatsAppLink(selected, conteo, medidas)}
                 >
                   Comprar
                 </Button>

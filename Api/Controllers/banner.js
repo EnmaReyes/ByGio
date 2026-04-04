@@ -2,15 +2,14 @@ const jwt = require("jsonwebtoken");
 const { Banner } = require("../DataBase/models/Banner.js");
 
 const getBanner = async (req, res) => {
-  console.log("entré al get");
-
   try {
     const Banners = await Banner.findAll();
     if (!Banners || Banners.length === 0) {
-      return res.status(404).json("No Hay Banners");
+      return res.status(404).json({ message: "No hay banners" });
     }
     res.status(200).json(Banners);
   } catch (error) {
+    console.error("Error en getBanner:", error);
     res.status(500).json("Error interno del servidor");
   }
 };
@@ -24,16 +23,23 @@ const addBanner = async (req, res) => {
         .status(401)
         .json("No estás autenticado para añadir articulos!");
     }
+
     const userInfo = jwt.verify(token, "jwtkey");
 
+    // Convertir array a JSON string igual que en EditBanner
     const newBanner = {
-      img: req.body.img,
+      img: Array.isArray(req.body.img)
+        ? JSON.stringify(req.body.img)
+        : req.body.img,
       uid: userInfo.id,
     };
-    const createdBanner = await Banner.create(newBanner);
 
-    res.json("Articulo creado con éxito!");
+    const createdBanner = await Banner.create(newBanner);
+    res
+      .status(201)
+      .json({ message: "Banner creado con éxito!", banner: createdBanner });
   } catch (error) {
+    console.error("Error en addBanner:", error);
     res.status(500).json("Error interno del servidor del post");
   }
 };
@@ -51,7 +57,7 @@ const EditBanner = async (req, res) => {
     const userInfo = jwt.verify(token, "jwtkey");
     const bannerId = req.params.id;
 
-    // Si viene un array, convertirlo a string JSON
+    // Convertir array a JSON string si es necesario
     const updateBanner = {
       img: Array.isArray(req.body.img)
         ? JSON.stringify(req.body.img)
@@ -69,9 +75,9 @@ const EditBanner = async (req, res) => {
       return res.status(404).json("No se encontró el Banner para actualizar");
     }
 
-    res.json("Banner actualizado con éxito!");
+    res.status(200).json({ message: "Banner actualizado con éxito!" });
   } catch (error) {
-    console.error(error);
+    console.error("Error en EditBanner:", error);
     res.status(500).json("Error interno del servidor");
   }
 };
@@ -84,6 +90,7 @@ const deleteBanner = async (req, res) => {
       .status(401)
       .json("No estás autenticado para eliminar el Banner!");
   }
+
   try {
     const userInfo = jwt.verify(token, "jwtkey");
     const BannerID = req.params.id;
@@ -94,6 +101,7 @@ const deleteBanner = async (req, res) => {
         uid: userInfo.id, // Solo permite eliminar si el post pertenece al usuario
       },
     });
+
     if (!Banners) {
       return res
         .status(404)
@@ -103,9 +111,10 @@ const deleteBanner = async (req, res) => {
     await Banners.destroy();
     return res.json("Banner eliminado con éxito!");
   } catch (error) {
-    if (err.name === "JsonWebTokenError") {
+    if (error.name === "JsonWebTokenError") {
       return res.status(403).json("Token no válido");
     }
+    console.error("Error en deleteBanner:", error);
     return res.status(500).json("Error en el servidor");
   }
 };

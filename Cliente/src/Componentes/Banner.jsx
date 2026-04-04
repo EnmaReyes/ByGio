@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/authContext";
@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import EditBanner from "./EditBanner";
 import { API_URL } from "../config";
+
 const URL = API_URL;
 
 const Banner = () => {
@@ -13,45 +14,72 @@ const Banner = () => {
   const location = useLocation().search;
   const [loading, setLoading] = useState(true);
   const { currentUser } = useContext(AuthContext);
-  const [editorVisible, setEditorVisible] = useState(false);
+  const [editorVisible, seteditorVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(`${URL}/api/banner/${location}`);
-        const data = res.data;
-        // Verificar y transformar los datos de `img` y `size`
-        const formattedData = Array.isArray(data)
-          ? data.map((art) => ({
-              ...art,
-              img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
-              sizes:
-                typeof art.sizes === "string"
-                  ? JSON.parse(art.sizes)
-                  : art.sizes,
-            }))
-          : [];
+  /**
+   * Función reutilizable para obtener datos del banner
+   */
+  const fetchBannerData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${URL}/api/banner/${location}`, {
+        withCredentials: true,
+      });
+      const data = res.data;
 
-        setBanner(formattedData[0]);
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
+      // Verificar y transformar los datos de `img` y `size`
+      const formattedData = Array.isArray(data)
+        ? data.map((art) => ({
+            ...art,
+            img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
+            sizes:
+              typeof art.sizes === "string"
+                ? JSON.parse(art.sizes)
+                : art.sizes,
+          }))
+        : [];
+
+      setBanner(formattedData[0] || []);
+    } catch (error) {
+      console.error("Error cargando banner:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [location]);
 
+  /**
+   * Cargar datos cuando cambia la ruta
+   */
+  useEffect(() => {
+    fetchBannerData();
+  }, [fetchBannerData, location]);
+
+  /**
+   * Callback cuando se actualiza el banner desde el editor
+   */
+  const handleBannerUpdated = useCallback(async () => {
+    // Esperar un pequeño delay para que el servidor procese la actualización
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Refrescar los datos del banner
+    await fetchBannerData();
+  }, [fetchBannerData]);
+
   return (
-    <div className="w-100 h-100 p-0" style={{ paddingTop: "3%", position: "relative" }}>
+    <div
+      className="w-100 h-100 p-0"
+      style={{ paddingTop: "3%", position: "relative" }}
+    >
       {editorVisible ? (
-        <EditBanner banner={banner} />
+        <EditBanner
+          banner={banner}
+          seteditorVisible={seteditorVisible}
+          onBannerUpdated={handleBannerUpdated}
+        />
       ) : (
         <div
           id="carouselExampleControls"
           className="carousel slide carrusel-banner"
           data-bs-ride="carousel"
-          
         >
           <div
             className="carousel-inner"
@@ -62,7 +90,7 @@ const Banner = () => {
                 <div className="spinner-border" role="status"></div>
               </div>
             ) : (
-              banner.img.map((bann, index) => (
+              banner?.img?.map((bann, index) => (
                 <div
                   key={index}
                   className={`carousel-item previewBanner${
@@ -110,8 +138,12 @@ const Banner = () => {
         <div
           className="upload-img"
           onClick={() => {
-            setEditorVisible(!editorVisible);
+            seteditorVisible(!editorVisible);
           }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && seteditorVisible(!editorVisible)}
+          title="Editar banner"
         >
           <FontAwesomeIcon icon={faPenToSquare} />
         </div>
@@ -121,3 +153,4 @@ const Banner = () => {
 };
 
 export default Banner;
+
