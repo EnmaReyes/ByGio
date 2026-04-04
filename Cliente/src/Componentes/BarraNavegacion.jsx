@@ -48,7 +48,7 @@ const BarraNavegacion = ({
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
           {/* Menú y carrito alineados a la derecha */}
           <div className="d-flex align-items-center ms-auto">
-            <ul className="navbar-nav mb-2 mb-lg-0 me-3">
+            <ul className="navbar-nav mb-2 mb-lg-0 me-3 gap-4">
               <NavItem href="/" label="Home" />
               <Dropdown
                 label="Links"
@@ -130,10 +130,10 @@ const UserDropdown = ({ currentUser, logout }) => (
     </a>
     <ul className="dropdown-menu" aria-labelledby="userDropdown">
       {currentUser ? (
-        <li>
-          <button className="dropdown-item li-navbar-hover" onClick={logout}>
+        <li className="dropdown-item li-navbar-hover">
+          <p className="mb-0" onClick={logout}>
             Cerrar Sesión
-          </button>
+          </p>
         </li>
       ) : (
         <>
