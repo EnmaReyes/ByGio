@@ -25,14 +25,14 @@ import { toast } from "react-toastify";
 import {
   notify,
   toastComments,
-} from "../Componentes/toastConfig/toastconfigs.jsx";
-import "../App.css";
+} from "../../Componentes/toastConfig/toastconfigs.jsx";
+import "../../App.css";
 import "./Articulo.css";
 import "swiper/css";
 import "swiper/css/pagination";
 import axios from "axios";
-import { API_URL } from "../config";
-import { AuthContext } from "../context/authContext.jsx";
+import { API_URL } from "../../config.js";
+import { AuthContext } from "../../context/authContext.jsx";
 
 // Constants
 const URL = API_URL;
@@ -69,7 +69,7 @@ const ImageGallery = ({ images }) => {
             src={img}
             alt={`Producto ${index + 1}`}
             className="w-100"
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: "contain" }}
           />
         </SwiperSlide>
       ))}

@@ -11,10 +11,10 @@ import BarraNavegacion from "./Componentes/BarraNavegacion";
 import Footer from "./Componentes/Footer";
 import Inicio from "./Paginas/Inicio";
 import Editor from "./Paginas/Editor";
-import Articulo from "./Paginas/Articulo";
 import { useState } from "react";
 import Registro from "./Paginas/Registro";
 import InicioSecion from "./Paginas/InicioSecion";
+import Articulo from "./Paginas/ArticuloDetallado/Articulo";
 
 //! Rutas de pagina\\
 const Layout = ({
