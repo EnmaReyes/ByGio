@@ -3,6 +3,7 @@ import logonegro from "../assets/Logo/logo_negro.png";
 import { AuthContext } from "../context/authContext";
 import { Link } from "react-router-dom";
 import Carrito from "./Carrito";
+import "../App.css";
 
 const BarraNavegacion = ({
   allProducts,
@@ -14,64 +15,77 @@ const BarraNavegacion = ({
 }) => {
   const { currentUser, logout } = useContext(AuthContext);
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+
+  const navbarLinks = [
+    {
+      href: `https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`,
+      label: "Whats'up",
+    },
+    {
+      href: "https://www.instagram.com/bygio_modafemenina?igsh=MXVkaTRpeHBsZXU3ag==",
+      label: "Instagram",
+    },
+  ];
+
   return (
-    <nav
-      className="navbar navbar-expand-sm pb-0 m-0"
-      style={{
-        position: "fixed",
-        width: "100%",
-        height: "auto",
-        zIndex: 1000,
-        backgroundColor: "#FFFBF5",
-      }}
-    >
-      <div className="container-fluid">
-        <img
-          className="navbar-brand"
-          src={logonegro}
-          alt="Logo"
-          style={{ width: "70px" }}
-        />
-
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
+    <nav className="navbar navbar-expand-sm navbar-light px-3 px-md-4 py-2">
+      <div className="container-fluid navbar-shell">
+        <Link
+          to="/"
+          className="navbar-brand me-3 p-0 d-flex align-items-center"
         >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+          <img
+            src={logonegro}
+            alt="Logo ByGio"
+            className="navbar-brand-image"
+          />
+        </Link>
 
-        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          {/* Menú y carrito alineados a la derecha */}
-          <div className="d-flex align-items-center ms-auto">
-            <ul className="navbar-nav mb-2 mb-lg-0 me-3 gap-4">
-              <NavItem href="/" label="Home" />
-              <Dropdown
-                label="Links"
-                items={[
-                  {
-                    href: `https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`,
-                    label: "Whats'up",
-                  },
-                  {
-                    href: "https://www.instagram.com/bygio_modafemenina?igsh=MXVkaTRpeHBsZXU3ag==",
-                    label: "Instagram",
-                  },
-                ]}
-              />
-              <UserDropdown currentUser={currentUser} logout={logout} />
-              <Carrito
-                allProducts={allProducts}
-                setAllProducts={setAllProducts}
-                total={total}
-                setTotal={setTotal}
-                countProducts={countProducts}
-                setCountProducts={setCountProducts}
-              />
+        {/* Contenedor que controla el alineado a la derecha en desktop */}
+        <div className="nav-actions d-flex align-items-center gap-2">
+          <div className="navbar-desktop-actions d-none d-sm-flex align-items-center gap-2">
+            <NavItem href="/" label="Home" />
+            <Dropdown label="Links" items={navbarLinks} />
+            <UserDropdown currentUser={currentUser} logout={logout} />
+          </div>
+
+          <div className="d-flex align-items-center gap-2">
+            <Carrito
+              allProducts={allProducts}
+              setAllProducts={setAllProducts}
+              total={total}
+              setTotal={setTotal}
+              countProducts={countProducts}
+              setCountProducts={setCountProducts}
+            />
+            <button
+              className="navbar-toggler rounded-pill"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="collapse navbar-collapse d-sm-none"
+          id="navbarSupportedContent"
+        >
+          <div className="navbar-mobile-panel">
+            <div className="navbar-mobile-header">
+              <span className="parrafos navbar-mobile-title">
+                Explora ByGio
+              </span>
+            </div>
+            <ul className="navbar-nav">
+              <NavItem href="/" label="Home" mobile />
+              <Dropdown label="Links" items={navbarLinks} mobile />
+              <UserDropdown currentUser={currentUser} logout={logout} mobile />
             </ul>
           </div>
         </div>
@@ -80,27 +94,32 @@ const BarraNavegacion = ({
   );
 };
 
-const NavItem = ({ href, label }) => (
-  <li className="nav-item">
-    <a className="nav-link" href={href}>
+const NavItem = ({ href, label, mobile = false }) => (
+  <li className={`nav-item ${mobile ? "w-100" : ""}`}>
+    <a
+      className={`nav-link ${mobile ? "nav-link-mobile" : "navbar-link"}`}
+      href={href}
+    >
       {label}
     </a>
   </li>
 );
 
-const Dropdown = ({ label, items }) => (
-  <li className="nav-item dropdown">
+const Dropdown = ({ label, items, mobile = false }) => (
+  <li className={`nav-item dropdown ${mobile ? "w-100" : ""}`}>
     <a
-      className="nav-link dropdown-toggle"
-      style={{ color: "#6C6868" }}
-      id="navbarDropdown"
+      className={`nav-link dropdown-toggle ${mobile ? "nav-link-mobile" : "navbar-link"}`}
+      id={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
       role="button"
       data-bs-toggle="dropdown"
       aria-expanded="false"
     >
       {label}
     </a>
-    <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+    <ul
+      className={`dropdown-menu ${mobile ? "dropdown-menu-end" : ""}`}
+      aria-labelledby={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
+    >
       {items.map((item, index) => (
         <li key={index}>
           <a
@@ -117,18 +136,21 @@ const Dropdown = ({ label, items }) => (
   </li>
 );
 
-const UserDropdown = ({ currentUser, logout }) => (
-  <li className="nav-item dropdown">
+const UserDropdown = ({ currentUser, logout, mobile = false }) => (
+  <li className={`nav-item dropdown ${mobile ? "w-100" : ""}`}>
     <a
-      className="nav-link dropdown-toggle"
-      id="userDropdown"
+      className={`nav-link dropdown-toggle ${mobile ? "nav-link-mobile" : "navbar-link"}`}
+      id={mobile ? "userDropdownMobile" : "userDropdown"}
       role="button"
       data-bs-toggle="dropdown"
       aria-expanded="false"
     >
       {currentUser ? `Bienvenido ${currentUser?.username}` : "Usuario"}
     </a>
-    <ul className="dropdown-menu" aria-labelledby="userDropdown">
+    <ul
+      className={`dropdown-menu ${mobile ? "dropdown-menu-end" : ""}`}
+      aria-labelledby={mobile ? "userDropdownMobile" : "userDropdown"}
+    >
       {currentUser ? (
         <li className="dropdown-item li-navbar-hover">
           <p className="mb-0" onClick={logout}>

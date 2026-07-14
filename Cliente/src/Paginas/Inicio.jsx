@@ -18,15 +18,15 @@ const Inicio = () => {
   return (
     <div>
       <Banner />
-      <ListonMayorista />
+      {/*<ListonMayorista />*/}
       <CartaInicial />
-      <ListonOffer />
+      {/* <ListonOffer /> */}
       <ArtiulosOferta />
-      <ListonTendencia />
+      {/*   <ListonTendencia /> */}
       <Col>
         <CartaDeArticulos />
       </Col>
-      <ListonMostSeller />
+      {/* <ListonMostSeller /> */}
     </div>
   );
 };

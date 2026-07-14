@@ -1,30 +1,233 @@
+:root {
+  --bg: rgba(255, 251, 245, 0.96);
+  --muted: #6c6868;
+  --muted-strong: #201f1f;
+  --accent: rgba(108, 104, 104, 0.08);
+  --border: rgba(108, 104, 104, 0.12);
+  --card-bg-start: #fffaf2;
+  --card-bg-end: #f8efe2;
+  --shadow-1: 0 8px 24px rgba(44, 36, 22, 0.06);
+  --shadow-2: 0 10px 30px rgba(44, 36, 22, 0.08);
+  --pill-radius: 999px;
+}
 
-.card-shadow{
--webkit-box-shadow: 3px 3px 8px -1px rgb(196, 186, 186);
--moz-box-shadow: 3px 3px 8px -1px rgb(177, 171, 171);
-box-shadow: 3px 3px 8px -1px rgb(155, 153, 153);
+.card-shadow {
+  -webkit-box-shadow: 3px 3px 8px -1px rgb(196, 186, 186);
+  -moz-box-shadow: 3px 3px 8px -1px rgb(177, 171, 171);
+  box-shadow: 3px 3px 8px -1px rgb(155, 153, 153);
 }
 
 .swiper {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  background: #fff;
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* NAVBAR BASE */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: var(--bg);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-1);
+}
+
+/* Shell controla layout principal: brand a la izquierda, acciones a la derecha */
+.navbar-shell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding-inline: 0.25rem;
+  list-style: none;
+}
+
+/* Contenedor que empuja acciones a la derecha en desktop */
+.nav-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Brand image */
+.navbar-brand-image {
+  width: 68px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Links comunes (desktop y mobile comparten estilos) */
+.navbar-link,
+.nav-link-mobile {
+  color: var(--muted) !important;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--pill-radius);
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    transform 0.12s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.navbar-link:hover,
+.nav-link-mobile:hover,
+.navbar-link:focus,
+.nav-link-mobile:focus {
+  color: var(--muted-strong) !important;
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Toggler */
+.navbar-toggler {
+  border: none;
+  padding: 0.45rem 0.6rem;
+  background-color: #f7efe2;
+  box-shadow: 0 4px 10px rgba(44, 36, 22, 0.07);
+}
+.navbar-toggler:focus {
+  box-shadow: none;
+}
+
+/* Mobile panel */
+.navbar-mobile-panel {
+  display: none;
+  width: 100%;
+  margin-top: 0.85rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(
+    145deg,
+    var(--card-bg-start) 0%,
+    var(--card-bg-end) 100%
+  );
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+}
+.navbar-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+.navbar-mobile-title {
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.navbar-mobile-panel .navbar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Dropdown / items hover */
+.li-navbar-hover {
+  color: var(--muted);
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+  cursor: pointer;
+}
+.li-navbar-hover:hover {
+  background-color: #c6bcbc;
+  color: #fff;
+}
+
+/* Carrito responsive dropdown */
+.carrito-responsive .dropdown-menu {
+  position: fixed;
+  top: 78px;
+  right: 12px;
+  width: min(92vw, 360px);
+  max-height: calc(100vh - 92px);
+  overflow-y: auto;
+  z-index: 1100;
+}
+
+/* Icon badge */
+.icon-badge {
+  position: relative;
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  line-height: 1;
+}
+.icon-badge .counter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(-130%, 225%);
+  width: 10px;
+  height: 10px;
+  background: #ff1212;
+  border-radius: 50%;
+}
+
+/* Small screens adjustments */
+@media (max-width: 767px) {
+  .navbar-brand-image {
+    width: 58px;
   }
-  
-  .swiper-slide {
-    text-align: center;
-    font-size: 18px;
-    background: #fff;
-  
-    /* Center slide text vertically */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .swiper-slide img {
+  .navbar-mobile-panel {
     display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    padding: 0.9rem;
   }
-  
+  .navbar-link,
+  .nav-link-mobile {
+    padding: 0.7rem 0.85rem;
+  }
+  .carrito-responsive .dropdown-menu {
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+  .icon-badge .counter {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* En mobile ocultamos las acciones de desktop y dejamos el collapse */
+  .navbar-desktop-actions {
+    display: none !important;
+  }
+}
+
+/* Desktop specific tweaks */
+@media (min-width: 768px) {
+  /* Asegura que el collapse no empuje las acciones en desktop */
+  .collapse.navbar-collapse {
+    display: none !important;
+  }
+  .navbar-desktop-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}

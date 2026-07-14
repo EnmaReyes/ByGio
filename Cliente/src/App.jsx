@@ -15,6 +15,7 @@ import { useState } from "react";
 import Registro from "./Paginas/Registro";
 import InicioSecion from "./Paginas/InicioSecion";
 import Articulo from "./Paginas/ArticuloDetallado/Articulo";
+import "./App.css";
 
 //! Rutas de pagina\\
 const Layout = ({

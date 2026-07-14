@@ -61,7 +61,7 @@ const ImageGallery = ({ images }) => {
     <Swiper
       pagination={true}
       modules={[Pagination]}
-      className="mySwiper product-gallery"
+      className="mySwiper product-gallery"p
     >
       {images.map((img, index) => (
         <SwiperSlide key={index} className="p-md-2">
