@@ -33,9 +33,7 @@ const Banner = () => {
             ...art,
             img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
             sizes:
-              typeof art.sizes === "string"
-                ? JSON.parse(art.sizes)
-                : art.sizes,
+              typeof art.sizes === "string" ? JSON.parse(art.sizes) : art.sizes,
           }))
         : [];
 
@@ -142,7 +140,9 @@ const Banner = () => {
           }}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && seteditorVisible(!editorVisible)}
+          onKeyDown={(e) =>
+            e.key === "Enter" && seteditorVisible(!editorVisible)
+          }
           title="Editar banner"
         >
           <FontAwesomeIcon icon={faPenToSquare} />
@@ -153,4 +153,3 @@ const Banner = () => {
 };
 
 export default Banner;
-
