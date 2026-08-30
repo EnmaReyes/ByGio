@@ -15,17 +15,16 @@ const sequelizeConfig = {
   port: DB_PORT,
 };
 
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
+
 // Instancia de Sequelize
-const sequelize = new Sequelize(
-  DB_NAME,
-  DB_USER,
-  DB_PASSWORD,
-  sequelizeConfig
-);
+const sequelize = new Sequelize(DATABASE_URL, sequelizeConfig);
 
 // Probar la conexión
 sequelize
   .authenticate()
   .then(() => console.log("Conexión exitosa con la base de datos"))
   .catch((err) => console.error("Error conectando con la base de datos:", err));
-  module.exports = { sequelize };
+module.exports = { sequelize };

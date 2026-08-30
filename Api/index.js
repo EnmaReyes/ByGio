@@ -1,3 +1,4 @@
+// index.js
 const express = require("express");
 const postRoutes = require("./Rutas/posts.js");
 const authRoutes = require("./Rutas/auth.js");
@@ -18,7 +19,7 @@ app.use(
     origin: FRONTEND_URL,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser());
 
@@ -27,14 +28,23 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
 
-async function main() {
+// Conexión a la DB
+(async () => {
   try {
+    await sequelize.authenticate();
     await sequelize.sync({ alter: true });
-    app.listen(port, () => {
-      console.log(`Conected!! app listening on port ${port}`);
-    });
+    console.log("✅ Conexión exitosa con la base de datos");
   } catch (error) {
-    console.error("Unable to connect to the database:", error);
+    console.error("❌ Error conectando con la base de datos:", error);
   }
+})();
+
+// 👉 En local sí levantamos el servidor
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
+  });
 }
-main();
+
+// 👉 En Vercel exportamos la app
+module.exports = app;
