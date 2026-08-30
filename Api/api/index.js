@@ -1,5 +1,4 @@
-//? index.js para vercel
-// api/index.js
+//? index para vercel
 const app = require("../index.js");
 
 module.exports = (req, res) => {
