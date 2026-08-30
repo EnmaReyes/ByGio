@@ -1,4 +1,3 @@
-// index.js
 const express = require("express");
 const postRoutes = require("./Rutas/posts.js");
 const authRoutes = require("./Rutas/auth.js");

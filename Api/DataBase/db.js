@@ -1,30 +1,27 @@
+// DataBase/db.js
 const { Sequelize } = require("sequelize");
-const {
-  DB_NAME,
-  DB_USER,
-  DB_PASSWORD,
-  DB_HOST,
-  DB_PORT,
-  DB_DIALECT,
-} = require("../config.js");
+const { DATABASE_URL, DB_DIALECT } = require("../config.js");
 
-// Configuración de Sequelize
-const sequelizeConfig = {
-  host: DB_HOST,
-  dialect: DB_DIALECT,
-  port: DB_PORT,
+const sequelizeOptions = {
+  dialect: DB_DIALECT || "postgres",
+  logging: false,
+  dialectOptions: {},
 };
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
+if (process.env.NODE_ENV === "production") {
+  sequelizeOptions.dialectOptions = {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  };
+}
 
-// Instancia de Sequelize
-const sequelize = new Sequelize(DATABASE_URL, sequelizeConfig);
+const sequelize = new Sequelize(DATABASE_URL, sequelizeOptions);
 
-// Probar la conexión
 sequelize
   .authenticate()
   .then(() => console.log("Conexión exitosa con la base de datos"))
   .catch((err) => console.error("Error conectando con la base de datos:", err));
+
 module.exports = { sequelize };
