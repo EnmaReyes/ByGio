@@ -4,6 +4,7 @@ const { DATABASE_URL, DB_DIALECT } = require("../config.js");
 
 const sequelizeOptions = {
   dialect: DB_DIALECT || "postgres",
+  dialectModule: require("pg"),
   logging: false,
   dialectOptions: {},
 };
