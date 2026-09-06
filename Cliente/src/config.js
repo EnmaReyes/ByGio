@@ -1,4 +1,4 @@
 export const API_URL =
   import.meta.env.MODE === "production"
-    ? "https://bygio.adorandoalrey.com"
+    ? import.meta.env.VITE_API_URL
     : "http://localhost:3000";
