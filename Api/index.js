@@ -35,16 +35,38 @@ app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const [results] = await sequelize.query("SELECT NOW()");
+
+    res.json({
+      ok: true,
+      databaseTime: results,
+    });
+  } catch (error) {
+    console.error("❌ TEST DB:", error);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
 
 (async () => {
   try {
+    console.log("🔌 Intentando conectar a Neon...");
+
     await sequelize.authenticate();
+
+    console.log("✅ Conexión inicial exitosa");
+
     if (process.env.NODE_ENV !== "production") {
       await sequelize.sync({ alter: true });
     }
-    console.log("✅ Conexión exitosa con la base de datos");
   } catch (error) {
-    console.error("❌ Error conectando con la base de datos:", error);
+    console.error("❌ Error conectando con la base de datos:");
+    console.error(error);
   }
 })();
 
