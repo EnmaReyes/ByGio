@@ -35,23 +35,6 @@ app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
-app.get("/api/test-db", async (req, res) => {
-  try {
-    const [results] = await sequelize.query("SELECT NOW()");
-
-    res.json({
-      ok: true,
-      databaseTime: results,
-    });
-  } catch (error) {
-    console.error("❌ TEST DB:", error);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message,
-    });
-  }
-});
 
 (async () => {
   try {

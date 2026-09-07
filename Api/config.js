@@ -26,13 +26,6 @@ const DATABASE_URL =
     return `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
   })();
 
-console.log(
-  "DATABASE_URL:",
-  DATABASE_URL?.replace(/:[^:@]+@/, ":****@")
-);
-
-console.log("DB_DIALECT:", DB_DIALECT);
-
 module.exports = {
   FRONTEND_URL,
   DATABASE_URL,
