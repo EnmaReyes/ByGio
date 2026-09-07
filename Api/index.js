@@ -10,7 +10,9 @@ const cookieParser = require("cookie-parser");
 const { FRONTEND_URL } = require("./config.js");
 
 const port = process.env.PORT || 3000;
+
 const app = express();
+
 app.use(express.json());
 
 app.use(
@@ -20,30 +22,36 @@ app.use(
     credentials: true,
   }),
 );
+
 app.use(cookieParser());
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "ByGio API funcionando correctamente 🚀",
+  });
+});
 
 app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
 
-// Conexión a la DB
 (async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
+    if (process.env.NODE_ENV !== "production") {
+      await sequelize.sync({ alter: true });
+    }
     console.log("✅ Conexión exitosa con la base de datos");
   } catch (error) {
     console.error("❌ Error conectando con la base de datos:", error);
   }
 })();
 
-// 👉 En local sí levantamos el servidor
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
   });
 }
 
-// 👉 En Vercel exportamos la app
 module.exports = app;
