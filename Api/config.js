@@ -22,8 +22,16 @@ const DATABASE_URL =
     const DB_PASSWORD = process.env.DB_PASSWORD || "password";
     const DB_NAME = process.env.DB_NAME || "ByGio";
     const DB_PORT = process.env.DB_PORT || 5432;
+
     return `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
   })();
+
+console.log(
+  "DATABASE_URL:",
+  DATABASE_URL?.replace(/:[^:@]+@/, ":****@")
+);
+
+console.log("DB_DIALECT:", DB_DIALECT);
 
 module.exports = {
   FRONTEND_URL,
