@@ -1,12 +1,7 @@
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import {
-  createBrowserRouter,
-  Outlet,
-  Route,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import BarraNavegacion from "./Componentes/BarraNavegacion";
 import Footer from "./Componentes/Footer";
 import Inicio from "./Paginas/Inicio";
@@ -27,7 +22,7 @@ const Layout = ({
   setCountProducts,
 }) => {
   return (
-    <>
+    <div className="site-shell">
       <ToastContainer />
       <BarraNavegacion
         allProducts={allProducts}
@@ -48,7 +43,7 @@ const Layout = ({
         }}
       />
       <Footer />
-    </>
+    </div>
   );
 };
 

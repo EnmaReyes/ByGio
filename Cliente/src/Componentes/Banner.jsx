@@ -63,10 +63,7 @@ const Banner = () => {
   }, [fetchBannerData]);
 
   return (
-    <div
-      className="w-100 h-100 p-0"
-      style={{ paddingTop: "3%", position: "relative" }}
-    >
+    <div className="banner-section">
       {editorVisible ? (
         <EditBanner
           banner={banner}
@@ -76,13 +73,10 @@ const Banner = () => {
       ) : (
         <div
           id="carouselExampleControls"
-          className="carousel slide carrusel-banner"
+          className="carousel slide carrusel-banner banner-frame"
           data-bs-ride="carousel"
         >
-          <div
-            className="carousel-inner"
-            style={{ width: "100%", height: "100%" }}
-          >
+          <div className="carousel-inner">
             {loading ? (
               <div className="d-flex justify-content-center p-4 m-4">
                 <div className="spinner-border" role="status"></div>
@@ -91,10 +85,9 @@ const Banner = () => {
               banner?.img?.map((bann, index) => (
                 <div
                   key={index}
-                  className={`carousel-item previewBanner${
+                  className={`carousel-item banner-slide${
                     index === 0 ? " active" : ""
                   }`}
-                  style={{ width: "100%", height: "100%" }}
                 >
                   <img
                     src={bann}

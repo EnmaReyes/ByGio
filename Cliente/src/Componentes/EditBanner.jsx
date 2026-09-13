@@ -143,7 +143,7 @@ const ThumbnailItem = React.memo(
         )}
       </div>
     );
-  }
+  },
 );
 
 ThumbnailItem.displayName = "ThumbnailItem";
@@ -192,9 +192,7 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
       return response.data.secure_url;
     } catch (error) {
       console.error("Cloudinary upload error:", error);
-      throw new Error(
-        error.response?.data?.error?.message || error.message
-      );
+      throw new Error(error.response?.data?.error?.message || error.message);
     }
   }, []);
 
@@ -239,18 +237,21 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
           });
         });
     },
-    [uploadImageToCloudinary, validateFile]
+    [uploadImageToCloudinary, validateFile],
   );
 
   /**
    * Elimina una imagen del estado
    */
-  const deleteImage = useCallback((index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    if (selectedImageIndex === index) {
-      setSelectedImageIndex(0);
-    }
-  }, [selectedImageIndex]);
+  const deleteImage = useCallback(
+    (index) => {
+      setImages((prev) => prev.filter((_, i) => i !== index));
+      if (selectedImageIndex === index) {
+        setSelectedImageIndex(0);
+      }
+    },
+    [selectedImageIndex],
+  );
 
   /**
    * Valida imágenes antes de guardar
@@ -261,7 +262,7 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
     }
 
     const validImages = images.filter(
-      (img) => typeof img === "string" && img.trim().length > 0
+      (img) => typeof img === "string" && img.trim().length > 0,
     );
 
     if (validImages.length === 0) {
@@ -298,7 +299,7 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
         return { success: true, message: "Banner creado exitosamente" };
       }
     },
-    [banner?.id]
+    [banner?.id],
   );
 
   /**
@@ -355,15 +356,18 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
 
   return (
     <div className="d-flex flex-column align-items-center">
-      <Col xs={12} md={12} className="d-flex flex-column align-items-center gap-2">
+      <Col
+        xs={12}
+        md={12}
+        className="d-flex flex-column align-items-center gap-2"
+      >
         {/* Vista Previa Principal */}
-        <div className="h-100 w-100">
+        <div className="banner-frame banner-editor-preview">
           {currentImageUrl ? (
             <img
               src={currentImageUrl}
               alt="Vista previa del banner"
-              className="previewBanner"
-              style={{ objectFit: "cover", width: "100%", height: "auto" }}
+              className="banner-img banner-editor-image"
               onError={() =>
                 toast.error("Error al cargar la vista previa de la imagen")
               }

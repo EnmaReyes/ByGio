@@ -135,7 +135,7 @@ export const CartaDeArticulos = () => {
 
   return (
     <Container className="container-card" id="articulos">
-      <Row>
+      <Row className="products-grid">
         {sinDescuento.map((art) => (
           <ArticleCard
             key={art?.id}
@@ -160,7 +160,7 @@ export const ArtiulosOferta = () => {
 
   return (
     <Container className="container-card" id="articulos">
-      <Row>
+      <Row className="products-grid">
         {conDescuento.map((art) => (
           <ArticleCard
             key={art?.id}

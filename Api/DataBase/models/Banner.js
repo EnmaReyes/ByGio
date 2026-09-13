@@ -12,20 +12,25 @@ const Banner = sequelize.define(
       allowNull: false,
       primaryKey: true,
     },
+
     img: {
-      type: DataTypes.TEXT("long"),
+      type: DataTypes.TEXT,
       allowNull: false,
+
       get() {
         const rawValue = this.getDataValue("img");
+
         try {
-          return JSON.parse(rawValue); // devolver como array
+          return JSON.parse(rawValue);
         } catch {
           return rawValue;
         }
       },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 Usuarios.hasMany(Banner, {
@@ -39,4 +44,5 @@ Banner.belongsTo(Usuarios, {
   as: "userBanner",
   targetKey: "id",
 });
+
 module.exports = { Banner };

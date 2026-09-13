@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Button, Carousel, Spinner } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { Carousel, Spinner } from "react-bootstrap";
 import "../App.css";
 import { Link, useLocation } from "react-router-dom";
 import { API_URL } from "../config";
@@ -44,20 +44,27 @@ const CartaInicial = () => {
      ¿Está disponible en ${tallaSlected}?`;
     const imageLink = art?.img[0];
     const whatsappLink = `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(
-      message
+      message,
     )}%0A%0A${encodeURIComponent(imageLink)}`;
     return whatsappLink;
   };
 
   return (
-    <div className="inital-Container" id="most-seller">
-      <Carousel controls indicators fade interval={1500}>
+    <section className="inital-Container" id="most-seller">
+      <Carousel
+        className="initial-carousel"
+        controls
+        indicators
+        fade
+        interval={1500}
+      >
         {articulo
-          .filter((art) => art.destacadas === true).slice(0, 4)
+          .filter((art) => art.destacadas === true)
+          .slice(0, 4)
           .map((art, index) => (
             <Carousel.Item key={art.id}>
-              <div className="d-flex flex-column flex-md-row align-items-center justify-content-center carousel-items">
-                <div className="w-100 w-md-50 text-center">
+              <div className="carousel-items">
+                <div className="carousel-image-column">
                   {art.img ? (
                     <img
                       className="img-fluid img-carousel"
@@ -72,7 +79,7 @@ const CartaInicial = () => {
                 </div>
 
                 {/* Contenido */}
-                <div className="w-100 w-md-50 text-md-start text-center p-4">
+                <div className="carousel-copy text-md-start text-center">
                   <h2 className="fw-bold titulo-inicial">{art.title}</h2>
 
                   {art.oversize ? (
@@ -85,7 +92,7 @@ const CartaInicial = () => {
                             <span key={i} className="tallasCartainicial">
                               {size}
                             </span>
-                          )
+                          ),
                       )}
                     </div>
                   )}
@@ -104,7 +111,7 @@ const CartaInicial = () => {
             </Carousel.Item>
           ))}
       </Carousel>
-    </div>
+    </section>
   );
 };
 

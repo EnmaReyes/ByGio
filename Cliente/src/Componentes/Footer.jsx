@@ -8,10 +8,10 @@ const Footer = () => {
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
 
   return (
-    <div className="bg-black">
-      <Container>
-        <Row>
-          <Col>
+    <footer className="site-footer">
+      <Container className="site-footer-inner">
+        <Row className="align-items-center gy-4">
+          <Col xs={12} md={6} className="text-center text-md-start">
             <Card.Img
               src={logo}
               variant="top"
@@ -20,7 +20,7 @@ const Footer = () => {
             />
           </Col>
 
-          <Col className="mt-2">
+          <Col xs={12} md={6} className="mt-2 mt-md-0">
             <h1 className="fs-3 text-center text-light">Contactanos</h1>
             <div className="text-center ">
               <a
@@ -41,7 +41,7 @@ const Footer = () => {
           </Col>
         </Row>
       </Container>
-    </div>
+    </footer>
   );
 };
 
