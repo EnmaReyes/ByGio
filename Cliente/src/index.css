@@ -580,12 +580,17 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: clamp(280px, 42vw, 540px);
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
     min-width: 0;
   }
   .img-carousel {
-    max-height: min(70vh, 600px);
+    display: block;
     object-fit: contain;
-    width: min(100%, 560px);
+    width: 100%;
+    height: 100%;
   }
   .carousel-copy {
     max-width: 35rem;
@@ -676,8 +681,8 @@ a {
     padding: 1.25rem 1rem 2.5rem;
   }
 
-  .inital-Container .img-carousel {
-    max-height: 48vh;
+  .inital-Container .carousel-image-column {
+    height: clamp(240px, 78vw, 360px);
   }
 
   .inital-Container .titulo-inicial {
@@ -685,156 +690,391 @@ a {
   }
 }
 
-/*carta Articulos */
-
 .container-card {
   width: 100%;
   padding: clamp(2rem, 5vw, 4rem) clamp(0.75rem, 4vw, 3rem);
 }
+
 .products-grid {
   row-gap: 1.5rem;
 }
+
 .products-grid > [class*="col-"] {
   margin-bottom: 0 !important;
 }
-.fixed-size-card {
+
+/* =========================================
+   CARD
+========================================= */
+
+.product-card {
   height: 100%;
   min-height: 430px;
-  margin: 0;
+  margin: 0.75rem 0;
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+
   border: none;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+
+  background: #fff;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.fixed-size-card img {
-  aspect-ratio: 4 / 5;
-  height: auto;
-  max-height: 320px;
-  width: 100%;
-  object-fit: cover; /* Recorta y mantiene proporción */
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.16);
 }
+
+/* =========================================
+   LINK / ZONA DE IMAGEN
+========================================= */
+
+.product-image-link {
+  display: block;
+  width: 100%;
+
+  text-decoration: none;
+  color: inherit;
+}
+
+.product-image-wrapper {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 4 / 5;
+
+  overflow: hidden;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #f7f7f7;
+}
+
+/* =========================================
+   IMAGEN
+========================================= */
+
+.product-image-wrapper img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+
+  margin: 0;
+}
+
+/* =========================================
+   BADGE AGOTADO
+========================================= */
 
 .agotado-site {
   position: absolute;
-  bottom: 10.5rem;
-  right: 1rem;
-  width: 35%;
+
+  /*
+     Siempre centrado horizontalmente
+     sin importar el tamaño de pantalla.
+  */
+  left: 50%;
+  bottom: 12%;
+
+  transform: translateX(-50%);
+
+  z-index: 10;
+
+  width: min(75%, 220px);
+
+  padding: 0.55rem 1rem;
+
   background-color: #ffc23b;
-  padding: 0.5rem 1rem;
+
   border-radius: 17px 5px;
-  font-weight: bold;
+
   color: #000;
-  text-align: center;
-  font-size: 1rem;
-}
-@media (max-width: 992px) {
-  .agotado-site {
-    width: 80%;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-  }
-}
-.card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-  text-align: center;
-  gap: 0.45rem;
-  flex: 1;
-}
 
-.tallas-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-/* Cada talla como una cajita */
-.tallas {
-  background-color: #fff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
   font-weight: bold;
-  font-size: 0.9rem;
-  color: #000;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
-  border: 1px solid #f0f0f0;
-  min-width: 40px;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+
   text-align: center;
-  transition: all 0.2s ease-in-out;
-  margin: 0;
+
+  white-space: nowrap;
+
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+
+  pointer-events: none;
 }
 
-/* Responsive */
-@media (max-width: 576px) {
-  .tallas {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
-    min-width: 35px;
-  }
-}
+/* =========================================
+   PORCENTAJE
+========================================= */
 
 .porcentaje {
   position: absolute;
-  top: 0.5rem;
-  left: 1rem;
-  width: 35%;
+
+  top: 0.75rem;
+  left: 0.75rem;
+
+  z-index: 10;
+
+  width: min(40%, 130px);
+
+  padding: 0.45rem 0.7rem;
+
   background-color: #ffc23b;
-  padding: 0.5rem 1rem;
+
   border-radius: 17px 5px;
-  font-weight: bold;
+
   color: #000;
+
+  font-weight: bold;
+
+  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+
   text-align: center;
-  font-size: 1rem;
-}
-/* Tablets */
-@media (max-width: 992px) {
-  .porcentaje {
-    width: 40%;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-  }
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-/* Móviles */
-@media (max-width: 576px) {
-  .porcentaje {
-    width: 50%;
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
-  }
+/* =========================================
+   CARD BODY
+========================================= */
+
+.card-body {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-between;
+  align-items: center;
+
+  width: 100%;
+
+  padding: 0.75rem !important;
+
+  text-align: center;
 }
+
+/* =========================================
+   PRECIOS / CONTENIDO
+========================================= */
+
+.product-price-container {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 0.4rem;
+
+  margin-top: auto;
+}
+
+.price-row {
+  width: 100%;
+
+  align-items: center;
+
+  margin: 0;
+}
+
+/* =========================================
+   TALLAS
+========================================= */
+
+.tallas-box {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 0.4rem;
+
+  margin-top: 0.5rem;
+}
+
+.tallas {
+  background-color: #fff;
+
+  padding: 0.35rem 0.7rem;
+
+  border-radius: 8px;
+
+  font-weight: bold;
+
+  font-size: 0.85rem;
+
+  color: #000;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+
+  border: 1px solid #f0f0f0;
+
+  min-width: 38px;
+
+  text-align: center;
+
+  transition: all 0.2s ease-in-out;
+
+  margin: 0;
+}
+
+/* =========================================
+   PRECIO DESCUENTO
+========================================= */
+
 .color-des {
   color: #dc0202;
 }
+
 .descuento {
   position: relative;
+
+  display: inline-block;
+
   color: #504d50;
-  display: inline-block; /* para que el pseudo-elemento se ajuste al texto */
 }
 
 .descuento::before,
 .descuento::after {
   content: "";
+
   position: absolute;
+
   top: 50%;
   left: 0;
+
   width: 100%;
-  height: 1.2px; /* grosor de la línea */
-  background: #dc0202; /* usa el mismo color del texto */
+  height: 1.2px;
+
+  background: #dc0202;
 }
 
 .descuento::before {
-  transform: rotate(15deg); /* primera diagonal */
+  transform: rotate(15deg);
 }
 
 .descuento::after {
-  transform: rotate(-15deg); /* segunda diagonal */
+  transform: rotate(-15deg);
 }
+
+/* =========================================
+   TABLETS
+========================================= */
+
+@media (max-width: 992px) {
+  .product-card {
+    min-height: 400px;
+  }
+
+  .agotado-site {
+    bottom: 12%;
+
+    width: 65%;
+
+    padding: 0.45rem 0.7rem;
+  }
+
+  .porcentaje {
+    width: 42%;
+  }
+}
+
+/* =========================================
+   MÓVILES
+========================================= */
+
+@media (max-width: 576px) {
+  .product-card {
+    min-height: 370px;
+
+    margin: 0.5rem 0;
+
+    border-radius: 10px;
+  }
+
+  .product-image-wrapper {
+    aspect-ratio: 4 / 5;
+  }
+
+  .agotado-site {
+    /*
+       Sigue dependiendo de la imagen,
+       NO del tamaño de la pantalla.
+    */
+    bottom: 10%;
+
+    width: 72%;
+
+    padding: 0.35rem 0.5rem;
+
+    font-size: 0.72rem;
+
+    border-radius: 13px 4px;
+  }
+
+  .porcentaje {
+    top: 0.5rem;
+    left: 0.5rem;
+
+    width: 48%;
+
+    padding: 0.3rem 0.4rem;
+
+    font-size: 0.7rem;
+  }
+
+  .card-body {
+    padding: 0.5rem !important;
+  }
+
+  .tallas {
+    min-width: 34px;
+
+    padding: 0.25rem 0.5rem;
+
+    font-size: 0.75rem;
+  }
+}
+
+/* =========================================
+   MÓVILES MUY PEQUEÑOS
+========================================= */
+
+@media (max-width: 380px) {
+  .product-card {
+    min-height: 350px;
+  }
+
+  .agotado-site {
+    width: 75%;
+
+    font-size: 0.65rem;
+
+    padding: 0.3rem 0.4rem;
+  }
+
+  .porcentaje {
+    width: 52%;
+
+    font-size: 0.65rem;
+  }
+}
+```
 
 /* articulos details */
 

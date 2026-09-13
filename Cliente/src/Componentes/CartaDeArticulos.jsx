@@ -74,9 +74,11 @@ const ArticleCard = ({ art, phoneNumber, showDiscount = false }) => {
 
   return (
     <Col key={art?.id} xs={6} sm={6} md={6} lg={3} className="mb-2">
-      <Card className="mt-4 mb-4 align-items-center fixed-size-card">
-        <Link to={`/${art.id}`}>
-          <div>
+      <Card className="product-card">
+        {/* IMAGEN + BADGES */}
+        <Link to={`/${art.id}`} className="product-image-link">
+          <div className="product-image-wrapper">
+            {/* DESCUENTO */}
             {showDiscount && (
               <div className="porcentaje">
                 <span>
@@ -85,37 +87,45 @@ const ArticleCard = ({ art, phoneNumber, showDiscount = false }) => {
                 </span>
               </div>
             )}
+
+            {/* AGOTADO */}
+            {!art.stock && <div className="agotado-site parrafos">AGOTADO</div>}
+
             <ImageDisplay img={art.img} />
           </div>
         </Link>
-        {!art.stock && <div className="agotado-site parrafos">AGOTADO</div>}
 
-        <Card.Body className="m-0 p-2 card-body">
+        {/* INFORMACIÓN DEL PRODUCTO */}
+        <Card.Body className="card-body">
           <Card.Title className="text-center m-0 titulos">
             {art?.title}
           </Card.Title>
+
           <SizesList sizes={art?.sizes} oversize={art.oversize} />
 
-          <div>
+          <div className="product-price-container">
             {showDiscount && art?.descuento > 0 && (
-              <Row>
+              <Row className="price-row">
                 <Col>
                   <Card.Text className="m-0 parrafos descuento">
-                    {`$${art?.descuento.toLocaleString()}`}
+                    ${art?.descuento.toLocaleString()}
                   </Card.Text>
                 </Col>
+
                 <Col>
                   <Card.Text className="color-des m-0 parrafos">
-                    {`$${art?.cost.toLocaleString()}`}
+                    ${art?.cost.toLocaleString()}
                   </Card.Text>
                 </Col>
               </Row>
             )}
+
             {!showDiscount && (
-              <Col>
-                <Card.Text className="m-0 parrafos">{`$${art?.cost.toLocaleString()}`}</Card.Text>
-              </Col>
+              <Card.Text className="m-0 parrafos">
+                ${art?.cost.toLocaleString()}
+              </Card.Text>
             )}
+
             <CompraButton art={art} whatsappLink={whatsappLink} />
           </div>
         </Card.Body>
