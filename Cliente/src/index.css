@@ -583,12 +583,12 @@ a {
     min-width: 0;
   }
   .img-carousel {
-    max-height: min(60vh, 600px);
+    max-height: min(70vh, 600px);
     object-fit: contain;
     width: min(100%, 560px);
   }
   .carousel-copy {
-    max-width: 34rem;
+    max-width: 35rem;
   }
 
   .titulo-inicial {
