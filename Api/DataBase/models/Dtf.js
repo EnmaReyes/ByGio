@@ -2,8 +2,8 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../db.js");
 const { v4: uuidv4 } = require("uuid");
 
-const Articulos = sequelize.define(
-  "articulos",
+const Dtf = sequelize.define(
+  "Dtf",
   {
     id: {
       type: DataTypes.UUID,
@@ -11,47 +11,33 @@ const Articulos = sequelize.define(
       allowNull: false,
       primaryKey: true,
     },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    desc: {
+    category: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false,
     },
     img: {
-      type: DataTypes.JSON,
-      defaultValue: {},
+      type: DataTypes.TEXT,
       allowNull: false,
-    },
-    sizes: {
-      type: DataTypes.JSON,
-      defaultValue: [],
-      allowNull: true,
-    },
-    oversize: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
     },
     cost: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 8000,
+    },
+    costwithShirtOversize: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 32000,
+    },
+    costwithShirt: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 22000,
     },
     stock: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
-    },
-    descuento: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    destacadas: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -59,9 +45,8 @@ const Articulos = sequelize.define(
       defaultValue: DataTypes.NOW,
     },
   },
-
   {
     timestamps: false,
   },
 );
-module.exports = { Articulos };
+module.exports = { Dtf };

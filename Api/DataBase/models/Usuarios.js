@@ -1,7 +1,9 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../db.js");
 const { Articulos } = require("./Articulos.js");
+
 const { v4: uuidv4 } = require("uuid");
+const { Dtf } = require("./Dtf.js");
 
 const Usuarios = sequelize.define(
   "usuarios",
@@ -40,10 +42,10 @@ const Usuarios = sequelize.define(
   },
   {
     timestamps: false,
-  }
+  },
 );
 
-// Relaciones
+// Relaciones a Articulos
 Usuarios.hasMany(Articulos, {
   foreignKey: "uid",
   as: "user",
@@ -55,4 +57,18 @@ Articulos.belongsTo(Usuarios, {
   as: "user",
   targetKey: "id",
 });
+
+// Relaciones a DTF
+Usuarios.hasMany(Dtf, {
+  foreignKey: "uid",
+  as: "dtfs",
+  sourceKey: "id",
+});
+
+Dtf.belongsTo(Usuarios, {
+  foreignKey: "uid",
+  as: "user",
+  targetKey: "id",
+});
+
 module.exports = { Usuarios };

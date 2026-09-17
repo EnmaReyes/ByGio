@@ -3,7 +3,7 @@ const postRoutes = require("./Rutas/posts.js");
 const authRoutes = require("./Rutas/auth.js");
 const userRoutes = require("./Rutas/user.js");
 const bannerRoutes = require("./Rutas/banner.js");
-
+const dtfRoutes = require("./Rutas/dtf.js");
 const { sequelize } = require("./DataBase/db.js");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -35,6 +35,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
+app.use("/api/dtf", dtfRoutes);
 
 (async () => {
   try {
