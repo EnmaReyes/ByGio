@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Card, Col, Container, Row, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "../App.css";
-import { useContextProvaider } from "../context/ContextProvaider";
+import { useContextProvaider } from "../context/ContextProvaider.jsx";
 
 const generateWhatsAppLink = (art, phoneNumber) => {
   const size = art.oversize ? "Over size" : "S/M/L";

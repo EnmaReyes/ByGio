@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useContextProvaider } from "../context/ContextProvaider.jsx";
 
 const CartaInicial = () => {
-  const { articulos, loading } = useContextProvaider();
+  const { articulos, loadingArticulos } = useContextProvaider();
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
 
   const generateWhatsAppLink = (art) => {
@@ -29,7 +29,7 @@ const CartaInicial = () => {
         fade
         interval={1500}
       >
-        {loading ? (
+        {loadingArticulos ? (
           <div className="d-flex justify-content-center align-items-center h-100 mt-2">
             <Spinner animation="border" variant="dark" />
           </div>
