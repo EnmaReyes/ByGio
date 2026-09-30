@@ -12,6 +12,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { FRONTEND_URL } = require("./config.js");
 
+console.log("🔎 CAMPOS DEL MODELO DTF:", Object.keys(Dtf.rawAttributes));
+
 const port = process.env.PORT || 3000;
 
 const app = express();
