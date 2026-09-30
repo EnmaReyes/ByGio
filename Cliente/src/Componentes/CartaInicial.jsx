@@ -1,7 +1,7 @@
 import { Carousel, Spinner } from "react-bootstrap";
 import "../App.css";
 import { Link } from "react-router-dom";
-import { useContextProvaider } from "../context/ContextProvaider";
+import { useContextProvaider } from "../context/ContextProvaider.jsx";
 
 const CartaInicial = () => {
   const { articulos, loading } = useContextProvaider();
@@ -30,7 +30,7 @@ const CartaInicial = () => {
         interval={1500}
       >
         {loading ? (
-          <div className="d-flex justify-content-center align-items-center h-100">
+          <div className="d-flex justify-content-center align-items-center h-100 mt-2">
             <Spinner animation="border" variant="dark" />
           </div>
         ) : (
