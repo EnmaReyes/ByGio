@@ -1,18 +1,26 @@
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { API_URL } from "../config";
 import { Col, Container, Row, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
-import {
-  notify,
-  toastpromise,
-} from "../Componentes/toastConfig/toastconfigs.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faImage, faPlus } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "react-bootstrap/Spinner";
 
-const URL = API_URL;
+const BASE_URL = API_URL;
+const preset_name = import.meta.env.VITE_CLOUDINARY_PRESET;
+const cloud_name = import.meta.env.VITE_CLOUDINARY_NAME;
+
+// Mismo helper que en el Context, para no romper si el JSON viene malformado
+const parseJsonValue = (value) => {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -20,55 +28,92 @@ const Editor = () => {
 
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
-  const [imgUrls, setImgUrls] = useState(
-    typeof state?.img === "string"
-      ? JSON.parse(state?.img)
-      : state?.img || ["", "", "", ""]
-  );
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [sizes, setSizes] = useState(
-    typeof state?.sizes === "string"
-      ? JSON.parse(state?.sizes)
-      : state?.sizes || ["S", "M", "L"]
-  );
-  const [overSize, setOverSize] = useState(state?.overSize || false);
-  const [stock, setStock] = useState(state?.stock || true);
-  const [cost, setCost] = useState(state?.cost || "");
-  const [descuento, setDescuento] = useState(state?.descuento || 0);
-  const [loading, setLoading] = useState(false);
-  const [destacadas, setDestacadas] = useState(state?.destacadas || false);
-  const preset_name = "bygiostore";
-  const cloud_name = "ds1xggjvm";
 
-  const uploadImageToCloudinary = async (image) => {
+  const parsedImg = parseJsonValue(state?.img);
+  const [imgUrls, setImgUrls] = useState(
+    Array.isArray(parsedImg) ? parsedImg : ["", "", "", ""],
+  );
+  // Guarda los File reales seleccionados por el usuario, paralelo a imgUrls.
+  // Si la posición i es null, significa "sin cambios" (se mantiene la URL existente).
+  const [imgFiles, setImgFiles] = useState([null, null, null, null]);
+
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const parsedSizes = parseJsonValue(state?.sizes);
+  const [sizes, setSizes] = useState(
+    Array.isArray(parsedSizes) ? parsedSizes : ["S", "M", "L"],
+  );
+
+  const [overSize, setOverSize] = useState(state?.overSize ?? false);
+  const [stock, setStock] = useState(state?.stock ?? true);
+  const [cost, setCost] = useState(state?.cost || "");
+  const [descuento, setDescuento] = useState(state?.descuento ?? 0);
+  const [loading, setLoading] = useState(false);
+  const [destacadas, setDestacadas] = useState(state?.destacadas ?? false);
+
+  // Rastrea las blob URLs activas para poder revocarlas y evitar memory leaks
+  const blobUrlsRef = useRef(new Set());
+
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const uploadImageToCloudinary = async (file) => {
+    if (!preset_name || !cloud_name) {
+      // Falla rápido y con un mensaje claro en vez de dejar que Cloudinary
+      // devuelva un 404 críptico por una URL armada con "undefined".
+      throw new Error(
+        "Faltan las variables de entorno VITE_CLOUDINARY_PRESET / VITE_CLOUDINARY_NAME.",
+      );
+    }
+
     const formData = new FormData();
-    formData.append("file", image);
+    formData.append("file", file);
     formData.append("upload_preset", preset_name);
     formData.append("cloud_name", cloud_name);
 
     try {
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
-        formData
+        formData,
       );
-
       return response.data.secure_url;
     } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error(`Error al Subir las imagenes: ${err.message}`);
-      return null;
+      // Log detallado: Cloudinary suele devolver el motivo real en error.response.data
+      console.error(
+        "Error subiendo imagen a Cloudinary:",
+        error.response?.data || error.message,
+      );
+      throw error;
     }
   };
 
-  const handleImageChange = async (e, index) => {
+  const handleImageChange = (e, index) => {
     const file = e.target.files[0];
-    if (file) {
-      const localPreview = window.URL.createObjectURL(file);
-      const newFileImg = [...imgUrls];
-      newFileImg[index] = localPreview;
-      setImgUrls(newFileImg);
-      setSelectedImageIndex(index);
+    if (!file) return;
+
+    // Si esa posición ya tenía una blob URL propia, la liberamos antes de reemplazarla
+    const previous = imgUrls[index];
+    if (previous?.startsWith("blob:")) {
+      URL.revokeObjectURL(previous);
+      blobUrlsRef.current.delete(previous);
     }
+
+    const localPreview = URL.createObjectURL(file);
+    blobUrlsRef.current.add(localPreview);
+
+    const newImgUrls = [...imgUrls];
+    newImgUrls[index] = localPreview;
+    setImgUrls(newImgUrls);
+
+    const newImgFiles = [...imgFiles];
+    newImgFiles[index] = file;
+    setImgFiles(newImgFiles);
+
+    setSelectedImageIndex(index);
   };
 
   const addSizeField = () => setSizes([...sizes, ""]);
@@ -76,34 +121,48 @@ const Editor = () => {
   const deleteSizeField = (index) =>
     setSizes(sizes.filter((_, i) => i !== index));
 
-  const deleteImgArticule = (index) =>
-    setImgUrls(imgUrls.filter((_, i) => i !== index));
+  const deleteImgArticule = (index) => {
+    const url = imgUrls[index];
+    if (url?.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+      blobUrlsRef.current.delete(url);
+    }
+
+    const newImgUrls = imgUrls.filter((_, i) => i !== index);
+    const newImgFiles = imgFiles.filter((_, i) => i !== index);
+    setImgUrls(newImgUrls);
+    setImgFiles(newImgFiles);
+
+    // Si borramos la imagen seleccionada (o una anterior a ella), reajustamos el índice
+    setSelectedImageIndex((current) => {
+      if (index === current) return 0;
+      if (index < current) return current - 1;
+      return current;
+    });
+  };
 
   const handleClick = async (e) => {
-    setLoading(true);
     e.preventDefault();
 
-    try {
-      if (!title || !description || !cost || !sizes.some((size) => size)) {
-        toast.error("Falta información para subir el artículo!", toastpromise);
-        setLoading(false);
-        return;
-      }
+    if (!title || !description || !cost || !sizes.some((size) => size)) {
+      toast.error("Falta información para subir el artículo!");
+      return;
+    }
 
-      // Subir imágenes a Cloudinary
+    setLoading(true);
+
+    try {
+      // Subir solo las imágenes que son File nuevos; mantener el resto tal cual
       const uploadedUrls = await Promise.all(
-        imgUrls.map(async (file, index) => {
+        imgUrls.map(async (url, index) => {
+          const file = imgFiles[index];
           if (file) {
-            // Convertir URL local a archivo para Cloudinary
-            const blob = await fetch(file).then((res) => res.blob());
-            return await uploadImageToCloudinary(blob);
+            return await uploadImageToCloudinary(file);
           }
-          // Si no hay imagen, mantener la URL existente
-          return imgUrls[index] || null;
-        })
+          return url || null;
+        }),
       );
 
-      // Filtrar URLs válidas (puede haber `null` si alguna carga falló)
       const validUrls = uploadedUrls.filter((url) => url !== null);
 
       if (validUrls.length === 0) {
@@ -125,24 +184,33 @@ const Editor = () => {
       };
 
       const promise = state
-        ? axios.put(`${URL}/api/posts/${state.id}`, postData, {
+        ? axios.put(`${BASE_URL}/api/posts/${state.id}`, postData, {
             withCredentials: true,
           })
-        : axios.post(`${URL}/api/posts/add`, postData, {
+        : axios.post(`${BASE_URL}/api/posts/add`, postData, {
             withCredentials: true,
           });
 
-      toast.promise(promise, {
+      // toast.promise ya maneja pending/success/error por sí solo;
+      // no volvemos a mostrar un toast.error manual sobre el mismo promise,
+      // así evitamos el doble toast en caso de fallo.
+      await toast.promise(promise, {
         pending: "Subiendo artículo...",
         success: `${title} subido exitosamente`,
         error: "Error al subir el artículo",
       });
 
-      await promise;
       navigate("/");
     } catch (err) {
-      toast.error(`Error al realizar la solicitud: ${err.message}`);
       console.error("Error al realizar la solicitud:", err);
+      // Si fue un fallo de Cloudinary (no del toast.promise del backend),
+      // mostramos el detalle para no quedarnos solo con un 404 genérico.
+      if (
+        !axios.isAxiosError(err) ||
+        !err.config?.url?.includes("/api/posts")
+      ) {
+        toast.error(err.message || "Error al subir las imágenes");
+      }
     } finally {
       setLoading(false);
     }
@@ -185,6 +253,7 @@ const Editor = () => {
                 <label className="mb-2" style={{ cursor: "pointer" }}>
                   <input
                     type="file"
+                    accept="image/*"
                     style={{ display: "none" }}
                     onChange={(e) => handleImageChange(e, index)}
                   />
@@ -259,6 +328,7 @@ const Editor = () => {
                   <Form.Label className="titulos">Precio</Form.Label>
                   <Form.Control
                     type="number"
+                    min="0"
                     value={cost}
                     onChange={(e) => setCost(e.target.value)}
                     placeholder="Precio"
@@ -271,6 +341,7 @@ const Editor = () => {
                   <Form.Label className="titulos">Precio anterior</Form.Label>
                   <Form.Control
                     type="number"
+                    min="0"
                     value={descuento}
                     onChange={(e) => setDescuento(e.target.value)}
                     placeholder="Descuento"
@@ -353,7 +424,7 @@ const Editor = () => {
               variant="dark"
               disabled={loading}
               size="lg"
-              onClick={(e) => handleClick(e)}
+              onClick={handleClick}
             >
               {loading ? (
                 <>
@@ -367,6 +438,8 @@ const Editor = () => {
                   />
                   Loading
                 </>
+              ) : state ? (
+                "Actualizar Articulo"
               ) : (
                 "Crear Articulo"
               )}

@@ -147,7 +147,7 @@ const getArticleByID = async (req, res) => {
     }
     res.status(200).json(article);
   } catch (error) {
-    console.error(err);
+    console.error(error);
     res.status(500).json("Error interno del servidor");
   }
 };

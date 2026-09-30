@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import logonegro from "../assets/Logo/logo_negro.png";
 import { AuthContext } from "../context/authContext";
 import { Link } from "react-router-dom";
@@ -45,6 +45,7 @@ const BarraNavegacion = ({
         <div className="nav-actions d-flex align-items-center gap-2">
           <div className="navbar-desktop-actions d-none d-sm-flex align-items-center gap-2">
             <NavItem href="/" label="Home" />
+            <NavItem href="/dtf" label="DTF" />
             <Dropdown label="Links" items={navbarLinks} />
             <UserDropdown currentUser={currentUser} logout={logout} />
           </div>
@@ -84,6 +85,7 @@ const BarraNavegacion = ({
             </div>
             <ul className="navbar-nav">
               <NavItem href="/" label="Home" mobile />
+              <NavItem href="/dtf" label="DTF" mobile />
               <Dropdown label="Links" items={navbarLinks} mobile />
               <UserDropdown currentUser={currentUser} logout={logout} mobile />
             </ul>
@@ -179,6 +181,11 @@ const UserDropdown = ({ currentUser, logout, mobile = false }) => (
           <li>
             <Link className="dropdown-item li-navbar-hover" to="/editor">
               Crear Artículo
+            </Link>
+          </li>
+          <li>
+            <Link className="dropdown-item li-navbar-hover" to="/dtf/upload">
+              Crear DTF
             </Link>
           </li>
         </>

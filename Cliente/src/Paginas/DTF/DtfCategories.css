@@ -1,0 +1,506 @@
+/* =========================
+   CATEGORIES
+========================= */
+
+.dtf-categories {
+  width: 100%;
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+}
+
+.dtf-categories-header {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.dtf-categories-header .titulos {
+  margin-bottom: 0.4rem;
+}
+
+.dtf-categories-header .parrafos {
+  margin: 0;
+  opacity: 0.75;
+}
+
+/* =========================
+   CATEGORY GRID
+========================= */
+
+.dtf-category-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* =========================
+   CATEGORY CARD
+========================= */
+
+.dtf-category-card {
+  position: relative;
+  width: 100%;
+  min-height: 145px;
+  border: 1px solid #dedede;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* =========================
+   CATEGORY CONTENT
+========================= */
+
+.dtf-category-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+}
+
+.dtf-category-name {
+  color: #000;
+  font-size: 3rem;
+  line-height: 1;
+  text-align: center;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+  transition: transform 0.3s ease;
+}
+
+/* =========================
+   CATEGORY HOVER
+========================= */
+
+.dtf-category-card:hover {
+  transform: translateY(-5px);
+  border-color: #111;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dtf-category-card:hover .dtf-category-name {
+  transform: scale(1.12);
+}
+
+/* =========================
+   CATEGORY ACTIVE
+========================= */
+
+.dtf-category-card.active {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 2px #111,
+    0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.dtf-category-card.active .dtf-category-name {
+  transform: scale(1.08);
+}
+
+/* =========================
+   ACTIVE INDICATOR
+========================= */
+
+.dtf-category-card.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 35px;
+  height: 3px;
+  transform: translateX(-50%);
+  background: #111;
+  border-radius: 10px;
+  z-index: 3;
+}
+
+/* =========================
+   DTF RESULTS
+========================= */
+
+.dtf-category-results {
+  margin-top: 2rem;
+}
+
+.dtf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dtf-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.dtf-design-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: #f6f6f4;
+  cursor: pointer;
+}
+
+.dtf-design-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.dtf-grid-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  padding: 0.75rem;
+  object-fit: contain;
+}
+
+.dtf-product-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.dtf-product-info h3,
+.dtf-product-info p {
+  margin: 0;
+}
+
+.dtf-product-info h3 {
+  font-size: 1rem;
+}
+
+.dtf-product-info p {
+  margin-top: 0.35rem;
+}
+
+.dtf-preview-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.5rem 0.65rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* =========================
+   PREVIEW MODAL
+========================= */
+
+.dtf-preview-modal .modal-body {
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.dtf-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(230px, 0.9fr);
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* =========================
+   SHIRT STAGE
+========================= */
+
+.dtf-shirt-stage {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 5;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #ededeb, #f9f9f7);
+}
+
+.dtf-shirt-shape {
+  position: absolute;
+  inset: 4% 5%;
+  width: 90%;
+  height: 92%;
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.12));
+}
+
+/* =========================
+   DTF DESIGN
+========================= */
+
+.dtf-shirt-design {
+  position: absolute;
+  z-index: 1;
+
+  /*
+    Tamaño base del diseño.
+    La escala final se controla desde React:
+    basic    = 0.60
+    oversize = 0.80
+  */
+  width: 38%;
+  max-height: 45%;
+
+  top: 50%;
+  left: 50%;
+
+  object-fit: contain;
+  transform-origin: center;
+  pointer-events: none;
+
+  transition: transform 180ms ease-out;
+}
+
+/* =========================
+   PREVIEW CONTROLS
+========================= */
+
+.dtf-preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dtf-control-group {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.dtf-control-group h3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* =========================
+   SHIRT COLORS
+========================= */
+
+.dtf-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.dtf-color-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font-family: "Space Grotesk", sans-serif;
+  cursor: pointer;
+}
+
+.dtf-color-option.selected {
+  border-color: #111;
+  box-shadow: 0 0 0 1px #111;
+}
+
+.dtf-color-swatch {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #bcbcbc;
+  border-radius: 50%;
+}
+
+.swatch-white {
+  background: #fff;
+}
+
+.swatch-black {
+  background: #171717;
+}
+
+/* =========================
+   DTF SIZE
+========================= */
+
+.dtf-size-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+
+.dtf-size-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+
+  min-height: 60px;
+  padding: 0.5rem;
+
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+
+  font-family: "Space Grotesk", sans-serif;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dtf-size-option:hover {
+  border-color: #111;
+  transform: translateY(-1px);
+}
+
+.dtf-size-option.selected {
+  border-color: #111;
+  box-shadow: 0 0 0 1px #111;
+}
+
+.dtf-size-option span {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dtf-size-option small {
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+/* =========================
+   EMPTY
+========================= */
+
+.dtf-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 992px) {
+  .dtf-category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dtf-category-card {
+    min-height: 135px;
+  }
+
+  .dtf-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 576px) {
+  .dtf-categories {
+    padding: 1rem 0.5rem;
+  }
+
+  .dtf-category-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.35rem;
+  }
+
+  .dtf-category-card {
+    width: 100%;
+    min-height: 55px;
+    height: 55px;
+    border-radius: 9px;
+  }
+
+  .dtf-category-name {
+    font-size: 0.75rem;
+    line-height: 1.1;
+  }
+
+  .dtf-category-card:hover .dtf-category-name {
+    transform: scale(1.05);
+  }
+
+  .dtf-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .dtf-category-results {
+    margin-top: 1.25rem;
+  }
+
+  .dtf-preview-modal .modal-body {
+    padding: 1rem;
+  }
+
+  .dtf-preview-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .dtf-shirt-stage {
+    max-width: 340px;
+    width: 100%;
+  }
+
+  .dtf-preview-controls {
+    gap: 0.75rem;
+  }
+
+  .dtf-size-option {
+    min-height: 55px;
+  }
+}
+
+/* =========================
+   VERY SMALL DEVICES
+========================= */
+
+@media (max-width: 380px) {
+  .dtf-category-grid {
+    gap: 0.25rem;
+  }
+
+  .dtf-category-card {
+    min-height: 50px;
+    height: 50px;
+  }
+
+  .dtf-category-name {
+    font-size: 0.65rem;
+  }
+
+  .dtf-grid {
+    gap: 0.5rem;
+  }
+}

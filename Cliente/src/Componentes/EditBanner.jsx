@@ -14,8 +14,8 @@ import axios from "axios";
 
 // ============ CONSTANTES ============
 const CLOUDINARY_CONFIG = {
-  uploadUrl: "https://api.cloudinary.com/v1_1/ds1xggjvm/image/upload",
-  preset: "bygioBanners",
+  uploadUrl: `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_NAME}/image/upload`,
+  preset: import.meta.env.VITE_CLOUDINARY_PRESET_BANNER,
   folder: "Banners",
 };
 

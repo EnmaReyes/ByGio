@@ -1,4 +1,5 @@
 const express = require("express");
+
 const {
   addDtf,
   getDtf,
@@ -8,9 +9,9 @@ const {
 
 const router = express.Router();
 
-router.post("/add", addDtf);
 router.get("/", getDtf);
-router.put("/:id", updateDtf);
 router.get("/category", getDtfByCategory);
+router.post("/add", addDtf);
+router.put("/:id", updateDtf);
 
 module.exports = router;

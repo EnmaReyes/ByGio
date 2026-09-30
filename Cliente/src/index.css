@@ -405,6 +405,71 @@ a {
   color: #eee;
 }
 
+.dtf-image-preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 420px);
+  min-height: 420px;
+  padding: 1.25rem;
+  border: 1px dashed #b9ae9f;
+  background: #faf7f1;
+}
+
+.dtf-image-preview > img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.dtf-empty-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: #6c6868;
+}
+
+.dtf-upload-button,
+.dtf-remove-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0;
+  cursor: pointer;
+}
+
+.dtf-upload-button {
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  color: #fff;
+  background: #201f1f;
+}
+
+.dtf-upload-button:hover {
+  background: #4c4743;
+}
+
+.dtf-remove-image {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  color: #fff;
+  background: #201f1f;
+}
+
+@media (max-width: 767px) {
+  .dtf-image-preview {
+    min-height: 300px;
+  }
+}
+
 .fontFamilyTitle {
   font-size: 1.5rem;
   font-family: Lobster, sans-serif;
@@ -1074,7 +1139,6 @@ a {
     font-size: 0.65rem;
   }
 }
-```
 
 /* articulos details */
 
@@ -1213,5 +1277,425 @@ img {
 @media (max-width: 576px) {
   .site-footer-inner {
     padding-block: 2.5rem;
+  }
+}
+
+/* =========================================
+   CONTENEDOR PRINCIPAL DTF UPLOAD
+========================================= */
+
+.dtf-editor {
+  position: relative;
+}
+
+/* =========================================
+   OVERLAY / CONTENEDOR DE LA VENTANA
+========================================= */
+
+.add-category-overlay {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: min(90%, 420px);
+
+  z-index: 1000;
+}
+
+/* =========================================
+   VENTANA
+========================================= */
+
+.add-category-modal {
+  position: relative;
+
+  width: 100%;
+  padding: 28px;
+
+  background: #ffffff;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  animation: addCategoryIn 0.2s ease-out;
+}
+
+/* =========================================
+   ANIMACIÓN
+========================================= */
+
+@keyframes addCategoryIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   TÍTULO
+========================================= */
+
+.add-category-modal h2 {
+  margin: 0 35px 22px 0;
+
+  font-size: 1.35rem;
+  font-weight: 600;
+
+  color: #212529;
+}
+
+/* =========================================
+   FORMULARIO
+========================================= */
+
+.add-category-modal form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 15px;
+}
+
+/* =========================================
+   INPUT
+========================================= */
+
+.add-category-modal input {
+  width: 100%;
+
+  padding: 11px 13px;
+
+  border: 1px solid #ced4da;
+  border-radius: 7px;
+
+  font-size: 1rem;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-category-modal input:focus {
+  border-color: #86b7fe;
+
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* =========================================
+   BOTÓN AGREGAR
+========================================= */
+
+.add-category-modal .btn {
+  width: 100%;
+
+  padding: 10px 15px;
+
+  font-weight: 500;
+}
+
+/* =========================================
+   BOTÓN CERRAR
+========================================= */
+
+.add-category-close {
+  position: absolute;
+
+  top: 10px;
+  right: 12px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #6c757d;
+
+  font-size: 28px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.add-category-close:hover {
+  background-color: #f1f3f5;
+  color: #212529;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 768px) {
+  .add-category-overlay {
+    top: 80px;
+
+    width: min(90%, 400px);
+  }
+
+  .add-category-modal {
+    padding: 24px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 576px) {
+  .add-category-overlay {
+    top: 70px;
+
+    width: calc(100% - 30px);
+
+    left: 15px;
+
+    transform: none;
+  }
+
+  .add-category-modal {
+    padding: 22px 18px;
+
+    border-radius: 12px;
+  }
+
+  .add-category-modal h2 {
+    font-size: 1.15rem;
+
+    margin-bottom: 18px;
+  }
+
+  .add-category-modal input {
+    padding: 10px 12px;
+
+    font-size: 0.95rem;
+  }
+
+  .add-category-modal .btn {
+    padding: 10px;
+
+    font-size: 0.95rem;
+  }
+
+  .add-category-close {
+    top: 8px;
+    right: 8px;
+
+    width: 30px;
+    height: 30px;
+
+    font-size: 25px;
+  }
+}
+
+/* ==========================================
+   ADD CATEGORY MODAL
+   ========================================== */
+
+.add-category-modal .modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.add-category-modal .modal-header {
+  padding: 1.25rem 1.5rem 0.5rem;
+}
+
+.add-category-modal .modal-body {
+  padding: 1rem 1.5rem;
+}
+
+.add-category-modal .modal-footer {
+  padding: 0.75rem 1.5rem 1.25rem;
+}
+
+/* ==========================================
+   CLOSE BUTTON
+   ========================================== */
+
+.add-category-close {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  color: #555;
+
+  font-size: 1.8rem;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.add-category-close:hover:not(:disabled) {
+  background-color: #f1f1f1;
+  color: #111;
+  transform: rotate(90deg);
+}
+
+.add-category-close:focus-visible {
+  outline: 2px solid #212529;
+  outline-offset: 2px;
+}
+
+.add-category-close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   INPUT
+   ========================================== */
+
+.add-category-modal .form-control {
+  min-height: 44px;
+
+  border-radius: 9px;
+  border: 1px solid #d6d6d6;
+
+  padding: 0.65rem 0.8rem;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-category-modal .form-control:focus {
+  border-color: #212529;
+
+  box-shadow:
+    0 0 0 0.2rem rgba(33, 37, 41, 0.1);
+}
+
+/* ==========================================
+   BUTTONS
+   ========================================== */
+
+.add-category-cancel,
+.add-category-submit {
+  min-height: 40px;
+
+  border-radius: 8px;
+
+  padding: 0.5rem 1rem;
+
+  font-weight: 500;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-category-cancel:hover:not(:disabled),
+.add-category-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.add-category-submit {
+  min-width: 170px;
+}
+
+/* ==========================================
+   BUTTON + CATEGORY
+   ========================================== */
+
+.dtf-add-category-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 36px;
+
+  border-radius: 8px;
+
+  padding: 0.35rem 0.75rem;
+
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dtf-add-category-btn:hover {
+  transform: translateY(-1px);
+}
+
+.dtf-add-category-btn:active {
+  transform: translateY(0);
+}
+
+.dtf-add-category-btn:focus-visible {
+  box-shadow:
+    0 0 0 0.2rem rgba(33, 37, 41, 0.15);
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 576px) {
+  .add-category-modal .modal-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+
+  .add-category-modal .modal-body {
+    padding: 1rem;
+  }
+
+  .add-category-modal .modal-footer {
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  .add-category-submit,
+  .add-category-cancel {
+    flex: 1;
+  }
+
+  .add-category-modal .modal-footer {
+    display: flex;
+    gap: 0.5rem;
   }
 }

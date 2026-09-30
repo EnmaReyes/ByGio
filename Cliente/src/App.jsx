@@ -10,7 +10,9 @@ import { useState } from "react";
 import Registro from "./Paginas/Registro";
 import InicioSecion from "./Paginas/InicioSecion";
 import Articulo from "./Paginas/ArticuloDetallado/Articulo";
+import UploadDTF from "./Paginas/DTF/UploadDTF";
 import "./App.css";
+import DtfCategories from "./Paginas/DTF/DtfCategories";
 
 //! Rutas de pagina\\
 const Layout = ({
@@ -73,6 +75,18 @@ function App() {
         {
           path: "/editor",
           element: <Editor />,
+        },
+        {
+          path: "/dtf/upload",
+          element: <UploadDTF />,
+        },
+        {
+          path: "/dtf",
+          element: <DtfCategories />,
+        },
+        {
+          path: "/dtfcategories",
+          element: <DtfCategories />,
         },
         {
           path: "/:id",

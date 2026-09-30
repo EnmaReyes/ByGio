@@ -61,7 +61,8 @@ const ImageGallery = ({ images }) => {
     <Swiper
       pagination={true}
       modules={[Pagination]}
-      className="mySwiper product-gallery"p
+      className="mySwiper product-gallery"
+      p
     >
       {images.map((img, index) => (
         <SwiperSlide key={index} className="p-md-2">
@@ -86,7 +87,7 @@ const SizeSelector = ({ sizes, oversize, selectedSize, onSizeChange }) => {
           className="titulos"
           style={{ color: COLORS.accent, fontSize: "2rem" }}
         >
-          Over Sizes
+          OverSizes
         </h2>
       </div>
     );

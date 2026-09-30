@@ -1,40 +1,11 @@
-import { useEffect, useState } from "react";
 import { Carousel, Spinner } from "react-bootstrap";
 import "../App.css";
-import { Link, useLocation } from "react-router-dom";
-import { API_URL } from "../config";
-import axios from "axios";
-
-const URL = API_URL;
+import { Link } from "react-router-dom";
+import { useContextProvaider } from "../context/ContextProvaider";
 
 const CartaInicial = () => {
-  const [articulo, setArticulo] = useState([]);
-  const location = useLocation().search;
+  const { articulos, loading } = useContextProvaider();
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`${URL}/api/posts/${location}`);
-        const data = res.data;
-
-        const formattedData = Array.isArray(data)
-          ? data.map((art) => ({
-              ...art,
-              img: typeof art.img === "string" ? JSON.parse(art.img) : art.img,
-              sizes:
-                typeof art.sizes === "string"
-                  ? JSON.parse(art.sizes)
-                  : art.sizes,
-            }))
-          : [];
-
-        setArticulo(formattedData);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, [location]);
 
   const generateWhatsAppLink = (art) => {
     const tallaSlected = art.oversize ? "Over size" : "S/M/L";
@@ -58,58 +29,64 @@ const CartaInicial = () => {
         fade
         interval={1500}
       >
-        {articulo
-          .filter((art) => art.destacadas === true)
-          .slice(0, 4)
-          .map((art, index) => (
-            <Carousel.Item key={art.id}>
-              <div className="carousel-items">
-                <div className="carousel-image-column">
-                  {art.img ? (
-                    <img
-                      className="img-fluid img-carousel"
-                      src={art.img[0]}
-                      alt={art.title}
-                    />
-                  ) : (
-                    <div className="d-flex justify-content-center align-items-center h-100">
-                      <Spinner animation="border" variant="dark" />
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center h-100">
+            <Spinner animation="border" variant="dark" />
+          </div>
+        ) : (
+          articulos
+            .filter((art) => art.destacadas === true)
+            .slice(0, 4)
+            .map((art, index) => (
+              <Carousel.Item key={art.id}>
+                <div className="carousel-items">
+                  <div className="carousel-image-column">
+                    {art.img ? (
+                      <img
+                        className="img-fluid img-carousel"
+                        src={art.img[0]}
+                        alt={art.title}
+                      />
+                    ) : (
+                      <div className="d-flex justify-content-center align-items-center h-100">
+                        <Spinner animation="border" variant="dark" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="carousel-copy text-md-start text-center">
+                    <h2 className="fw-bold titulo-inicial">{art.title}</h2>
+
+                    {art.oversize ? (
+                      <p className="m-0">Oversize</p>
+                    ) : (
+                      <div className="d-flex gap-1 justify-content-center justify-content-md-start">
+                        {art.sizes.map(
+                          (size, i) =>
+                            size !== "" && (
+                              <span key={i} className="tallasCartainicial">
+                                {size}
+                              </span>
+                            ),
+                        )}
+                      </div>
+                    )}
+                    <p className="des-inicial mt-3">{art.desc}</p>
+                    <p className="parrafo-inicial mt-3">No te lo pierdas!</p>
+
+                    <div className="mt-3">
+                      <Link to={`/${art.id}`}>
+                        <span className="text-muted parrafos pointer explorar-inicial">
+                          Explorar
+                        </span>
+                      </Link>
                     </div>
-                  )}
-                </div>
-
-                {/* Contenido */}
-                <div className="carousel-copy text-md-start text-center">
-                  <h2 className="fw-bold titulo-inicial">{art.title}</h2>
-
-                  {art.oversize ? (
-                    <p className="m-0">Oversize</p>
-                  ) : (
-                    <div className="d-flex gap-1 justify-content-center justify-content-md-start">
-                      {art.sizes.map(
-                        (size, i) =>
-                          size !== "" && (
-                            <span key={i} className="tallasCartainicial">
-                              {size}
-                            </span>
-                          ),
-                      )}
-                    </div>
-                  )}
-                  <p className="des-inicial mt-3">{art.desc}</p>
-                  <p className="parrafo-inicial mt-3">No te lo pierdas!</p>
-
-                  <div className="mt-3">
-                    <Link to={`/${art.id}`}>
-                      <span className="text-muted parrafos pointer explorar-inicial">
-                        Explorar
-                      </span>
-                    </Link>
                   </div>
                 </div>
-              </div>
-            </Carousel.Item>
-          ))}
+              </Carousel.Item>
+            ))
+        )}
       </Carousel>
     </section>
   );

@@ -1,0 +1,436 @@
+/* =========================
+   DTF PRODUCT GRID
+========================= */
+
+.dtf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* =========================
+   DTF PRODUCT CARD
+========================= */
+
+.dtf-grid-item {
+  min-width: 0;
+}
+
+.dtf-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* =========================
+   DTF DESIGN TRIGGER
+========================= */
+
+.dtf-design-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: #f6f6f4;
+  cursor: pointer;
+}
+
+/* =========================
+   DTF DESIGN IMAGE
+========================= */
+
+.dtf-design-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.dtf-design-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding: 0.75rem;
+  object-fit: contain;
+}
+
+/* =========================
+   DTF PRODUCT INFO
+========================= */
+
+.dtf-product-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.dtf-product-info h3,
+.dtf-product-info p {
+  margin: 0;
+}
+
+.dtf-product-info h3 {
+  font-size: 1rem;
+}
+
+.dtf-product-info p {
+  margin-top: 0.35rem;
+}
+
+/* =========================
+   PREVIEW BUTTON
+========================= */
+
+.dtf-preview-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.5rem 0.65rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* =========================
+   PREVIEW MODAL
+========================= */
+
+.dtf-preview-modal .modal-body {
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.dtf-preview-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(230px, 0.9fr);
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* =========================
+   SHIRT MOCKUP STAGE
+========================= */
+
+.dtf-shirt-stage {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 5;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  background: #f6f6f4;
+}
+
+/* =========================
+   SHIRT PNG
+========================= */
+
+.dtf-shirt-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* =========================
+   DTF OVER SHIRT
+========================= */
+
+.dtf-shirt-design {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 38%;
+  max-height: 45%;
+  object-fit: contain;
+  transform-origin: center;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 180ms ease-out;
+}
+
+/* =========================
+   PREVIEW CONTROLS
+========================= */
+
+.dtf-preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dtf-control-group {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.dtf-control-group h3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* =========================
+   SHIRT COLOR OPTIONS
+========================= */
+
+.dtf-shirt-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.dtf-shirt-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.4rem;
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dtf-shirt-option:hover {
+  border-color: #111;
+  transform: translateY(-2px);
+}
+
+.dtf-shirt-option.selected {
+  border-color: #111;
+  box-shadow: 0 0 0 1px #111;
+}
+
+.dtf-shirt-option img {
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  object-fit: contain;
+}
+
+.dtf-shirt-option span {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* =========================
+   DTF SIZE OPTIONS
+========================= */
+
+.dtf-size-options {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 0.7rem;
+}
+
+.dtf-size-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 60px;
+  padding: 0.5rem;
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font-family: "Space Grotesk", sans-serif;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dtf-size-option:hover {
+  border-color: #111;
+
+  transform: translateY(-1px);
+}
+
+.dtf-size-option.selected {
+  border-color: #111;
+
+  box-shadow: 0 0 0 1px #111;
+}
+
+.dtf-size-option span {
+  font-size: 0.9rem;
+
+  font-weight: 600;
+}
+
+.dtf-size-option small {
+  font-family: "Space Mono", monospace;
+
+  font-size: 0.75rem;
+
+  opacity: 0.65;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.dtf-empty {
+  text-align: center;
+
+  padding: 3rem 1rem;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 992px) {
+  .dtf-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 576px) {
+  /* =========================
+     DTF GRID
+  ========================= */
+
+  .dtf-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 0.6rem;
+  }
+
+  /* =========================
+     PRODUCT INFO
+  ========================= */
+
+  .dtf-product-info {
+    padding: 0.6rem 0.65rem 0.75rem;
+  }
+
+  .dtf-preview-button {
+    padding: 0.45rem 0.5rem;
+
+    font-size: 0.8rem;
+  }
+
+  /* =========================
+     MODAL
+  ========================= */
+
+  .dtf-preview-modal .modal-body {
+    padding: 1rem;
+  }
+
+  .dtf-preview-layout {
+    grid-template-columns: 1fr;
+
+    gap: 1rem;
+  }
+
+  /* =========================
+     SHIRT MOCKUP
+  ========================= */
+
+  .dtf-shirt-stage {
+    width: 100%;
+
+    max-width: 340px;
+
+    margin: 0 auto;
+  }
+
+  /* =========================
+     CONTROLS
+  ========================= */
+
+  .dtf-preview-controls {
+    gap: 0.75rem;
+  }
+
+  /* =========================
+     SHIRT OPTIONS
+  ========================= */
+
+  .dtf-shirt-options {
+    grid-template-columns: repeat(5, 1fr);
+
+    gap: 0.35rem;
+  }
+
+  .dtf-shirt-option {
+    padding: 0.25rem;
+
+    font-size: 0.62rem;
+  }
+
+  .dtf-shirt-option img {
+    height: 38px;
+  }
+
+  /* =========================
+     SIZE OPTIONS
+  ========================= */
+
+  .dtf-size-option {
+    min-height: 55px;
+  }
+}
+
+/* =========================
+   VERY SMALL DEVICES
+========================= */
+
+@media (max-width: 380px) {
+  .dtf-grid {
+    gap: 0.5rem;
+  }
+
+  .dtf-shirt-options {
+    gap: 0.25rem;
+  }
+
+  .dtf-shirt-option {
+    font-size: 0.55rem;
+  }
+
+  .dtf-shirt-option img {
+    height: 32px;
+  }
+}

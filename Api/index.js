@@ -4,7 +4,10 @@ const authRoutes = require("./Rutas/auth.js");
 const userRoutes = require("./Rutas/user.js");
 const bannerRoutes = require("./Rutas/banner.js");
 const dtfRoutes = require("./Rutas/dtf.js");
+const categoryRoutes = require("./Rutas/category.js");
+
 const { sequelize } = require("./DataBase/db.js");
+
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { FRONTEND_URL } = require("./config.js");
@@ -13,30 +16,35 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
+// Middlewares
 app.use(express.json());
 
 app.use(
   cors({
     origin: FRONTEND_URL,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
   }),
 );
 
 app.use(cookieParser());
 
+// Ruta principal
 app.get("/", (req, res) => {
   res.json({
     message: "ByGio API funcionando correctamente 🚀",
   });
 });
 
+// Rutas
 app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
 app.use("/api/dtf", dtfRoutes);
+app.use("/api/category", categoryRoutes);
 
+// Conexión a la base de datos
 (async () => {
   try {
     console.log("🔌 Intentando conectar a Neon...");
@@ -45,8 +53,9 @@ app.use("/api/dtf", dtfRoutes);
 
     console.log("✅ Conexión inicial exitosa");
 
+    // Solo desarrollo
     if (process.env.NODE_ENV !== "production") {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync();
     }
   } catch (error) {
     console.error("❌ Error conectando con la base de datos:");
@@ -54,6 +63,7 @@ app.use("/api/dtf", dtfRoutes);
   }
 })();
 
+// Servidor local
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${port}`);

@@ -1,8 +1,8 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Card, Col, Container, Row, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "../App.css";
-import { useArticulos } from "./UseArticulos";
+import { useContextProvaider } from "../context/ContextProvaider";
 
 const generateWhatsAppLink = (art, phoneNumber) => {
   const size = art.oversize ? "Over size" : "S/M/L";
@@ -25,9 +25,9 @@ const SizesList = ({ sizes, oversize }) => {
       {sizes
         .filter((size) => size)
         .map((size, idx) => (
-          <p key={idx} className="tallas">
+          <span key={idx} className="tallas">
             {size}
-          </p>
+          </span>
         ))}
     </Card.Text>
   );
@@ -135,7 +135,7 @@ const ArticleCard = ({ art, phoneNumber, showDiscount = false }) => {
 };
 
 export const CartaDeArticulos = () => {
-  const articulos = useArticulos();
+  const { articulos } = useContextProvaider();
   const phoneNumber = import.meta.env.VITE_NUMBER_PHONE;
 
   const sinDescuento = useMemo(
@@ -160,7 +160,7 @@ export const CartaDeArticulos = () => {
 };
 
 export const ArtiulosOferta = () => {
-  const articulos = useArticulos();
+  const { articulos } = useContextProvaider();
   const phoneNumber = import.meta.env.VITE_NUMBER_PHONE;
 
   const conDescuento = useMemo(

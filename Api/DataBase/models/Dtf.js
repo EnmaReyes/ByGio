@@ -11,42 +11,39 @@ const Dtf = sequelize.define(
       allowNull: false,
       primaryKey: true,
     },
-    category: {
-      type: DataTypes.TEXT,
+
+    categoryId: {
+      type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "categories",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
     },
+
     img: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    cost: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 8000,
-    },
-    costwithShirtOversize: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 32000,
-    },
-    costwithShirt: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 22000,
-    },
+    
     stock: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
     },
+
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: true,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   },
   {
+    tableName: "dtfs",
     timestamps: false,
   },
 );
+
 module.exports = { Dtf };
