@@ -27,8 +27,9 @@
 
 .dtf-category-grid {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
 }
 
@@ -38,23 +39,25 @@
 
 .dtf-category-card {
   position: relative;
-  width: 100%;
+  width: fit-content;
+  min-width: 145px;
   min-height: 145px;
+  padding: 0 1.5rem;
   border: 1px solid #dedede;
   border-radius: 14px;
   background: #fff;
   overflow: hidden;
   cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease,
     border-color 0.3s ease;
 }
-
 /* =========================
    CATEGORY CONTENT
 ========================= */
@@ -62,11 +65,13 @@
 .dtf-category-content {
   position: relative;
   z-index: 2;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
+
+  width: auto;
   height: 100%;
   padding: 1rem;
 }
@@ -77,7 +82,10 @@
   line-height: 1;
   text-align: center;
   text-transform: capitalize;
-  overflow-wrap: anywhere;
+
+  white-space: nowrap;
+  overflow: visible;
+
   transition: transform 0.3s ease;
 }
 
@@ -262,14 +270,11 @@
   */
   width: 38%;
   max-height: 45%;
-
   top: 50%;
   left: 50%;
-
   object-fit: contain;
   transform-origin: center;
   pointer-events: none;
-
   transition: transform 180ms ease-out;
 }
 
@@ -430,20 +435,28 @@
   }
 
   .dtf-category-grid {
-    grid-template-columns: repeat(5, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.35rem;
   }
 
   .dtf-category-card {
-    width: 100%;
+    min-width: 0;
     min-height: 55px;
     height: 55px;
+    padding: 0 0.7rem;
     border-radius: 9px;
   }
 
+  .dtf-category-content {
+    padding: 0.5rem;
+  }
+
   .dtf-category-name {
-    font-size: 0.75rem;
+    font-size: 1rem;
     line-height: 1.1;
+    white-space: nowrap;
   }
 
   .dtf-category-card:hover .dtf-category-name {

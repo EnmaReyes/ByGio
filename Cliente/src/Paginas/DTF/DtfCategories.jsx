@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-
 import { useContextProvaider } from "../../context/ContextProvaider";
 import DtfCard from "./DtfCard";
 
@@ -96,7 +95,7 @@ const DtfCategories = () => {
           aria-pressed={selectedCategory === "all"}
         >
           <div className="dtf-category-content">
-            <span className="dtf-category-name bygiotext">Todos</span>
+            <span className="dtf-category-name titulos">Todos</span>
           </div>
         </button>
 
@@ -113,7 +112,7 @@ const DtfCategories = () => {
               aria-pressed={isActive}
             >
               <div className="dtf-category-content">
-                <span className="dtf-category-name bygiotext">
+                <span className="dtf-category-name titulos">
                   {category.name}
                 </span>
               </div>
