@@ -34,12 +34,6 @@ const parseJsonValue = (value) => {
   }
 };
 
-/*
- * ==========================================
- * FORMATEAR ARTICULOS
- * ==========================================
- */
-
 const formatArticulos = (data) =>
   Array.isArray(data)
     ? data.map((art) => ({
@@ -48,15 +42,6 @@ const formatArticulos = (data) =>
         sizes: parseJsonValue(art.sizes),
       }))
     : [];
-
-/*
- * ==========================================
- * FORMATEAR DTF
- * ==========================================
- *
- * El campo "img" contiene directamente
- * la imagen PNG transparente del DTF.
- */
 
 const formatDtf = (data) =>
   Array.isArray(data)
@@ -68,126 +53,163 @@ const formatDtf = (data) =>
 
 /*
  * ==========================================
- * CONTEXT PROVIDER
+ * PROVIDER
  * ==========================================
  */
 
 export const ContextProvaider = ({ children }) => {
   /*
-   * ==========================================
-   * ESTADOS
-   * ==========================================
+   * ========================================
+   * DATA
+   * ========================================
    */
 
   const [articulos, setArticulos] = useState([]);
-
-  // Todos los DTF
   const [dtf, setDtf] = useState([]);
-
-  // DTF filtrados por categoría
   const [dtfCategory, setDtfCategory] = useState([]);
-
-  // Categorías
   const [categories, setCategories] = useState([]);
 
-  // Error global
   const [error, setError] = useState(null);
 
   /*
-   * ==========================================
+   * ========================================
    * LOADING STATES
-   * ==========================================
+   * ========================================
    */
 
   const [loadingArticulos, setLoadingArticulos] = useState(false);
-
   const [loadingDtf, setLoadingDtf] = useState(false);
-
   const [loadingCategories, setLoadingCategories] = useState(false);
-
   const [loadingDtfCategory, setLoadingDtfCategory] = useState(false);
 
+  // Loading exclusivamente de la carga inicial
+  const [loadingInitial, setLoadingInitial] = useState(true);
+
   /*
-   * ==========================================
-   * REFS / CACHE
-   * ==========================================
+   * ========================================
+   * REFS - ARTICULOS
+   * ========================================
    */
 
-  const dtfCategoryAbortRef = useRef(null);
+  const articulosRequestRef = useRef(null);
+  const articulosRequestKeyRef = useRef(null);
+
+  /*
+   * ========================================
+   * REFS - DTF
+   * ========================================
+   */
+
+  const dtfRef = useRef([]);
   const dtfLoadedRef = useRef(false);
   const dtfRequestRef = useRef(null);
 
   /*
-   * Cache de DTF por categoría.
-
-   * Ejemplo:
-   *
-   * {
-   *   "uuid-anime": [...],
-   *   "uuid-halloween": [...]
-   * }
+   * ========================================
+   * REFS - CATEGORIES
+   * ========================================
    */
+
+  const categoriesRef = useRef([]);
+  const categoriesLoadedRef = useRef(false);
+  const categoriesRequestRef = useRef(null);
+
+  /*
+   * ========================================
+   * REFS - DTF CATEGORY
+   * ========================================
+   */
+
+  const dtfCategoryAbortRef = useRef(null);
   const dtfCategoryCacheRef = useRef(new Map());
 
   /*
-   * ==========================================
-   * LOADING GLOBAL
-   * ==========================================
-   *
-   * Mantiene compatibilidad con los componentes
-   * que ya utilizan:
-   *
-   * const { loading } = useContextProvaider();
+   * ========================================
+   * KEEP REFS SYNCHRONIZED
+   * ========================================
    */
 
-  const loading =
-    loadingArticulos || loadingDtf || loadingCategories || loadingDtfCategory;
+  useEffect(() => {
+    dtfRef.current = dtf;
+  }, [dtf]);
+
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
 
   /*
-   * ==========================================
-   * OBTENER ARTICULOS
-   * ==========================================
+   * ========================================
+   * GET ARTICULOS
+   * ========================================
    */
 
   const getArticulos = useCallback(async (search = window.location.search) => {
+    const requestKey = search || "";
+
+    /*
+     * Si ya existe una petición para exactamente
+     * la misma búsqueda, reutilizamos esa petición.
+     */
+    if (
+      articulosRequestRef.current &&
+      articulosRequestKeyRef.current === requestKey
+    ) {
+      return articulosRequestRef.current;
+    }
+
     setLoadingArticulos(true);
     setError(null);
 
-    try {
-      const res = await api.get(`/api/posts/${search}`);
+    const request = (async () => {
+      try {
+        const res = await api.get(`/api/posts/${requestKey}`);
 
-      const formattedData = formatArticulos(res.data);
+        const formattedData = formatArticulos(res.data);
 
-      setArticulos(formattedData);
+        setArticulos(formattedData);
 
-      return formattedData;
-    } catch (err) {
-      setError(err);
+        return formattedData;
+      } catch (err) {
+        setError(err);
 
-      console.error("Error al cargar articulos:", err);
+        console.error("Error al cargar articulos:", err);
 
-      throw err;
-    } finally {
-      setLoadingArticulos(false);
-    }
+        throw err;
+      } finally {
+        if (articulosRequestRef.current === request) {
+          articulosRequestRef.current = null;
+          articulosRequestKeyRef.current = null;
+        }
+
+        setLoadingArticulos(false);
+      }
+    })();
+
+    articulosRequestRef.current = request;
+    articulosRequestKeyRef.current = requestKey;
+
+    return request;
   }, []);
 
   /*
-   * ==========================================
-   * OBTENER TODOS LOS DTF
-   * ==========================================
-   *
-   * Este request solamente obtiene TODOS los DTF.
-   *
-   * No se ejecuta para obtener una categoría.
+   * ========================================
+   * GET DTF
+   * ========================================
    */
 
   const getDtf = useCallback(async () => {
+    /*
+     * Ya tenemos los DTF cargados.
+     */
     if (dtfLoadedRef.current) {
       setError(null);
-      return dtf;
+      return dtfRef.current;
     }
 
+    /*
+     * Ya existe una petición.
+     * Reutilizamos la misma.
+     */
     if (dtfRequestRef.current) {
       return dtfRequestRef.current;
     }
@@ -201,8 +223,10 @@ export const ContextProvaider = ({ children }) => {
 
         const formattedData = formatDtf(res.data);
 
-        setDtf(formattedData);
+        dtfRef.current = formattedData;
         dtfLoadedRef.current = true;
+
+        setDtf(formattedData);
 
         return formattedData;
       } catch (err) {
@@ -212,7 +236,6 @@ export const ContextProvaider = ({ children }) => {
 
         if (err.response) {
           console.error("Status:", err.response.status);
-
           console.error("Respuesta:", err.response.data);
         }
 
@@ -229,118 +252,94 @@ export const ContextProvaider = ({ children }) => {
     dtfRequestRef.current = request;
 
     return request;
-  }, [dtf]);
+  }, []);
 
   /*
-   * ==========================================
-   * OBTENER DTF POR CATEGORIA
-   * ==========================================
-   *
-   * Se ejecuta solamente cuando el usuario
-   * solicita una categoría.
-   *
-   * También utiliza cache.
+   * ========================================
+   * GET DTF BY CATEGORY
+   * ========================================
    */
 
   const getDtfByCategory = useCallback(async (categoryId) => {
+    /*
+     * Si no hay categoría seleccionada,
+     * limpiamos solamente el resultado.
+     */
     if (!categoryId) {
       setDtfCategory([]);
       return [];
     }
 
     /*
-     * ------------------------------------------
-     * CACHE
-     * ------------------------------------------
+     * Revisamos primero la caché.
      */
+    if (dtfCategoryCacheRef.current.has(categoryId)) {
+      const cachedData = dtfCategoryCacheRef.current.get(categoryId);
 
-    const cachedData = dtfCategoryCacheRef.current.get(categoryId);
-
-    if (cachedData !== undefined) {
-      setError(null);
       setDtfCategory(cachedData);
-      setLoadingDtfCategory(false);
 
       return cachedData;
     }
 
     /*
-     * ------------------------------------------
-     * CANCELAR REQUEST ANTERIOR
-     * ------------------------------------------
+     * Cancelamos la petición anterior si todavía existe.
+     *
+     * Esto evita que una respuesta vieja llegue después
+     * y sobrescriba la categoría actualmente seleccionada.
      */
-
-    dtfCategoryAbortRef.current?.abort();
+    if (dtfCategoryAbortRef.current) {
+      dtfCategoryAbortRef.current.abort();
+    }
 
     const controller = new AbortController();
 
     dtfCategoryAbortRef.current = controller;
 
     /*
-     * ------------------------------------------
-     * LIMPIAR RESULTADOS ANTERIORES
-     * ------------------------------------------
+     * IMPORTANTE:
      *
-     * Esto es lo importante.
-     * Evita mostrar los DTF de la categoría
-     * anterior mientras cargamos la nueva.
+     * NO hacemos:
+     *
+     * setDtfCategory([]);
+     *
+     * antes de la petición.
+     *
+     * De esta manera la UI conserva los DTF actuales
+     * mientras llegan los nuevos.
      */
-
-    setDtfCategory([]);
 
     setLoadingDtfCategory(true);
     setError(null);
 
     try {
-      const res = await api.get("/api/dtf/category", {
-        params: {
-          categoryId,
-        },
+      const res = await api.get(`/api/dtf/category?categoryId=${categoryId}`, {
         signal: controller.signal,
       });
 
-      const formattedData = formatDtf(res.data);
-
       /*
-       * ------------------------------------------
-       * VERIFICAR QUE EL REQUEST SIGA ACTIVO
-       * ------------------------------------------
+       * Verificamos que esta siga siendo
+       * la petición activa.
        */
-
       if (dtfCategoryAbortRef.current !== controller) {
         return [];
       }
 
-      /*
-       * ------------------------------------------
-       * GUARDAR EN CACHE
-       * ------------------------------------------
-       */
+      const formattedData = formatDtf(res.data);
 
+      /*
+       * Guardamos en caché.
+       */
       dtfCategoryCacheRef.current.set(categoryId, formattedData);
-
-      /*
-       * ------------------------------------------
-       * ACTUALIZAR ESTADO
-       * ------------------------------------------
-       *
-       * Si formattedData es [],
-       * se guarda [] explícitamente.
-       */
 
       setDtfCategory(formattedData);
 
       return formattedData;
     } catch (err) {
       /*
-       * Request cancelado
+       * Axios puede devolver diferentes códigos
+       * dependiendo de la versión.
        */
-
-      if (
-        axios.isCancel(err) ||
-        err.name === "CanceledError" ||
-        err.code === "ERR_CANCELED"
-      ) {
+      if (err.name === "CanceledError" || err.code === "ERR_CANCELED") {
         return [];
       }
 
@@ -348,53 +347,49 @@ export const ContextProvaider = ({ children }) => {
 
       console.error("Error al cargar DTF por categoría:", err);
 
-      if (err.response) {
-        console.error("Status:", err.response.status);
-
-        console.error("Respuesta:", err.response.data);
-      }
-
-      /*
-       * Si la petición actual falla,
-       * tampoco dejamos los DTF anteriores.
-       */
-
       if (dtfCategoryAbortRef.current === controller) {
         setDtfCategory([]);
       }
 
       throw err;
     } finally {
-      /*
-       * Solo modificar loading si este request
-       * sigue siendo el request actual.
-       */
-
       if (dtfCategoryAbortRef.current === controller) {
+        dtfCategoryAbortRef.current = null;
         setLoadingDtfCategory(false);
       }
     }
   }, []);
 
   /*
-   * ==========================================
-   * LIMPIAR CACHE DTF
-   * ==========================================
-   *
-   * Útil después de agregar o actualizar un DTF.
+   * ========================================
+   * CLEAR DTF CACHE
+   * ========================================
    */
 
   const clearDtfCache = useCallback(() => {
-    dtfCategoryCacheRef.current.clear();
+    /*
+     * Caché de DTF generales.
+     */
     dtfLoadedRef.current = false;
+    dtfRef.current = [];
 
-    setDtfCategory([]);
+    /*
+     * Caché por categoría.
+     */
+    dtfCategoryCacheRef.current.clear();
+
+    /*
+     * No necesitamos borrar inmediatamente
+     * los DTF visibles.
+     *
+     * Esto evita un flash visual innecesario.
+     */
   }, []);
 
   /*
-   * ==========================================
-   * GUARDAR / ACTUALIZAR DTF
-   * ==========================================
+   * ========================================
+   * SAVE DTF
+   * ========================================
    */
 
   const saveDtf = useCallback(
@@ -405,22 +400,17 @@ export const ContextProvaider = ({ children }) => {
           : await api.post("/api/dtf/add", data);
 
         /*
-         * Limpiar cache porque los datos cambiaron.
+         * Invalidamos las cachés.
          */
         clearDtfCache();
 
         /*
-         * Actualizar lista completa.
+         * Volvemos a cargar los DTF mediante
+         * la misma función centralizada.
          *
-         * getDtf tiene cache, por lo que primero
-         * necesitamos actualizarla explícitamente.
+         * Esto mantiene loadingDtf consistente.
          */
-        const res = await api.get("/api/dtf");
-
-        const formattedData = formatDtf(res.data);
-
-        setDtf(formattedData);
-        dtfLoadedRef.current = true;
+        await getDtf();
 
         return response.data;
       } catch (err) {
@@ -428,31 +418,53 @@ export const ContextProvaider = ({ children }) => {
 
         console.error("Error al guardar DTF:", err);
 
+        if (err.response) {
+          console.error("Status:", err.response.status);
+          console.error("Respuesta:", err.response.data);
+        }
+
         throw err;
       }
     },
-    [clearDtfCache],
+    [clearDtfCache, getDtf],
   );
 
   /*
-   * ==========================================
-   * OBTENER CATEGORIAS
-   * ==========================================
+   * ========================================
+   * GET CATEGORIES
+   * ========================================
    */
 
-  const getCategories = useCallback(
-    async (force = false) => {
-      if (!force && categories.length > 0) {
-        return categories;
-      }
+  const getCategories = useCallback(async (force = false) => {
+    /*
+     * Si ya están cargadas y no se pidió
+     * una actualización forzada, usamos memoria.
+     */
+    if (!force && categoriesLoadedRef.current) {
+      return categoriesRef.current;
+    }
 
-      setLoadingCategories(true);
-      setError(null);
+    /*
+     * Si ya existe una petición activa,
+     * reutilizamos esa misma petición.
+     *
+     * Esto evita varias llamadas simultáneas.
+     */
+    if (categoriesRequestRef.current) {
+      return categoriesRequestRef.current;
+    }
 
+    setLoadingCategories(true);
+    setError(null);
+
+    const request = (async () => {
       try {
         const res = await api.get("/api/category/");
 
         const data = Array.isArray(res.data) ? res.data : [];
+
+        categoriesRef.current = data;
+        categoriesLoadedRef.current = true;
 
         setCategories(data);
 
@@ -464,27 +476,28 @@ export const ContextProvaider = ({ children }) => {
 
         if (err.response) {
           console.error("Status:", err.response.status);
-
           console.error("Respuesta:", err.response.data);
         }
 
         throw err;
       } finally {
+        if (categoriesRequestRef.current === request) {
+          categoriesRequestRef.current = null;
+        }
+
         setLoadingCategories(false);
       }
-    },
-    [categories],
-  );
+    })();
+
+    categoriesRequestRef.current = request;
+
+    return request;
+  }, []);
 
   /*
-   * ==========================================
-   * AGREGAR CATEGORIA AL ESTADO
-   * ==========================================
-   *
-   * Útil para tu AddCategory.
-   *
-   * De esta manera no necesariamente necesitas
-   * volver a solicitar todas las categorías.
+   * ========================================
+   * ADD CATEGORY TO STATE
+   * ========================================
    */
 
   const addCategoryToState = useCallback((newCategory) => {
@@ -495,48 +508,24 @@ export const ContextProvaider = ({ children }) => {
         return prev;
       }
 
-      return [...prev, newCategory];
+      const updatedCategories = [...prev, newCategory];
+
+      /*
+       * Actualizamos también la ref para que
+       * getCategories() no devuelva información vieja.
+       */
+      categoriesRef.current = updatedCategories;
+
+      return updatedCategories;
     });
   }, []);
 
   /*
-   * ==========================================
-   * CARGA INICIAL
-   * ==========================================
+   * ========================================
+   * ADD CATEGORY
+   * ========================================
    */
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        /*
-         * Artículos y categorías son independientes.
-         *
-         * Los DTF NO se cargan aquí automáticamente.
-         *
-         * Se cargarán cuando una pantalla realmente
-         * solicite getDtf().
-         */
-
-        await Promise.all([getArticulos(), getCategories()]);
-      } catch (err) {
-        console.error("Error al cargar los datos iniciales:", err);
-      }
-    };
-
-    fetchInitialData();
-
-    return () => {
-      dtfCategoryAbortRef.current?.abort();
-    };
-  }, [getArticulos, getCategories]);
-
-  /*
-   * ==========================================
-   * CONTEXT VALUE
-   * ==========================================
-   */
-
-  // API + actualización del estado
   const addCategory = useCallback(
     async (name) => {
       try {
@@ -565,7 +554,66 @@ export const ContextProvaider = ({ children }) => {
     [addCategoryToState],
   );
 
-  const value = useMemo(
+  /*
+   * ========================================
+   * INITIAL DATA
+   * ========================================
+   *
+   * SOLO carga lo necesario para el inicio.
+   *
+   * Los DTF NO se cargan aquí.
+   */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchInitialData = async () => {
+      setLoadingInitial(true);
+
+      try {
+        /*
+         * Ambas peticiones comienzan al mismo tiempo.
+         */
+        await Promise.all([getArticulos(), getCategories()]);
+      } catch (err) {
+        console.error("Error al cargar los datos iniciales:", err);
+      } finally {
+        if (mounted) {
+          setLoadingInitial(false);
+        }
+      }
+    };
+
+    fetchInitialData();
+
+    return () => {
+      mounted = false;
+
+      /*
+       * Cancelamos solamente la petición
+       * de DTF por categoría.
+       */
+      if (dtfCategoryAbortRef.current) {
+        dtfCategoryAbortRef.current.abort();
+      }
+    };
+  }, [getArticulos, getCategories]);
+
+  /*
+   * ========================================
+   * GLOBAL LOADING
+   * ========================================
+   */
+
+  const loading = loadingInitial;
+
+  /*
+   * ========================================
+   * CONTEXT VALUE
+   * ========================================
+   */
+
+  const contextValue = useMemo(
     () => ({
       /*
        * DATA
@@ -576,10 +624,14 @@ export const ContextProvaider = ({ children }) => {
       categories,
 
       /*
-       * LOADING
+       * LOADING GLOBAL
        */
       loading,
+      loadingInitial,
 
+      /*
+       * LOADING INDIVIDUAL
+       */
       loadingArticulos,
       loadingDtf,
       loadingCategories,
@@ -604,7 +656,7 @@ export const ContextProvaider = ({ children }) => {
       clearDtfCache,
 
       /*
-       * CATEGORIAS
+       * CATEGORIES
        */
       getCategories,
       addCategoryToState,
@@ -617,6 +669,8 @@ export const ContextProvaider = ({ children }) => {
       categories,
 
       loading,
+      loadingInitial,
+
       loadingArticulos,
       loadingDtf,
       loadingCategories,
@@ -629,13 +683,36 @@ export const ContextProvaider = ({ children }) => {
       getDtfByCategory,
       saveDtf,
       clearDtfCache,
+
       getCategories,
       addCategoryToState,
       addCategory,
     ],
   );
 
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  /*
+   * ========================================
+   * PROVIDER
+   * ========================================
+   */
+
+  return <Context.Provider value={contextValue}>{children}</Context.Provider>;
 };
 
-export const useContextProvaider = () => useContext(Context);
+/*
+ * ==========================================
+ * CUSTOM HOOK
+ * ==========================================
+ */
+
+export const useContextProvaider = () => {
+  const context = useContext(Context);
+
+  if (!context) {
+    throw new Error(
+      "useContextProvaider debe utilizarse dentro de ContextProvaider",
+    );
+  }
+
+  return context;
+};

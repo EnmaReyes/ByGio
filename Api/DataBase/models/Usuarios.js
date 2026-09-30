@@ -58,17 +58,4 @@ Articulos.belongsTo(Usuarios, {
   targetKey: "id",
 });
 
-// Relaciones a DTF
-Usuarios.hasMany(Dtf, {
-  foreignKey: "uid",
-  as: "dtfs",
-  sourceKey: "id",
-});
-
-Dtf.belongsTo(Usuarios, {
-  foreignKey: "uid",
-  as: "user",
-  targetKey: "id",
-});
-
 module.exports = { Usuarios };
