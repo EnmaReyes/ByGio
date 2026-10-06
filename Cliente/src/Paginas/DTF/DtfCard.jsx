@@ -1,16 +1,65 @@
 import { useState } from "react";
 import { Button, Modal } from "react-bootstrap";
+import { useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
+import {
+  getCartItemIdentity,
+  getCartTotals,
+} from "../../Componentes/cartUtils";
 import { shirts } from "../../assets/Camisetas/camisetas.js";
 import "./DtfCard.css";
 const DTF_SCALE = {
-  basic: 0.80,
-  oversize: 0.99,
+  basic: 1,
+  oversize: 1.2,
 };
 
+const getDtfImageUrl = (item) =>
+  typeof item.img === "string" ? item.img : item.img?.[0] || "";
+
 const DtfCard = ({ items = [] }) => {
+  const { allProducts, setAllProducts, setTotal, setCountProducts } =
+    useOutletContext();
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedShirt, setSelectedShirt] = useState(shirts[0]);
   const [dtfSize, setDtfSize] = useState("basic");
+
+  const addDtfToCart = (item, shirt, size) => {
+    const imageUrl = getDtfImageUrl(item);
+    if (!imageUrl) {
+      return;
+    }
+
+    const cartItem = {
+      id: item.id,
+      cartType: "dtf",
+      img: imageUrl,
+      category: item.category?.name || item.categoryName || "Sin categoría",
+      cantidad: 1,
+      cost: 0,
+      ...(shirt && {
+        shirtColor: shirt.color,
+        shirtName: shirt.name,
+        dtfSize: size,
+      }),
+    };
+    const identity = getCartItemIdentity(cartItem);
+    const existingItem = allProducts.find(
+      (product) => getCartItemIdentity(product) === identity,
+    );
+    const updatedProducts = existingItem
+      ? allProducts.map((product) =>
+          getCartItemIdentity(product) === identity
+            ? { ...product, cantidad: product.cantidad + 1 }
+            : product,
+        )
+      : [...allProducts, cartItem];
+
+    const { total, count } = getCartTotals(updatedProducts);
+    setAllProducts(updatedProducts);
+    setTotal(total);
+    setCountProducts(count);
+    toast.success("Diseño DTF añadido al carrito");
+  };
 
   const openPreview = (item) => {
     setSelectedItem(item);
@@ -24,7 +73,10 @@ const DtfCard = ({ items = [] }) => {
     <>
       {items.map((item) => (
         <article key={item.id} className="dtf-grid-item">
-          <div className="dtf-product-card">
+          <div
+            className="dtf-product-card"
+            onContextMenu={(e) => e.preventDefault()}
+          >
             <button
               type="button"
               className="dtf-design-trigger"
@@ -35,9 +87,10 @@ const DtfCard = ({ items = [] }) => {
             >
               <span className="dtf-design-image">
                 <img
-                  src={item.img}
+                  src={getDtfImageUrl(item)}
                   alt={item.category?.name || "Diseño DTF"}
                   loading="lazy"
+                  draggable={false}
                 />
               </span>
             </button>
@@ -50,6 +103,15 @@ const DtfCard = ({ items = [] }) => {
                 onClick={() => openPreview(item)}
               >
                 <span>Ver en franela</span>
+              </Button>
+              <Button
+                type="button"
+                variant="dark"
+                className="w-100 mt-2"
+                disabled={!getDtfImageUrl(item)}
+                onClick={() => addDtfToCart(item)}
+              >
+                Añadir DTF al carrito
               </Button>
             </div>
           </div>
@@ -86,7 +148,7 @@ const DtfCard = ({ items = [] }) => {
 
                 <img
                   className="dtf-shirt-design"
-                  src={selectedItem.img}
+                  src={getDtfImageUrl(selectedItem)}
                   alt="Diseño DTF colocado sobre la franela"
                   style={{
                     transform: `translate(-50%, -50%) scale(${currentScale})`,
@@ -160,6 +222,16 @@ const DtfCard = ({ items = [] }) => {
             </div>
           )}
         </Modal.Body>
+        <Modal.Footer>
+          <Button
+            type="button"
+            variant="dark"
+            disabled={!selectedItem || !getDtfImageUrl(selectedItem)}
+            onClick={() => addDtfToCart(selectedItem, selectedShirt, dtfSize)}
+          >
+            Añadir configuración al carrito
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );

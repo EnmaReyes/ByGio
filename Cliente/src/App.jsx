@@ -6,13 +6,18 @@ import BarraNavegacion from "./Componentes/BarraNavegacion";
 import Footer from "./Componentes/Footer";
 import Inicio from "./Paginas/Inicio";
 import Editor from "./Paginas/Editor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Registro from "./Paginas/Registro";
 import InicioSecion from "./Paginas/InicioSecion";
 import Articulo from "./Paginas/ArticuloDetallado/Articulo";
 import UploadDTF from "./Paginas/DTF/UploadDTF";
 import "./App.css";
 import DtfCategories from "./Paginas/DTF/DtfCategories";
+import {
+  getCartTotals,
+  readCartFromStorage,
+  writeCartToStorage,
+} from "./Componentes/cartUtils";
 
 //! Rutas de pagina\\
 const Layout = ({
@@ -50,9 +55,20 @@ const Layout = ({
 };
 
 function App() {
-  const [allProducts, setAllProducts] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [countProducts, setCountProducts] = useState(0);
+  const [initialCart] = useState(() => {
+    const products = readCartFromStorage();
+    return { products, ...getCartTotals(products) };
+  });
+  const [allProducts, setAllProducts] = useState(initialCart.products);
+  const [total, setTotal] = useState(initialCart.total);
+  const [countProducts, setCountProducts] = useState(initialCart.count);
+
+  useEffect(() => {
+    const cartTotals = getCartTotals(allProducts);
+    setTotal(cartTotals.total);
+    setCountProducts(cartTotals.count);
+    writeCartToStorage(allProducts);
+  }, [allProducts]);
 
   const router = createBrowserRouter([
     {

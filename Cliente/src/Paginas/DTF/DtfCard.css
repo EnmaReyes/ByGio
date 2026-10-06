@@ -56,6 +56,9 @@
   display: block;
   padding: 0.75rem;
   object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* =========================
