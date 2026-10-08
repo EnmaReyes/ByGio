@@ -22,7 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-#skill.md & AGENTS.md
-skill.md
-AGENTS.md
