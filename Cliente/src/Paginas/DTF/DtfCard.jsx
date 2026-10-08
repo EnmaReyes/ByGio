@@ -58,7 +58,11 @@ const DtfCard = ({ items = [] }) => {
     setAllProducts(updatedProducts);
     setTotal(total);
     setCountProducts(count);
-    toast.success("Diseño DTF añadido al carrito");
+    toast.success("Diseño DTF añadido al carrito", {
+      position: "bottom-right",
+      autoClose: 1500,
+      hideProgressBar: true,
+    });
   };
 
   const openPreview = (item) => {
@@ -111,7 +115,7 @@ const DtfCard = ({ items = [] }) => {
                 disabled={!getDtfImageUrl(item)}
                 onClick={() => addDtfToCart(item)}
               >
-                Añadir DTF al carrito
+                <span>Carrito</span>
               </Button>
             </div>
           </div>
@@ -202,7 +206,6 @@ const DtfCard = ({ items = [] }) => {
                       aria-pressed={dtfSize === "basic"}
                     >
                       <span>Básico</span>
-                      <small>60%</small>
                     </button>
 
                     <button
@@ -214,7 +217,6 @@ const DtfCard = ({ items = [] }) => {
                       aria-pressed={dtfSize === "oversize"}
                     >
                       <span>Oversize</span>
-                      <small>80%</small>
                     </button>
                   </div>
                 </section>
@@ -229,7 +231,7 @@ const DtfCard = ({ items = [] }) => {
             disabled={!selectedItem || !getDtfImageUrl(selectedItem)}
             onClick={() => addDtfToCart(selectedItem, selectedShirt, dtfSize)}
           >
-            Añadir configuración al carrito
+            <span>Carrito</span>
           </Button>
         </Modal.Footer>
       </Modal>

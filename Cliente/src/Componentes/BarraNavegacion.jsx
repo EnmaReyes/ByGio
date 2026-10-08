@@ -97,7 +97,7 @@ const BarraNavegacion = ({
 };
 
 const NavItem = ({ href, label, mobile = false }) => (
-  <li className={`nav-item ${mobile ? "w-100" : ""}`}>
+  <li className={`nav-item titulos ${mobile ? "w-100" : ""}`}>
     <a
       className={`nav-link ${mobile ? "nav-link-mobile" : "navbar-link"}`}
       href={href}
@@ -108,9 +108,9 @@ const NavItem = ({ href, label, mobile = false }) => (
 );
 
 const Dropdown = ({ label, items, mobile = false }) => (
-  <li className={`nav-item dropdown ${mobile ? "w-100" : ""}`}>
+  <li className={`nav-item dropdown titulos ${mobile ? "w-100" : ""}`}>
     <a
-      className={`nav-link dropdown-toggle ${mobile ? "nav-link-mobile" : "navbar-link"}`}
+      className={`nav-link dropdown-toggle  ${mobile ? "nav-link-mobile" : "navbar-link"}`}
       id={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
       role="button"
       data-bs-toggle="dropdown"
@@ -123,9 +123,9 @@ const Dropdown = ({ label, items, mobile = false }) => (
       aria-labelledby={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
     >
       {items.map((item, index) => (
-        <li key={index}>
+        <li key={index} className="dropdown-item li-navbar-hover">
           <a
-            className="dropdown-item li-navbar-hover"
+            className="titulos"
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
@@ -139,7 +139,7 @@ const Dropdown = ({ label, items, mobile = false }) => (
 );
 
 const UserDropdown = ({ currentUser, logout, mobile = false }) => (
-  <li className={`nav-item dropdown ${mobile ? "w-100" : ""}`}>
+  <li className={`nav-item dropdown titulos ${mobile ? "w-100" : ""}`}>
     <a
       className={`nav-link dropdown-toggle ${mobile ? "nav-link-mobile" : "navbar-link"}`}
       id={mobile ? "userDropdownMobile" : "userDropdown"}
@@ -161,13 +161,13 @@ const UserDropdown = ({ currentUser, logout, mobile = false }) => (
         </li>
       ) : (
         <>
-          <li>
-            <Link className="dropdown-item li-navbar-hover" to="/login">
+          <li className="dropdown-item li-navbar-hover">
+            <Link className="" to="/login">
               Iniciar Sesión
             </Link>
           </li>
-          <li>
-            <Link className="dropdown-item li-navbar-hover" to="/register">
+          <li className="dropdown-item li-navbar-hover">
+            <Link className="" to="/register">
               Registrarte
             </Link>
           </li>
@@ -175,16 +175,16 @@ const UserDropdown = ({ currentUser, logout, mobile = false }) => (
       )}
       {currentUser?.admin && (
         <>
-          <li>
+          <li className="dropdown-item li-navbar-hover">
             <hr className="dropdown-divider" />
           </li>
-          <li>
-            <Link className="dropdown-item li-navbar-hover" to="/editor">
+          <li className="dropdown-item li-navbar-hover">
+            <Link className="" to="/editor">
               Crear Artículo
             </Link>
           </li>
-          <li>
-            <Link className="dropdown-item li-navbar-hover" to="/dtf/upload">
+          <li className="dropdown-item li-navbar-hover">
+            <Link className="" to="/dtf/upload">
               Crear DTF
             </Link>
           </li>
