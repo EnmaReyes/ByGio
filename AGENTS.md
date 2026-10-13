@@ -48,3 +48,14 @@ npm run dev
 - Server fields `img` and `sizes` arrive as **JSON strings**, not arrays — use the `parseJsonValue` helper pattern from `Paginas/Editor.jsx`.
 - Images upload to Cloudinary via unsigned presets (`Paginas/Editor.jsx`, `DTF/UploadDTF.jsx`, `Componentes/EditBanner.jsx`). Cart state persists to localStorage (`Componentes/cartUtils.js`). User feedback via `react-toastify` (`toast.promise` for async ops).
 - UI/UX work: the `ui-ux-pro-max` skill is installed under `.agents/skills/` (see `skills-lock.json`). Its search script requires Python, which is **not installed** on this machine — read `references/quick-reference.md` directly instead of running `scripts/search.py`.
+
+## Meta Pixel + cookie consent (Ley 1581 de 2012, Colombia)
+
+- Pixel ID `1417915269868850` (public, lives in `Cliente/src/metaPixel.js`). **Do NOT add the Meta snippet to `index.html`** — the pixel loads **only after cookie consent** via `loadMetaPixel()` (idempotent: fires `init` + initial `PageView`). No `<noscript>` fallback by design — it can't be consent-gated.
+- Consent is stored in `localStorage` key `meta_pixel_consent` (`granted`/`denied`). `BannerCookies.jsx` uses a `<Link>`, so it **must render inside the router** — it's mounted in the root layout AND on the standalone `/register` + `/login` route elements (never at `App` root, outside `RouterProvider`). It shows the banner and loads the pixel on accept; rejecting clears `_fbp`/`_fbc`. `resetConsent()` (Footer "Preferencias de cookies") clears the choice and reloads.
+- `PixelPageViewTracker.jsx` tracks SPA route-change `PageView`s and skips the first render (StrictMode-safe); it's mounted in the root layout AND on the standalone `/register` + `/login` routes. It no-ops silently when the pixel isn't loaded (consent denied).
+- Legal pages: `/privacidad` and `/terminos` are **templates with `[PENDIENTE: ...]` placeholders** (NIT, address, email, dates) — must be completed and lawyer-reviewed before any real e-commerce launch.
+
+## Business roadmap notes
+
+- Site is currently a **catalog** (orders close via WhatsApp). Future goal: e-commerce with payment gateway for **Colombia** — **not decided** (candidate: Wompi; also Mercado Pago / ePayco / PayU). When implemented: update `/terminos` (retracto/reversa, arts. 47 & 51 Ley 1480/2011, Decreto 587/2016), add DIAN e-invoicing, and register the trademark/database with the SIC as applicable.

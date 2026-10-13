@@ -18,6 +18,10 @@ import {
   readCartFromStorage,
   writeCartToStorage,
 } from "./Componentes/cartUtils";
+import PixelPageViewTracker from "./Componentes/PixelPageViewTracker";
+import BannerCookies from "./Componentes/BannerCookies";
+import PoliticaPrivacidad from "./Paginas/PoliticaPrivacidad";
+import TerminosCondiciones from "./Paginas/TerminosCondiciones";
 
 //! Rutas de pagina\\
 const Layout = ({
@@ -30,6 +34,8 @@ const Layout = ({
 }) => {
   return (
     <div className="site-shell">
+      <PixelPageViewTracker />
+      <BannerCookies />
       <ToastContainer />
       <BarraNavegacion
         allProducts={allProducts}
@@ -70,7 +76,8 @@ function App() {
     writeCartToStorage(allProducts);
   }, [allProducts]);
 
-  const router = createBrowserRouter([
+  const router = createBrowserRouter(
+    [
     {
       path: "/",
       element: (
@@ -105,6 +112,14 @@ function App() {
           element: <DtfCategories />,
         },
         {
+          path: "/privacidad",
+          element: <PoliticaPrivacidad />,
+        },
+        {
+          path: "/terminos",
+          element: <TerminosCondiciones />,
+        },
+        {
           path: "/:id",
           element: <Articulo />,
         },
@@ -112,13 +127,31 @@ function App() {
     },
     {
       path: "/register",
-      element: <Registro />,
+      element: (
+        <>
+          <PixelPageViewTracker />
+          <BannerCookies />
+          <Registro />
+        </>
+      ),
     },
     {
       path: "/login",
-      element: <InicioSecion />,
+      element: (
+        <>
+          <PixelPageViewTracker />
+          <BannerCookies />
+          <InicioSecion />
+        </>
+      ),
     },
-  ]);
+    ],
+    {
+      future: {
+        v7_startTransition: true,
+      },
+    },
+  );
 
   return (
     <div className="app">

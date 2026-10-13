@@ -1,5 +1,7 @@
 import React from "react";
 import { Card, Col, Container, Row } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { resetConsent } from "../metaPixel";
 import logo from "../assets/Logo/logo_blanco.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
@@ -38,6 +40,36 @@ const Footer = () => {
                 <FontAwesomeIcon icon={faWhatsapp} />
               </a>
             </div>
+          </Col>
+        </Row>
+
+        <Row className="mt-4">
+          <Col xs={12} className="text-center">
+            <Link
+              to="/privacidad"
+              className="text-light small mx-2"
+              style={{ textDecoration: "underline", cursor: "pointer" }}
+            >
+              Política de Privacidad
+            </Link>
+            <Link
+              to="/terminos"
+              className="text-light small mx-2"
+              style={{ textDecoration: "underline", cursor: "pointer" }}
+            >
+              Términos y Condiciones
+            </Link>
+            <button
+              type="button"
+              className="btn btn-link text-light small mx-2 p-0 align-baseline"
+              style={{ textDecoration: "underline" }}
+              onClick={() => {
+                resetConsent();
+                window.location.reload();
+              }}
+            >
+              Preferencias de cookies
+            </button>
           </Col>
         </Row>
       </Container>
