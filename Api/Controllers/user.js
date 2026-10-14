@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
 const { Usuarios } = require("../DataBase/models/Usuarios.js");
 
 const userById = async (req, res) => {
@@ -9,9 +10,11 @@ const userById = async (req, res) => {
         .status(401)
         .json("No estas autenticado para actualizar Usuario");
     }
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
-    const user = await Usuarios.findByPk(userInfo.id);
+    const user = await Usuarios.findByPk(userInfo.id, {
+      attributes: { exclude: ["password"] },
+    });
 
     if (!user) {
       return res.status(404).json("No Hay Usuario con este ID");
@@ -31,7 +34,7 @@ const updateUser = async (req, res) => {
         .status(401)
         .json("No estas autenticado para actualizar Usuario");
     }
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     const userUpdate = {
       image: req.body.image,

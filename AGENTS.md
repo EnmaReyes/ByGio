@@ -25,9 +25,11 @@ npm run dev
 
 ## Environment
 
-- **Both `.env` files are tracked in git** and required to run. Don't delete them; don't add secrets expecting them to stay private.
-- `Cliente/.env`: `VITE_API_URL` (every API call flows through `Cliente/src/config.js`), `VITE_NUMBER_PHONE`, `VITE_CLOUDINARY_NAME`, `VITE_CLOUDINARY_PRESET`, `VITE_CLOUDINARY_PRESET_DTF`, `VITE_CLOUDINARY_PRESET_BANNER`. Only `VITE_*` vars reach the browser; they're read at **build** time.
-- `Api/.env`: `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` / `DB_PORT` (+ `_GIO` variants) and `DB_DIALECT`; `Api/config.js` builds the Postgres URL from them (`DATABASE_URL` wins if set).
+- **Both `.env` files are tracked in git as TEMPLATES** (placeholders only — never put real secrets in them; GitHub Push Protection blocks pushes containing secrets). Real local values go in `Api/.env.local` / `Cliente/.env.local` (gitignored; Vite loads `.env.local` automatically, `Api/config.js` loads it with `override` after `.env`). Production values go in each Vercel project's Environment Variables.
+- `Cliente/.env`: `VITE_API_URL` (every API call flows through `Cliente/src/config.js`), `VITE_NUMBER_PHONE`, `VITE_CLOUDINARY_NAME`, `VITE_CLOUDINARY_PRESET`, `VITE_CLOUDINARY_PRESET_DTF`, `VITE_CLOUDINARY_PRESET_BANNER`, `VITE_GOOGLE_CLIENT_ID`, `VITE_FACEBOOK_APP_ID`. Only `VITE_*` vars reach the browser; they're read at **build** time.
+- Social login (frontend): `GoogleOAuthProvider` wraps the app in `main.jsx` only when `VITE_GOOGLE_CLIENT_ID` exists. `Componentes/SocialAuthButtons.jsx` (Google button via `@react-oauth/google`, Facebook via `src/facebookSdk.js` — official SDK, no extra dependency) is used in `InicioSecion.jsx` and `Registro.jsx`; buttons hide themselves when IDs are missing. On success they set the session via `AuthContext.loginWithSocial`.
+- `authContext.jsx`: session timers live in refs (never state), activity listener is throttled (1/min), storage parse is crash-safe, `logout` always clears local state, `refreshUserData` calls `GET /api/auth/me`.
+- `Api/.env`: `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` / `DB_PORT` (+ `_GIO` variants), `DB_DIALECT`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`; `Api/config.js` builds the Postgres URL from them (`DATABASE_URL` wins if set).
 - Dev CORS origin is hardcoded to `http://localhost:5173` in `Api/config.js`; production uses `FRONTEND_URL`. Cookies require `credentials: true` (already configured) — the client must send axios requests with `withCredentials: true`.
 - **Schema changes apply via `sequelize.sync()`, which only runs when `NODE_ENV !== "production"`.** No migrations exist. Model files in `Api/DataBase/models/` are the source of truth; production never syncs (deploy schema manually or let sync run once outside prod).
 
@@ -35,7 +37,10 @@ npm run dev
 
 - Route flow: `Api/Rutas/` → `Api/Controllers/` → `Api/DataBase/models/`.
 - Mounted endpoints: `/api/posts`, `/api/auth`, `/api/user`, `/api/banner`, `/api/dtf`, `/api/category`.
-- Auth: JWT (`jsonwebtoken`) stored in the httpOnly cookie `access_token`, secret is the hardcoded string `"jwtkey"`.
+- Auth: JWT (`jsonwebtoken`, 12h `expiresIn`) stored in the httpOnly cookie `access_token`. The secret is `JWT_SECRET` from `Api/config.js` (`process.env.JWT_SECRET`, dev fallback `"jwtkey"`) — all controllers import it from config; never hardcode.
+- Session emission is centralized in `issueSession(res, user)` (`Controllers/auth.js`) — reused by traditional login and social auth. Cookie flags depend on `process.env.NODE_ENV === "production"` (Secure + SameSite=None only in prod).
+- Social auth (`Controllers/socialAuth.js`): `POST /api/auth/google {credential}` verifies the Google ID token with `google-auth-library` (aud = `GOOGLE_CLIENT_ID`), requires `email_verified`; auto-links a verified-Google email to an existing account. `POST /api/auth/facebook {accessToken}` validates via Graph `debug_token` + `/me` (native fetch, Node 18+); Facebook does NOT auto-link by email. `GET /api/auth/me` returns the cookie-verified user (no password). Needs `GOOGLE_CLIENT_ID`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` in `Api/.env` (endpoints return 503 while empty).
+- `usuarios` table: `username`/`password` nullable (social accounts), `googleId`/`facebookId` unique nullable, email must be unique — prod migration is manual: `Api/migrations/001_social_auth.sql` (run the duplicate-email pre-check FIRST; sync() never runs in prod).
 - **API errors are returned as plain JSON strings**, not objects: `res.status(409).json("Usuario Existente")`. Client code reads `err.response?.data` directly (sometimes it's an object — check the specific controller before assuming).
 - Production DB (Neon) forces SSL with `rejectUnauthorized: false` (`Api/DataBase/db.js`).
 

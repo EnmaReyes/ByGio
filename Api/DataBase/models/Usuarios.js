@@ -16,15 +16,29 @@ const Usuarios = sequelize.define(
     },
     username: {
       type: DataTypes.STRING,
-      allowNull: false,
+      // Nullable: las cuentas sociales no tienen username. El registro
+      // tradicional lo sigue exigiendo a nivel de aplicacion.
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
+      // Nullable: las cuentas sociales no tienen password local.
+      allowNull: true,
+    },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    facebookId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
     },
     admin: {
       type: DataTypes.BOOLEAN,

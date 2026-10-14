@@ -147,7 +147,9 @@ const UserDropdown = ({ currentUser, logout, mobile = false }) => (
       data-bs-toggle="dropdown"
       aria-expanded="false"
     >
-      {currentUser ? `Bienvenido ${currentUser?.username}` : "Usuario"}
+      {currentUser
+        ? `Bienvenido ${currentUser.username || currentUser.name || currentUser.email}`
+        : "Usuario"}
     </a>
     <ul
       className={`dropdown-menu ${mobile ? "dropdown-menu-end" : ""}`}

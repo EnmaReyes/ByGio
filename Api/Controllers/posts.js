@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
 const { Articulos } = require("../DataBase/models/Articulos.js");
 
 const addArticle = async (req, res) => {
@@ -10,7 +11,7 @@ const addArticle = async (req, res) => {
         .status(401)
         .json("No estás autenticado para añadir articulos!");
     }
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     const newArticule = {
       title: req.body.title,
@@ -69,7 +70,7 @@ const deleteArticle = async (req, res) => {
     return res.status(401).json("No estás autenticado para eliminar post!");
   }
   try {
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
     const ArticletId = req.params.id;
 
     const Article = await Articulos.findOne({
@@ -104,7 +105,7 @@ const updateArticle = async (req, res) => {
         .json("No estás autenticado para actualizar Articulos!");
     }
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     const articletId = req.params.id;
 
@@ -162,7 +163,7 @@ const addDtf = async (req, res) => {
     if (!token) {
       return res.status(401).json("No estás autenticado para añadir DTF!");
     }
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     const newDtf = await Dtf.create({
       category: req.body.category,
@@ -205,7 +206,7 @@ const updateDtf = async (req, res) => {
     if (!token) {
       return res.status(401).json("No estás autenticado para actualizar DTF!");
     }
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     const dtfId = req.params.id;
 

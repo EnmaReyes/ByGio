@@ -1,38 +1,75 @@
 const bcrypt = require("bcryptjs");
 const { Usuarios } = require("../DataBase/models/Usuarios.js");
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
+const { Op } = require("sequelize");
+
+const TOKEN_EXPIRATION = "12h";
+const COOKIE_MAX_AGE = 12 * 60 * 60 * 1000; // 12 horas
+
+const isProduction = () => process.env.NODE_ENV === "production";
+
+// Emite la sesion propia de ByGio (JWT en cookie httpOnly) y responde con el
+// usuario sin la contrasena. Compartida por login tradicional y social.
+const issueSession = (res, user) => {
+  const token = jwt.sign({ id: user.id, admin: user.admin }, JWT_SECRET, {
+    expiresIn: TOKEN_EXPIRATION,
+  });
+
+  const { password, ...userData } = user.toJSON();
+  const production = isProduction();
+
+  return res
+    .cookie("access_token", token, {
+      httpOnly: true,
+      secure: production,
+      sameSite: production ? "none" : "lax",
+      maxAge: COOKIE_MAX_AGE,
+    })
+    .status(200)
+    .json(userData);
+};
 
 const register = async (req, res) => {
   try {
-    console.log("Petición recibida:", req.body);
+    const { username, email, password } = req.body || {};
 
-    //? Verificar usuarios existentes
-    const existingUsers = await Usuarios.findAll({
+    // Validacion minima de entrada (no confiar solo en el frontend)
+    if (
+      typeof username !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !username.trim() ||
+      !email.trim() ||
+      password.length < 8
+    ) {
+      return res.status(400).json("Datos de registro invalidos");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    //? Verificar usuarios existentes (colision por email O por username)
+    const existingUser = await Usuarios.findOne({
       where: {
-        email: req.body.email,
-        username: req.body.username,
+        [Op.or]: [{ email: normalizedEmail }, { username: username.trim() }],
       },
     });
-    console.log("Usuarios existentes:", existingUsers);
 
-    if (existingUsers.length > 0) {
+    if (existingUser) {
       return res.status(409).json("Usuario Existente");
     }
 
-    //? Hash de contraseña y crear usuario
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(req.body.password, salt);
-    console.log("Contraseña encriptada:", hash);
+    //? Hash de contrasena y crear usuario
+    const hash = await bcrypt.hash(password, 10);
 
-    const newUser = await Usuarios.create({
-      email: req.body.email,
-      username: req.body.username,
+    await Usuarios.create({
+      email: normalizedEmail,
+      username: username.trim(),
       password: hash,
     });
-    console.log("Usuario creado:", newUser);
     return res.status(200).json("Usuario creado con éxito");
   } catch (error) {
-    console.error("Error en el servidor:", error.message);
+    console.error("Error en el registro:", error.message);
     return res.status(500).json("Error en el servidor");
   }
 };
@@ -49,6 +86,12 @@ const login = async (req, res) => {
       return res.status(404).json("Usuario no existente");
     }
 
+    if (!existingUser.password) {
+      return res
+        .status(400)
+        .json("Esta cuenta usa inicio de sesión social (Google/Facebook)");
+    }
+
     const isPasswordCorrect = await bcrypt.compare(
       req.body.password,
       existingUser.password
@@ -58,33 +101,43 @@ const login = async (req, res) => {
       return res.status(400).json("Contraseña Errada");
     }
 
-    const token = jwt.sign(
-      { id: existingUser.id, admin: existingUser.admin },
-      "jwtkey"
-    );
-
-    const { password, ...other } = existingUser.toJSON();
-    const isProduction = "production";
-
-    res
-      .cookie("access_token", token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-      })
-      .status(200)
-      .json(other);
+    return issueSession(res, existingUser);
   } catch (error) {
+    console.error("Error en el login:", error.message);
     res.status(500).json("Error interno del servidor");
+  }
+};
+
+// Devuelve el usuario autenticado a partir de la cookie (sin password).
+// Usado por el frontend para refrescar los datos de sesion.
+const me = async (req, res) => {
+  try {
+    const token = req.cookies.access_token;
+    if (!token) {
+      return res.status(401).json("No autenticado");
+    }
+    const userInfo = jwt.verify(token, JWT_SECRET);
+
+    const user = await Usuarios.findByPk(userInfo.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      return res.status(404).json("Usuario no encontrado");
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(401).json("Sesión inválida o expirada");
   }
 };
 
 const logout = async (req, res) => {
   try {
+    const production = isProduction();
     res
       .clearCookie("access_token", {
-        sameSite: "none",
-        secure: true,
+        httpOnly: true,
+        sameSite: production ? "none" : "lax",
+        secure: production,
       })
       .status(204)
       .end();
@@ -92,8 +145,11 @@ const logout = async (req, res) => {
     res.status(500).json("Error interno del servidor");
   }
 };
+
 module.exports = {
   register,
   login,
   logout,
+  me,
+  issueSession,
 };

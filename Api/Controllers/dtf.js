@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
 const { Dtf } = require("../DataBase/models/Dtf");
 const { Category } = require("../DataBase/models/Category");
 
@@ -11,7 +12,7 @@ const addDtf = async (req, res) => {
       return res.status(401).json("No estás autenticado para añadir DTF!");
     }
 
-    jwt.verify(token, "jwtkey");
+    jwt.verify(token, JWT_SECRET);
 
     const { categoryId, img, stock } = req.body;
 
@@ -62,7 +63,7 @@ const updateDtf = async (req, res) => {
       return res.status(401).json("No estás autenticado para actualizar DTF!");
     }
 
-    jwt.verify(token, "jwtkey");
+    jwt.verify(token, JWT_SECRET);
 
     const dtfId = req.params.id;
 

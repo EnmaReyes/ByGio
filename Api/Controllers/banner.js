@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
 const { Banner } = require("../DataBase/models/Banner.js");
 
 const getBanner = async (req, res) => {
@@ -24,7 +25,7 @@ const addBanner = async (req, res) => {
         .json("No estás autenticado para añadir articulos!");
     }
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
     // Convertir array a JSON string igual que en EditBanner
     const newBanner = {
@@ -54,7 +55,7 @@ const EditBanner = async (req, res) => {
         .json("No estás autenticado para actualizar Banner!");
     }
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
     const bannerId = req.params.id;
 
     // Convertir array a JSON string si es necesario
@@ -92,7 +93,7 @@ const deleteBanner = async (req, res) => {
   }
 
   try {
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, JWT_SECRET);
     const BannerID = req.params.id;
 
     const Banners = await Banner.findOne({

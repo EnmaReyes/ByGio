@@ -17,6 +17,7 @@ import {
 import axios from "axios";
 import { API_URL } from "../config";
 import { Form } from "react-bootstrap";
+import SocialAuthButtons from "../Componentes/SocialAuthButtons";
 
 const URL = API_URL;
 
@@ -472,6 +473,8 @@ const Registro = () => {
             )}
           </button>
         </Form>
+
+        <SocialAuthButtons onError={setSubmitError} />
 
         {/* Login Link */}
         <p className="signup-text parrafos">

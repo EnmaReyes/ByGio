@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config.js");
 const { Category } = require("../DataBase/models/Category.js");
 
 //--------------------- Add Category ---------------------//
@@ -12,7 +13,7 @@ const addCategory = async (req, res) => {
         .json("No estás autenticado para añadir categorías!");
     }
 
-    jwt.verify(token, "jwtkey");
+    jwt.verify(token, JWT_SECRET);
 
     const { name } = req.body;
 
@@ -48,7 +49,7 @@ const updateCategory = async (req, res) => {
         .json("No estás autenticado para modificar categorías!");
     }
 
-    jwt.verify(token, "jwtkey");
+    jwt.verify(token, JWT_SECRET);
 
     const { id } = req.params;
     const { name } = req.body;

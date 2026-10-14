@@ -1,7 +1,10 @@
 // config.js
 if (process.env.NODE_ENV !== "production") {
   try {
-    require("dotenv").config();
+    const dotenv = require("dotenv");
+    dotenv.config(); // .env (plantilla versionada, sin secretos)
+    // .env.local (NO versionado) tiene prioridad: aqui van los valores reales
+    dotenv.config({ path: ".env.local", override: true });
   } catch (err) {
     console.warn("dotenv no disponible:", err.message);
   }
@@ -30,4 +33,9 @@ module.exports = {
   FRONTEND_URL,
   DATABASE_URL,
   DB_DIALECT,
+  // Secreto JWT: en produccion DEBE venir de process.env.JWT_SECRET.
+  JWT_SECRET: process.env.JWT_SECRET || "jwtkey",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+  FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID || "",
+  FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET || "",
 };

@@ -15,6 +15,7 @@ import {
 import "../index.css";
 import { API_URL } from "../config";
 import { Form } from "react-bootstrap";
+import SocialAuthButtons from "../Componentes/SocialAuthButtons";
 
 const URL = API_URL;
 
@@ -315,6 +316,8 @@ const InicioSecion = () => {
             )}
           </button>
         </Form>
+
+        <SocialAuthButtons onError={setSubmitError} />
 
         {/* Sign Up */}
         <p className="signup-text parrafos">
