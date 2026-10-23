@@ -1,9 +1,118 @@
-import { useContext } from "react";
-import logonegro from "../assets/Logo/logo_negro.png";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBars,
+  faChevronDown,
+  faRightFromBracket,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { AuthContext } from "../context/authContext";
-import { Link } from "react-router-dom";
 import Carrito from "./Carrito";
+import SelectorTema from "./SelectorTema";
+import logonegro from "../assets/Logo/logo_negro.png";
 import "../App.css";
+
+const enlacesPrincipales = [
+  { to: "/", label: "Inicio" },
+  { to: "/productos", label: "Productos" },
+  { to: "/dtf", label: "DTF" },
+];
+
+/*
+ * Etiqueta con dos copias apiladas: al pasar el cursor (o al
+ * enfocar con el teclado) ambas suben una línea, como el hover de
+ * la navegación de Sabina. La copia extra queda fuera del árbol de
+ * accesibilidad para que el enlace se lea una sola vez.
+ */
+const TextoRodante = ({ children }) => (
+  <span className="texto-rodante">
+    <span className="texto-rodante-capa">{children}</span>
+    <span className="texto-rodante-capa" aria-hidden="true">
+      {children}
+    </span>
+  </span>
+);
+
+/* Enlace con estado activo */
+const EnlaceNav = ({ to, label, onClick, activoExacto = false }) => (
+  <li>
+    <NavLink
+      to={to}
+      end={activoExacto || to === "/"}
+      className={({ isActive }) => `nav-enlace ${isActive ? "activo" : ""}`}
+      onClick={onClick}
+    >
+      <TextoRodante>{label}</TextoRodante>
+    </NavLink>
+  </li>
+);
+
+/* Desplegable propio (sin depender de Bootstrap) */
+const MenuDesplegable = ({ etiqueta, children, id }) => {
+  const [abierto, setAbierto] = useState(false);
+  const contenedorRef = useRef(null);
+
+  useEffect(() => {
+    if (!abierto) return undefined;
+
+    const alHacerClicFuera = (evento) => {
+      if (
+        contenedorRef.current &&
+        !contenedorRef.current.contains(evento.target)
+      ) {
+        setAbierto(false);
+      }
+    };
+
+    const alPresionarTecla = (evento) => {
+      if (evento.key === "Escape") {
+        setAbierto(false);
+      }
+    };
+
+    document.addEventListener("mousedown", alHacerClicFuera);
+    document.addEventListener("keydown", alPresionarTecla);
+
+    return () => {
+      document.removeEventListener("mousedown", alHacerClicFuera);
+      document.removeEventListener("keydown", alPresionarTecla);
+    };
+  }, [abierto]);
+
+  return (
+    <div className="dropdown-usuario" ref={contenedorRef}>
+      <button
+        type="button"
+        className="nav-enlace"
+        aria-expanded={abierto}
+        aria-haspopup="true"
+        aria-controls={id}
+        onClick={() => setAbierto((previo) => !previo)}
+      >
+        <TextoRodante>{etiqueta}</TextoRodante>
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          aria-hidden="true"
+          className={`nav-desplegable-flecha${abierto ? " abierta" : ""}`}
+        />
+      </button>
+
+      {/*
+       * El panel se queda montado para poder animar la salida.
+       * Cerrado: .menu-desplegable lo oculta con opacity/scale y
+       * retrasa `visibility`, así que no recibe foco ni clics.
+       */}
+      <ul
+        className="dropdown-usuario-panel menu-desplegable"
+        id={id}
+        data-abierto={abierto ? "true" : "false"}
+      >
+        {children(() => setAbierto(false))}
+      </ul>
+    </div>
+  );
+};
 
 const BarraNavegacion = ({
   allProducts,
@@ -14,186 +123,282 @@ const BarraNavegacion = ({
   setCountProducts,
 }) => {
   const { currentUser, logout } = useContext(AuthContext);
-  const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+  const location = useLocation();
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [transparente, setTransparente] = useState(false);
+  const cabeceraRef = useRef(null);
 
-  const navbarLinks = [
-    {
-      href: `https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`,
-      label: "Whats'up",
-    },
-    {
-      href: "https://www.instagram.com/bygio_modafemenina?igsh=MXVkaTRpeHBsZXU3ag==",
-      label: "Instagram",
-    },
-  ];
+  // Cerramos el menú móvil al cambiar de ruta.
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [location.pathname, location.search]);
+
+  /*
+   * Cabecera transparente sobre el hero (como Sabina): mientras el
+   * hero siga debajo de la barra, se pinta sin fondo y en blanco.
+   * Al pasar el hero, o en cualquier otra ruta, vuelve a su estado
+   * sólido. Se mide en un rAF por scroll para no leer el DOM más de
+   * una vez por frame.
+   */
+  useLayoutEffect(() => {
+    let frame = 0;
+
+    const medir = () => {
+      frame = 0;
+      const cabecera = cabeceraRef.current;
+      const hero = document.querySelector("#contenido .hero");
+
+      if (!cabecera || !hero) {
+        setTransparente(false);
+        return;
+      }
+
+      const limite = cabecera.offsetHeight;
+      setTransparente(hero.getBoundingClientRect().bottom > limite + 1);
+    };
+
+    const programar = () => {
+      if (!frame) frame = requestAnimationFrame(medir);
+    };
+
+    medir();
+    window.addEventListener("scroll", programar, { passive: true });
+    window.addEventListener("resize", programar);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", programar);
+      window.removeEventListener("resize", programar);
+    };
+  }, [location.pathname]);
+
+  // Escape cierra el menú móvil.
+  useEffect(() => {
+    if (!menuAbierto) return undefined;
+
+    const alPresionarTecla = (evento) => {
+      if (evento.key === "Escape") setMenuAbierto(false);
+    };
+
+    document.addEventListener("keydown", alPresionarTecla);
+    return () => document.removeEventListener("keydown", alPresionarTecla);
+  }, [menuAbierto]);
+
+  const nombreUsuario = currentUser
+    ? currentUser.username || currentUser.name || currentUser.email
+    : null;
+
+  const cerrarSesion = () => {
+    logout();
+    setMenuAbierto(false);
+  };
 
   return (
-    <nav className="navbar navbar-expand-sm navbar-light px-3 px-md-4 py-2">
-      <div className="container-fluid navbar-shell">
-        <Link
-          to="/"
-          className="navbar-brand me-3 p-0 d-flex align-items-center"
-        >
-          <img
-            src={logonegro}
-            alt="Logo ByGio"
-            className="navbar-brand-image"
-          />
+    <header
+      className={`cabecera${transparente ? " cabecera--transparente" : ""}`}
+      ref={cabeceraRef}
+    >
+      <div className="cabecera-inner">
+        <nav className="nav-principal" aria-label="Navegación principal">
+          <ul className="nav-lista">
+            {enlacesPrincipales.map((enlace) => (
+              <EnlaceNav key={enlace.to} {...enlace} />
+            ))}
+          </ul>
+        </nav>
+
+        <Link to="/" className="marca" aria-label="ByGio, ir al inicio">
+          <img src={logonegro} alt="ByGio" className="marca-logo" />
         </Link>
 
-        {/* Contenedor que controla el alineado a la derecha en desktop */}
-        <div className="nav-actions d-flex align-items-center gap-2">
-          <div className="navbar-desktop-actions d-none d-sm-flex align-items-center gap-2">
-            <NavItem href="/" label="Home" />
-            <NavItem href="/dtf" label="DTF" />
-            <Dropdown label="Links" items={navbarLinks} />
-            <UserDropdown currentUser={currentUser} logout={logout} />
-          </div>
+        <div className="nav-acciones">
+          <MenuDesplegable
+            id="menu-cuenta"
+            etiqueta={nombreUsuario ? "Mi cuenta" : "Cuenta"}
+          >
+            {(cerrar) =>
+              currentUser ? (
+                <>
+                  <li>
+                    <span className="dropdown-usuario-nombre">
+                      {nombreUsuario}
+                    </span>
+                  </li>
+                  {currentUser.admin && (
+                    <>
+                      <li>
+                        <Link
+                          to="/editor"
+                          className="nav-enlace"
+                          onClick={cerrar}
+                        >
+                          Crear artículo
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/dtf/upload"
+                          className="nav-enlace"
+                          onClick={cerrar}
+                        >
+                          Crear diseño DTF
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                  <li>
+                    <button
+                      type="button"
+                      className="nav-enlace"
+                      onClick={() => {
+                        cerrarSesion();
+                        cerrar();
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faRightFromBracket}
+                        aria-hidden="true"
+                      />
+                      Cerrar sesión
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/login" className="nav-enlace" onClick={cerrar}>
+                      Iniciar sesión
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="nav-enlace" onClick={cerrar}>
+                      Crear cuenta
+                    </Link>
+                  </li>
+                </>
+              )
+            }
+          </MenuDesplegable>
 
-          <div className="d-flex align-items-center gap-2">
-            <Carrito
-              allProducts={allProducts}
-              setAllProducts={setAllProducts}
-              total={total}
-              setTotal={setTotal}
-              countProducts={countProducts}
-              setCountProducts={setCountProducts}
-            />
-            <button
-              className="navbar-toggler rounded-pill"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent"
-              aria-controls="navbarSupportedContent"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
+          <SelectorTema />
+
+          <Carrito
+            allProducts={allProducts}
+            setAllProducts={setAllProducts}
+            total={total}
+            setTotal={setTotal}
+            countProducts={countProducts}
+            setCountProducts={setCountProducts}
+          />
+
+          <button
+            type="button"
+            className="btn-menu"
+            onClick={() => setMenuAbierto((previo) => !previo)}
+            aria-expanded={menuAbierto}
+            aria-controls="menu-movil"
+            aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+          >
+            <span
+              className="icono-intercambio"
+              data-estado={menuAbierto ? "b" : "a"}
+              aria-hidden="true"
             >
-              <span className="navbar-toggler-icon"></span>
-            </button>
-          </div>
-        </div>
-
-        <div
-          className="collapse navbar-collapse d-sm-none"
-          id="navbarSupportedContent"
-        >
-          <div className="navbar-mobile-panel">
-            <div className="navbar-mobile-header">
-              <span className="parrafos navbar-mobile-title">
-                Explora ByGio
-              </span>
-            </div>
-            <ul className="navbar-nav">
-              <NavItem href="/" label="Home" mobile />
-              <NavItem href="/dtf" label="DTF" mobile />
-              <Dropdown label="Links" items={navbarLinks} mobile />
-              <UserDropdown currentUser={currentUser} logout={logout} mobile />
-            </ul>
-          </div>
+              <FontAwesomeIcon icon={faBars} data-icono="a" />
+              <FontAwesomeIcon icon={faXmark} data-icono="b" />
+            </span>
+          </button>
         </div>
       </div>
-    </nav>
+
+      {/* El panel móvil también se queda montado para animar el cierre. */}
+      <div
+        className="menu-movil panel-deslizante"
+        id="menu-movil"
+        data-abierto={menuAbierto ? "true" : "false"}
+      >
+        <nav aria-label="Navegación móvil">
+          <ul className="menu-movil-lista">
+            {enlacesPrincipales.map((enlace) => (
+              <EnlaceNav
+                key={enlace.to}
+                {...enlace}
+                onClick={() => setMenuAbierto(false)}
+              />
+            ))}
+
+            <li className="menu-movil-separador" aria-hidden="true" />
+
+            {currentUser ? (
+              <>
+                <li>
+                  <span className="dropdown-usuario-nombre">
+                    {nombreUsuario}
+                  </span>
+                </li>
+                {currentUser.admin && (
+                  <>
+                    <li>
+                      <Link
+                        to="/editor"
+                        className="nav-enlace"
+                        onClick={() => setMenuAbierto(false)}
+                      >
+                        Crear artículo
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/dtf/upload"
+                        className="nav-enlace"
+                        onClick={() => setMenuAbierto(false)}
+                      >
+                        Crear diseño DTF
+                      </Link>
+                    </li>
+                  </>
+                )}
+                <li>
+                  <button
+                    type="button"
+                    className="nav-enlace"
+                    onClick={cerrarSesion}
+                  >
+                    <FontAwesomeIcon
+                      icon={faRightFromBracket}
+                      aria-hidden="true"
+                    />
+                    Cerrar sesión
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    to="/login"
+                    className="nav-enlace"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    Iniciar sesión
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/register"
+                    className="nav-enlace"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    Crear cuenta
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+      </div>
+    </header>
   );
 };
-
-const NavItem = ({ href, label, mobile = false }) => (
-  <li className={`nav-item titulos ${mobile ? "w-100" : ""}`}>
-    <a
-      className={`nav-link ${mobile ? "nav-link-mobile" : "navbar-link"}`}
-      href={href}
-    >
-      {label}
-    </a>
-  </li>
-);
-
-const Dropdown = ({ label, items, mobile = false }) => (
-  <li className={`nav-item dropdown titulos ${mobile ? "w-100" : ""}`}>
-    <a
-      className={`nav-link dropdown-toggle  ${mobile ? "nav-link-mobile" : "navbar-link"}`}
-      id={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
-      role="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="false"
-    >
-      {label}
-    </a>
-    <ul
-      className={`dropdown-menu ${mobile ? "dropdown-menu-end" : ""}`}
-      aria-labelledby={mobile ? "navbarDropdownMobile" : "navbarDropdown"}
-    >
-      {items.map((item, index) => (
-        <li key={index} className="dropdown-item li-navbar-hover">
-          <a
-            className="titulos"
-            href={item.href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {item.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </li>
-);
-
-const UserDropdown = ({ currentUser, logout, mobile = false }) => (
-  <li className={`nav-item dropdown titulos ${mobile ? "w-100" : ""}`}>
-    <a
-      className={`nav-link dropdown-toggle ${mobile ? "nav-link-mobile" : "navbar-link"}`}
-      id={mobile ? "userDropdownMobile" : "userDropdown"}
-      role="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="false"
-    >
-      {currentUser
-        ? `Bienvenido ${currentUser.username || currentUser.name || currentUser.email}`
-        : "Usuario"}
-    </a>
-    <ul
-      className={`dropdown-menu ${mobile ? "dropdown-menu-end" : ""}`}
-      aria-labelledby={mobile ? "userDropdownMobile" : "userDropdown"}
-    >
-      {currentUser ? (
-        <li className="dropdown-item li-navbar-hover">
-          <p className="mb-0" onClick={logout}>
-            Cerrar Sesión
-          </p>
-        </li>
-      ) : (
-        <>
-          <li className="dropdown-item li-navbar-hover">
-            <Link className="" to="/login">
-              Iniciar Sesión
-            </Link>
-          </li>
-          <li className="dropdown-item li-navbar-hover">
-            <Link className="" to="/register">
-              Registrarte
-            </Link>
-          </li>
-        </>
-      )}
-      {currentUser?.admin && (
-        <>
-          <li className="dropdown-item li-navbar-hover">
-            <hr className="dropdown-divider" />
-          </li>
-          <li className="dropdown-item li-navbar-hover">
-            <Link className="" to="/editor">
-              Crear Artículo
-            </Link>
-          </li>
-          <li className="dropdown-item li-navbar-hover">
-            <Link className="" to="/dtf/upload">
-              Crear DTF
-            </Link>
-          </li>
-        </>
-      )}
-    </ul>
-  </li>
-);
 
 export default BarraNavegacion;

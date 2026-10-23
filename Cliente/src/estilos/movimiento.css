@@ -1,0 +1,265 @@
+/* =========================================================
+   BYGIO · MOVIMIENTO
+   Utilidades de entrada compartidas.
+
+   Se importa DESPUES de componentes.css (capa de utilidades),
+   por lo que gana en cascada a cualquier empate de especificidad.
+   Regla: este archivo solo declara ESTADOS de entrada (opacidad
+   y transform). Nunca apariencia (color, tipografia, tamanos).
+
+   Uso:
+     <div class="revelar is-visible">
+       <p class="revelar-linea" style="--i: 0">...</p>
+       <h1 class="revelar-linea" style="--i: 1">...</h1>
+     </div>
+
+   - Sin .is-visible las lineas quedan ocultas y desplazadas.
+   - .is-visible las revela con stagger de --mov-stagger.
+   - --i es el indice (0, 1, 2...). Sin --i se asume 0.
+
+   No aplicar .revelar-linea a un elemento que ya anime su
+   propio `transform` (botones .btn-tema, .coleccion-imagen,
+   .tarjeta-imagen): se pisarian. Envuelvelo en un contenedor.
+
+   Los tokens (--mov-*) viven en estilos/tema.css.
+   ========================================================= */
+
+.revelar {
+  --revelar-distancia: 26px;
+  --revelar-duracion: var(--mov-entrada);
+  --revelar-ease: var(--mov-ease-resorte);
+}
+
+.revelar-linea {
+  opacity: 0;
+  transform: translateY(var(--revelar-distancia));
+  transition:
+    opacity var(--revelar-duracion) var(--revelar-ease),
+    transform var(--revelar-duracion) var(--revelar-ease);
+  transition-delay: calc(var(--mov-stagger) * var(--i, 0));
+}
+
+.revelar.is-visible .revelar-linea {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------
+   TEXTO RODANTE (hover de la navegacion, como en Sabina)
+   Dos copias del texto apiladas dentro de una caja de una
+   linea; al pasar el cursor/teclado ambas suben una linea.
+   --------------------------------------------------------- */
+
+.texto-rodante {
+  display: block;
+  overflow: hidden;
+  /* La altura es la de UNA linea: sin ella, `overflow: hidden` no
+     recorta nada y las dos copias se verian a la vez. */
+  height: 1.35em;
+  line-height: 1.35;
+}
+
+.texto-rodante-capa {
+  display: block;
+  transition: transform var(--mov-base) var(--mov-ease-hover);
+}
+
+.nav-enlace:hover .texto-rodante-capa,
+.nav-enlace:focus-visible .texto-rodante-capa {
+  transform: translateY(-100%);
+}
+
+/* ---------------------------------------------------------
+   MENU DESPLEGABLE (receta menu-dropdown)
+   Crece desde el borde superior derecho del disparador.
+   Se queda montado: `visibility` se retrasa en el cierre para
+   que la salida se vea, y a la vez saca el panel del orden de
+   tabulacion y del arbol de accesibilidad mientras esta cerrado.
+   Usa --mov-ease-hover y no --mov-ease: lo dispara el puntero y
+   con expo-out el panel ya estaba al 86% en el primer tercio.
+   --------------------------------------------------------- */
+
+.menu-desplegable {
+  transform-origin: top right;
+  transform: scale(var(--desplegable-escala));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform var(--desplegable-cerrar) var(--mov-ease-hover),
+    opacity var(--desplegable-cerrar) var(--mov-ease-hover),
+    visibility 0s linear var(--desplegable-cerrar);
+}
+
+.menu-desplegable[data-abierto="true"] {
+  transform: scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    transform var(--desplegable-abrir) var(--mov-ease-hover),
+    opacity var(--desplegable-abrir) var(--mov-ease-hover),
+    visibility 0s;
+}
+
+/* ---------------------------------------------------------
+   INTERCAMBIO DE ICONO (receta icon-swap)
+   Dos iconos apilados en la misma celda; el estado decide cual
+   se ve. data-estado="a" | "b" empareja con data-icono.
+   --------------------------------------------------------- */
+
+.icono-intercambio {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.icono-intercambio > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--icono-intercambio) var(--mov-ease-hover),
+    transform var(--icono-intercambio) var(--mov-ease-hover),
+    filter var(--icono-intercambio) var(--mov-ease-hover);
+}
+
+.icono-intercambio[data-estado="a"] > [data-icono="a"],
+.icono-intercambio[data-estado="b"] > [data-icono="b"] {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.icono-intercambio[data-estado="a"] > [data-icono="b"],
+.icono-intercambio[data-estado="b"] > [data-icono="a"] {
+  opacity: 0;
+  transform: scale(var(--icono-escala));
+  filter: blur(var(--icono-desenfoque));
+}
+
+/* ---------------------------------------------------------
+   INTERCAMBIO DE TEXTO (receta text-states-swap)
+   Dos etiquetas apiladas en la misma celda: la celda conserva el
+   ancho de la más larga, así el botón no cambia de tamaño, y una
+   entra mientras la otra sale. data-estado="a" | "b" empareja con
+   data-texto.
+   --------------------------------------------------------- */
+
+.intercambio-texto {
+  display: inline-grid;
+  place-items: center;
+}
+
+.intercambio-texto > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--icono-intercambio) var(--mov-ease-hover),
+    transform var(--icono-intercambio) var(--mov-ease-hover);
+}
+
+.intercambio-texto[data-estado="a"] > [data-texto="a"],
+.intercambio-texto[data-estado="b"] > [data-texto="b"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.intercambio-texto[data-estado="a"] > [data-texto="b"],
+.intercambio-texto[data-estado="b"] > [data-texto="a"] {
+  opacity: 0;
+  transform: translateY(-0.35em);
+}
+
+/* ---------------------------------------------------------
+   PANEL DESLIZANTE (receta panel-reveal)
+   Para paneles que cuelgan de un contenedor existente, como el
+   menu movil. Se omite el desenfoque de la receta: sobre una
+   barra fija con backdrop-filter obliga a repintar de mas.
+   --------------------------------------------------------- */
+
+.panel-deslizante {
+  transform: translateY(var(--panel-desplazamiento));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform var(--panel-cerrar) var(--mov-ease-hover),
+    opacity var(--panel-cerrar) var(--mov-ease-hover),
+    visibility 0s linear var(--panel-cerrar);
+}
+
+.panel-deslizante[data-abierto="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    transform var(--panel-abrir) var(--mov-ease-hover),
+    opacity var(--panel-abrir) var(--mov-ease-hover),
+    visibility 0s;
+}
+
+/* ---------------------------------------------------------
+   ENTRADA DE REJILLA (receta texts-reveal, variante rejilla)
+   Aqui se usa `animation` y no `transition` a proposito: la
+   entrada se dispara al MONTAR la rejilla (llegan los datos o
+   cambia el filtro), sin observadores ni clases de estado por
+   cada cambio. El observador solo decide cuando arranca.
+   Arranca en pausa para no gastarse por debajo del pliegue.
+   --------------------------------------------------------- */
+
+@keyframes rejilla-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(var(--revelar-distancia, 26px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rejilla-entrada > * {
+  animation: rejilla-aparece var(--mov-lento) var(--mov-ease) both;
+  animation-delay: calc(var(--mov-stagger-corto) * var(--i, 0));
+  animation-play-state: paused;
+}
+
+.rejilla-entrada.is-visible > * {
+  animation-play-state: running;
+}
+
+/* Accesibilidad: el bloque global de tema.css neutraliza las
+   duraciones, pero no los `transition-delay`. Aqui se anulan
+   tambien los retrasos y se fuerza el estado final visible,
+   de modo que el contenido nunca quede oculto esperando un
+   .is-visible que quizas no llegue. */
+@media (prefers-reduced-motion: reduce) {
+  .revelar,
+  .revelar-linea {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+  }
+
+  .menu-desplegable,
+  .panel-deslizante,
+  .icono-intercambio > *,
+  .intercambio-texto > *,
+  .texto-rodante-capa {
+    transition: none !important;
+  }
+
+  /* La rejilla se queda quieta y visible: el `animation-delay`
+     no lo anula el bloque global, y sin esto las tarjetas
+     entrarian con retraso en cascada. */
+  .rejilla-entrada > * {
+    animation: none !important;
+    animation-delay: 0s !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .esqueleto {
+    animation: none !important;
+  }
+}

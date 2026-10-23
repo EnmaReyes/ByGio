@@ -1,42 +1,65 @@
-import { ToastContainer } from "react-toastify";
+import { Slide, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import BarraNavegacion from "./Componentes/BarraNavegacion";
 import Footer from "./Componentes/Footer";
 import Inicio from "./Paginas/Inicio";
 import Editor from "./Paginas/Editor";
-import { useEffect, useState } from "react";
 import Registro from "./Paginas/Registro";
 import InicioSecion from "./Paginas/InicioSecion";
 import Articulo from "./Paginas/ArticuloDetallado/Articulo";
 import UploadDTF from "./Paginas/DTF/UploadDTF";
 import "./App.css";
 import DtfCategories from "./Paginas/DTF/DtfCategories";
-import {
-  getCartTotals,
-  readCartFromStorage,
-  writeCartToStorage,
-} from "./Componentes/cartUtils";
 import PixelPageViewTracker from "./Componentes/PixelPageViewTracker";
 import BannerCookies from "./Componentes/BannerCookies";
 import PoliticaPrivacidad from "./Paginas/PoliticaPrivacidad";
 import TerminosCondiciones from "./Paginas/TerminosCondiciones";
+import Productos from "./Paginas/Productos";
+import { TemaProvider } from "./tema/TemaProvider";
+import { CarritoProvider, useCarrito } from "./carrito/CarritoProvider";
+import TransicionRuta from "./Componentes/TransicionRuta";
 
 //! Rutas de pagina\\
-const Layout = ({
-  allProducts,
-  total,
-  countProducts,
-  setAllProducts,
-  setTotal,
-  setCountProducts,
-}) => {
+const Layout = () => {
+  const { pathname } = useLocation();
+  const {
+    allProducts,
+    setAllProducts,
+    total,
+    setTotal,
+    countProducts,
+    setCountProducts,
+  } = useCarrito();
+
+  // En la portada el hero se mete bajo la cabecera fija.
+  const enPortada = pathname === "/";
+
   return (
     <div className="site-shell">
+      <a className="saltar-contenido" href="#contenido">
+        Saltar al contenido
+      </a>
       <PixelPageViewTracker />
       <BannerCookies />
-      <ToastContainer />
+      {/* Posición y comportamiento por defecto de los avisos: los
+          toasts que no pasan opciones (o pasan solo algunas) salen
+          abajo a la derecha, que es donde apuntan las acciones. Slide
+          en vez del Bounce por defecto: el rebote no es de la casa. */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        transition={Slide}
+      />
       <BarraNavegacion
         allProducts={allProducts}
         setAllProducts={setAllProducts}
@@ -45,55 +68,37 @@ const Layout = ({
         countProducts={countProducts}
         setCountProducts={setCountProducts}
       />
-      <Outlet
-        context={{
-          allProducts,
-          setAllProducts,
-          total,
-          setTotal,
-          countProducts,
-          setCountProducts,
-        }}
-      />
+      <main
+        id="contenido"
+        className={`contenido-principal${
+          enPortada ? " contenido-principal--inicio" : ""
+        }`}
+      >
+        <TransicionRuta />
+      </main>
       <Footer />
     </div>
   );
 };
 
-function App() {
-  const [initialCart] = useState(() => {
-    const products = readCartFromStorage();
-    return { products, ...getCartTotals(products) };
-  });
-  const [allProducts, setAllProducts] = useState(initialCart.products);
-  const [total, setTotal] = useState(initialCart.total);
-  const [countProducts, setCountProducts] = useState(initialCart.count);
-
-  useEffect(() => {
-    const cartTotals = getCartTotals(allProducts);
-    setTotal(cartTotals.total);
-    setCountProducts(cartTotals.count);
-    writeCartToStorage(allProducts);
-  }, [allProducts]);
-
-  const router = createBrowserRouter(
-    [
+/*
+ * El router se crea UNA vez, fuera del render: si se creara dentro de
+ * App (como antes), cada cambio de carrito lo recrearía y remontaría
+ * toda la aplicación, incluida la transición entre páginas.
+ */
+const router = createBrowserRouter(
+  [
     {
       path: "/",
-      element: (
-        <Layout
-          allProducts={allProducts}
-          total={total}
-          countProducts={countProducts}
-          setAllProducts={setAllProducts}
-          setTotal={setTotal}
-          setCountProducts={setCountProducts}
-        />
-      ),
+      element: <Layout />,
       children: [
         {
           path: "/",
           element: <Inicio />,
+        },
+        {
+          path: "/productos",
+          element: <Productos />,
         },
         {
           path: "/editor",
@@ -145,18 +150,23 @@ function App() {
         </>
       ),
     },
-    ],
-    {
-      future: {
-        v7_startTransition: true,
-      },
+  ],
+  {
+    future: {
+      v7_startTransition: true,
     },
-  );
+  }
+);
 
+function App() {
   return (
-    <div className="app">
-      <RouterProvider router={router} />
-    </div>
+    <TemaProvider>
+      <CarritoProvider>
+        <div className="app">
+          <RouterProvider router={router} />
+        </div>
+      </CarritoProvider>
+    </TemaProvider>
   );
 }
 

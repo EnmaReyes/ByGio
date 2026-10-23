@@ -1,34 +1,29 @@
-import React, { useState } from "react";
-import {
-  CartaDeArticulos,
-  ArtiulosOferta,
-} from "../Componentes/CartaDeArticulos";
-import "../App.css";
-import { Col } from "react-bootstrap";
-import Banner from "../Componentes/Banner";
+import Hero from "../Componentes/Hero";
 import CartaInicial from "../Componentes/CartaInicial";
-import {
-  ListonMostSeller,
-  ListonOffer,
-  ListonMayorista,
-  ListonTendencia,
-} from "../Componentes/Liston";
+import Banner from "../Componentes/Banner";
+import Colecciones from "../Componentes/Colecciones";
+import { ArtiulosOferta } from "../Componentes/CartaDeArticulos";
+import BandaBeneficios from "../Componentes/BandaBeneficios";
 
-const Inicio = () => {
-  return (
-    <div>
-      <Banner />
-      {/*<ListonMayorista />*/}
-      <CartaInicial />
-      {/* <ListonOffer /> */}
-      <ArtiulosOferta />
-      {/*   <ListonTendencia /> */}
-      <Col>
-        <CartaDeArticulos />
-      </Col>
-      {/* <ListonMostSeller /> */}
-    </div>
-  );
-};
+/*
+ * Inicio: hero a sangre, destacados con la rejilla del catálogo,
+ * el banner existente, las colecciones y las ofertas. Cierra con
+ * la banda de beneficios, igual que el detalle de artículo.
+ */
+const Inicio = () => (
+  <>
+    <Hero />
+
+    <CartaInicial />
+
+    <Banner />
+
+    <Colecciones />
+
+    <ArtiulosOferta limite={4} />
+
+    <BandaBeneficios />
+  </>
+);
 
 export default Inicio;

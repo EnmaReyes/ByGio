@@ -1,41 +1,35 @@
 /* ============================================ */
-/* ARTICULO COMPONENT - MODERN STYLES */
+/* ARTICULO · DETALLE DE PRODUCTO               */
+/* Estilo editorial (referencia Sabina): títulos */
+/* planos, filetes finos y controles discretos.  */
+/* Todos los colores y tiempos salen de los      */
+/* tokens de src/estilos/tema.css.               */
 /* ============================================ */
 
-/* Color Palette */
-:root {
-  --primary-color: #000000;
-  --secondary-color: #ffffff;
-  --accent-color: #d4af37;
-  --dark-accent: #b8960f;
-  --light-accent: #e5c158;
-  --background-light: #fafafa;
-  --border-radius-lg: 1rem;
-  --border-radius-xl: 1.5rem;
-  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
 /* ============================================ */
-/* PRODUCT IMAGE GALLERY */
+/* GALERÍA                                       */
 /* ============================================ */
 
-.product-gallery {
-  border-radius: var(--border-radius-xl);
+/* Sin borde ni sombra: el fondo es el del tema, así en modo oscuro
+   no aparece un recuadro claro alrededor de la foto. */
+/* Swiper trae `position: relative` en su propio CSS (se importa
+   después), así que la regla necesita más especificidad. */
+.producto-detalle .product-gallery {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
+/* La proporción la manda el contenedor: así una foto vertical no
+   estira la ficha (Swiper se posiciona encima en absoluto). */
 .product-image-container {
+  position: relative;
   aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f8f8 100%);
-  transition: var(--transition-smooth);
-}
-
-.product-image-container:hover {
-  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.15);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
 }
 
 .mySwiper {
@@ -43,273 +37,304 @@
   width: 100%;
 }
 
-.swiper-pagination-bullet {
-  background-color: var(--accent-color);
-  opacity: 0.8;
+.producto-detalle .swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.5rem, 1.6vw, 1rem);
 }
 
-.swiper-pagination-bullet-active {
-  background-color: var(--accent-color);
+.producto-detalle .product-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.producto-detalle .swiper-pagination-bullet {
+  background: var(--muted);
+  opacity: 0.45;
+}
+
+.producto-detalle .swiper-pagination-bullet-active {
+  background: var(--ink);
   opacity: 1;
 }
 
 /* ============================================ */
-/* PRODUCT DETAILS SECTION */
+/* COLUMNA DE DETALLE                            */
 /* ============================================ */
 
 .product-details {
-  padding: 1rem;
+  padding: clamp(0.25rem, 2vw, 1.5rem);
 }
 
-.product-details h1 {
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-  animation: slideInUp 0.6s ease;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.product-details p {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #666;
-  margin-bottom: 2rem;
-}
-
-/* ============================================ */
-/* SIZE SELECTOR */
-/* ============================================ */
-
-.size-selector {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid #e0e0e0;
-  transition: var(--transition-smooth);
-}
-
-.size-selector h3 {
-  color: var(--primary-color);
+.detalle-titulo {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3.4vw, 2.5rem);
   font-weight: 600;
-  margin-bottom: 1rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-.size-selector .btn-outline-dark {
-  border-width: 2px;
-  font-weight: 600;
-  transition: var(--transition-smooth);
-}
-
-.size-selector .btn-outline-dark:hover {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  transform: translateY(-2px);
-}
-
-.size-selector .active-size {
-  background-color: var(--accent-color) !important;
-  border-color: var(--accent-color) !important;
-  color: var(--primary-color) !important;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-}
-
-/* ============================================ */
-/* QUANTITY SELECTOR */
-/* ============================================ */
-
-.quantity-selector {
-  background: linear-gradient(135deg, #f0f0f0 0%, #fafafa 100%);
-  border: 2px solid #e0e0e0;
-  transition: var(--transition-smooth);
-}
-
-.quantity-selector:hover {
-  border-color: var(--accent-color);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
-}
-
-.quantity-selector .btn-outline-dark {
-  border-width: 2px;
-  width: 40px;
-  height: 40px;
+/* Precio: una sola línea bajo el título, como en la referencia. */
+.detalle-precio {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  transition: var(--transition-smooth);
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  margin: 0.85rem 0 0;
+  font-family: var(--font-body);
 }
 
-.quantity-selector .btn-outline-dark:hover:not(:disabled) {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-  color: var(--primary-color);
-}
-
-.quantity-selector .btn-outline-dark:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ============================================ */
-/* PRICE INFO */
-/* ============================================ */
-
-.price-info {
-  background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
-  border-left: 4px solid var(--accent-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  animation: fadeInUp 0.6s ease 0.2s both;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.price-info p {
-  font-size: 0.875rem;
+.detalle-precio-valor {
+  color: var(--ink);
+  font-size: clamp(1.15rem, 1.7vw, 1.35rem);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.price-info h3,
-.price-info h2 {
-  color: var(--accent-color);
-  font-weight: 700;
-  margin: 0.5rem 0;
+.detalle-precio-anterior {
+  color: var(--muted-soft);
+  font-size: 0.95rem;
 }
 
-.price-info h2 {
-  color: var(--primary-color);
-  font-size: 2rem;
-}
-
-.price-info hr {
-  border-color: #e0e0e0;
-  margin: 1rem 0;
+.detalle-precio-nota {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 /* ============================================ */
-/* ACTION BUTTONS */
+/* OPCIONES (talla y cantidad)                   */
 /* ============================================ */
 
-.btn-action {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  padding: 1rem 2rem;
-  border-radius: var(--border-radius-xl);
-  transition: var(--transition-smooth);
-  position: relative;
+.detalle-opciones {
+  display: grid;
+  gap: 1.05rem;
+  margin-top: 1.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.detalle-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+
+.detalle-etiqueta {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.detalle-tallas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.detalle-talla {
+  min-width: 46px;
+  min-height: 38px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion);
+}
+
+.detalle-talla:hover {
+  border-color: var(--ink);
+}
+
+.detalle-talla.is-activa {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg-page);
+}
+
+.detalle-talla:focus-visible {
+  outline: var(--foco-ancho) solid var(--brand);
+  outline-offset: var(--foco-offset);
+}
+
+.detalle-talla-unica {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Cantidad: un solo control con forma de píldora. */
+.detalle-cantidad {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
-.btn-action::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
+.detalle-cantidad-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.78rem;
+  cursor: pointer;
   transition:
-    width 0.6s,
-    height 0.6s;
+    background-color var(--transicion),
+    color var(--transicion);
 }
 
-.btn-action:hover::before {
-  width: 300px;
-  height: 300px;
+.detalle-cantidad-btn:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--bg-page);
 }
 
-/* Botón Comprar */
-.btn-buy {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: var(--secondary-color);
+.detalle-cantidad-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
-.btn-buy:hover {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-  color: var(--primary-color);
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
-  transform: translateY(-2px);
+.detalle-cantidad-btn:focus-visible {
+  outline: var(--foco-ancho) solid var(--brand);
+  outline-offset: -2px;
 }
 
-/* Botón Carrito */
-.btn-cart {
-  background-color: transparent;
-  border: 2px solid var(--accent-color);
-  color: var(--accent-color);
-}
-
-.btn-cart:hover {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-  color: var(--primary-color);
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
-  transform: translateY(-2px);
+.detalle-cantidad-valor {
+  min-width: 2.2rem;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* ============================================ */
-/* ADMIN ACTIONS */
+/* ACCIONES Y PUNTOS                             */
+/* ============================================ */
+
+.detalle-acciones {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+}
+
+.detalle-puntos {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.6rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.4;
+  list-style: disc;
+}
+
+.detalle-puntos li::marker {
+  color: var(--muted-soft);
+}
+
+/* ============================================ */
+/* ACORDEONES                                    */
+/* ============================================ */
+
+.detalle-acordeones {
+  margin-top: 1.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.detalle-acordeon {
+  border-bottom: 1px solid var(--border);
+}
+
+.detalle-acordeon summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.05rem 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari dibuja su propio triángulo: se quita para dejar el icono. */
+.detalle-acordeon summary::-webkit-details-marker {
+  display: none;
+}
+
+.detalle-acordeon summary svg {
+  color: var(--muted);
+  font-size: 1rem;
+  transition:
+    transform var(--mov-base) var(--mov-ease-hover),
+    color var(--transicion);
+}
+
+.detalle-acordeon summary:hover svg {
+  color: var(--ink);
+}
+
+/* El "+" gira a "×" al abrir: solo transform, nada de layout. */
+.detalle-acordeon[open] summary svg {
+  transform: rotate(45deg);
+}
+
+.detalle-acordeon summary:focus-visible {
+  outline: var(--foco-ancho) solid var(--brand);
+  outline-offset: var(--foco-offset);
+}
+
+.detalle-acordeon-cuerpo {
+  padding-bottom: 1.1rem;
+}
+
+.detalle-acordeon-cuerpo p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+/* ============================================ */
+/* ADMINISTRACIÓN                                */
 /* ============================================ */
 
 .admin-actions {
-  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-  border: 2px solid var(--accent-color);
   margin-top: 2rem;
-  animation: slideInUp 0.6s ease;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
-.admin-actions .btn,
-.admin-actions .btn-sm {
-  font-weight: 600;
-  transition: var(--transition-smooth);
-  border: none;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.admin-actions .btn:hover,
-.admin-actions .btn-sm:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.admin-actions a.btn {
-  color: var(--primary-color);
-}
-
-.admin-actions a.btn:hover {
-  color: var(--primary-color);
+.admin-actions .btn-admin {
+  flex: 1;
 }
 
 /* ============================================ */
-/* RESPONSIVE DESIGN */
+/* RESPONSIVE                                    */
 /* ============================================ */
 
 @media (max-width: 991.98px) {
@@ -317,57 +342,22 @@
     padding: 0;
   }
 
-  .product-details h1 {
-    font-size: 2rem;
-  }
-
-  .size-selector {
-    margin: 1.5rem 0;
-  }
-
-  .price-info {
-    margin: 1.5rem 0;
+  .product-image-container {
+    aspect-ratio: 4 / 5;
   }
 
   .admin-actions {
     flex-direction: column;
   }
-
-  .admin-actions .btn {
-    width: 100%;
-  }
 }
 
 @media (max-width: 767.98px) {
-  .product-details h1 {
-    font-size: 1.75rem;
-  }
-
-  .price-info h2 {
-    font-size: 1.75rem;
-  }
-
   .product-image-container {
-    aspect-ratio: 3 / 4;
-    min-height: 300px;
+    aspect-ratio: 4 / 5;
   }
 
-  .quantity-selector {
-    padding: 1rem;
-  }
-
-  .btn-action {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
-  }
-
-  .admin-actions {
-    gap: 1rem;
-  }
-
-  .admin-actions .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+  .detalle-titulo {
+    font-size: 1.8rem;
   }
 }
 
@@ -377,59 +367,15 @@
     min-height: 280px;
   }
 
-  .product-details h1 {
-    font-size: 1.5rem;
+  .detalle-grupo {
+    align-items: flex-start;
   }
 
-  .price-info {
-    padding: 1rem;
+  .detalle-tallas {
+    justify-content: flex-start;
   }
 
-  .price-info h2 {
-    font-size: 1.5rem;
+  .detalle-titulo {
+    font-size: 1.6rem;
   }
-
-  .size-selector .d-flex {
-    gap: 0.5rem;
-  }
-
-  .quantity-selector {
-    padding: 0.75rem;
-    gap: 1rem;
-  }
-
-  .quantity-selector > span {
-    font-size: 1.25rem;
-  }
-}
-
-/* ============================================ */
-/* ACCESSIBILITY */
-/* ============================================ */
-
-.btn-action:focus,
-.size-selector .btn:focus,
-.quantity-selector .btn:focus {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-/* ============================================ */
-/* ANIMATIONS */
-/* ============================================ */
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
-  }
-}
-
-.btn-action:active {
-  animation: pulse 0.6s;
 }

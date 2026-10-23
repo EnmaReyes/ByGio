@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useContextProvaider } from "../../context/ContextProvaider";
 import DtfCard from "./DtfCard";
+import DtfEsqueleto from "./DtfEsqueleto";
 
 import "./DtfCategories.css";
 
@@ -75,7 +76,7 @@ const DtfCategories = () => {
     selectedCategory === "all" ? loadingDtf : loadingDtfCategory;
 
   return (
-    <section className="dtf-categories mt-5">
+    <section className="dtf-categories">
       <div className="dtf-categories-header">
         <h2 className="titulos">Diseños DTF</h2>
 
@@ -124,9 +125,7 @@ const DtfCategories = () => {
       {/* RESULTADOS DTF */}
       <div className="dtf-category-results">
         {isLoading ? (
-          <div className="dtf-empty">
-            <p className="parrafos">Cargando diseños...</p>
-          </div>
+          <DtfEsqueleto />
         ) : loadError ? (
           <div className="dtf-empty" role="alert">
             <p className="parrafos">
@@ -135,7 +134,16 @@ const DtfCategories = () => {
             </p>
           </div>
         ) : Array.isArray(visibleDtf) && visibleDtf.length > 0 ? (
-          <div className="dtf-grid">
+          /*
+           * `is-visible` va fijo: la rejilla se monta cuando llegan los
+           * datos (nunca en el primer render), así que aquí no hay
+           * observador de visibilidad que esperar. La `key` la vuelve a
+           * montar al cambiar de categoría y la entrada se reproduce.
+           */
+          <div
+            key={selectedCategory}
+            className="dtf-grid rejilla-entrada is-visible"
+          >
             <DtfCard items={visibleDtf} />
           </div>
         ) : (

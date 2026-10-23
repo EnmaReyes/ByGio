@@ -4,8 +4,8 @@
 
 .dtf-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
 /* =========================
@@ -37,6 +37,13 @@
   border: 0;
   background: #f6f6f4;
   cursor: pointer;
+}
+
+/* La tarjeta recorta (overflow: hidden) y el disparador ocupa todo
+   el ancho: el anillo de foco se dibuja hacia dentro para que no se
+   corte por izquierda, derecha y arriba. */
+.dtf-design-trigger:focus-visible {
+  outline-offset: calc(var(--foco-ancho) * -1);
 }
 
 /* =========================
@@ -164,7 +171,7 @@
   transform-origin: center;
   pointer-events: none;
   user-select: none;
-  transition: transform 180ms ease-out;
+  transition: transform var(--mov-base) var(--mov-ease-hover);
 }
 
 /* =========================
@@ -215,9 +222,9 @@
   cursor: pointer;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transicion),
+    box-shadow var(--transicion),
+    transform var(--mov-base) var(--mov-ease-hover);
 }
 
 .dtf-shirt-option:hover {
@@ -273,9 +280,9 @@
   cursor: pointer;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transicion),
+    box-shadow var(--transicion),
+    transform var(--mov-base) var(--mov-ease-hover);
 }
 
 .dtf-size-option:hover {
@@ -318,9 +325,9 @@
    TABLET
 ========================= */
 
-@media (max-width: 992px) {
+@media (max-width: 1023px) {
   .dtf-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

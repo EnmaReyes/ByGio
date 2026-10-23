@@ -488,7 +488,15 @@ const UploadDTF = () => {
    */
 
   return (
-    <Container className="mb-4 dtf-editor" style={{ paddingTop: "90px" }}>
+    <Container className="mb-4 dtf-editor editor-pagina">
+      <header className="editor-cabecera">
+        <span className="etiqueta-seccion">Panel ByGio</span>
+        <h1 className="titulo-seccion">Nuevo diseño DTF</h1>
+        <p className="texto-seccion">
+          Sube el diseño, asígnalo a una categoría y publícalo en el catálogo.
+        </p>
+      </header>
+
       {openAddCategoryModal && (
         <AddCategory
           show={openAddCategoryModal}
@@ -603,6 +611,7 @@ const UploadDTF = () => {
               variant="dark"
               type="submit"
               disabled={loading}
+              aria-busy={loading}
             >
               {loading ? (
                 <>

@@ -54,6 +54,32 @@ npm run dev
 - Images upload to Cloudinary via unsigned presets (`Paginas/Editor.jsx`, `DTF/UploadDTF.jsx`, `Componentes/EditBanner.jsx`). Cart state persists to localStorage (`Componentes/cartUtils.js`). User feedback via `react-toastify` (`toast.promise` for async ops).
 - UI/UX work: the `ui-ux-pro-max` skill is installed under `.agents/skills/` (see `skills-lock.json`). Its search script requires Python, which is **not installed** on this machine — read `references/quick-reference.md` directly instead of running `scripts/search.py`.
 
+## UI system (every new section follows this — ByGio tokens, no new palettes)
+
+The visual language is **editorial type Sabina**: warm soft bands, thin `--line` rules, pill/chip controls, large centered page titles, 3-column grids. A new section must look like it was always part of the site; never import a new palette, font or motion timing.
+
+- **Where styles live.** Global CSS is imported in this order from `Cliente/src/main.jsx`: `index.css` (reset + global `a { all: unset }`) → `estilos/tema.css` (tokens + base) → `estilos/componentes.css` (layout, shared sections, catalog) → `estilos/movimiento.css` (motion primitives, loaded last on purpose). Page-specific CSS stays next to the page (`Paginas/DTF/DtfCard.css`, `Paginas/DTF/DtfCategories.css`, `Paginas/ArticuloDetallado/Articulo.css`). Add shared section styles to `componentes.css`, not to a page file.
+- **Tokens only.** Colors, radii, shadows, spacing, timing and easing come from `tema.css`; both themes are just `[data-theme="dark"]` overrides of those variables.
+  - Surfaces/text: `--bg-page`, `--bg-soft`, `--surface`, `--surface-2`, `--ink`, `--ink-soft`, `--muted`, `--muted-soft`, `--line`, `--line-strong`, `--header-bg`.
+  - Brand/actions: `--brand`, `--brand-strong`, `--brand-ink`, `--brand-soft`, `--danger*`, `--success*`.
+  - Shape: `--radius-xs|sm|md|lg|pill`, `--shadow-sm|md|lg`, `--shadow-drawer`, `--overlay`.
+  - Layout: `--ancho-max`, `--espacio-lateral`, `--espacio-seccion`, `--header-h`.
+  - Motion: `--mov-rapido|base|lento|entrada|stagger`, `--mov-ease`, `--mov-ease-suave`, `--mov-ease-hover`, `--mov-ease-resorte`, `--panel-*`, `--desplegable-*`, `--icono-*`, `--foco-ancho`, `--foco-offset`, `--pulse-*`.
+  - Never hardcode `#fff`/`#000` for new UI, never `transition: all`, never arbitrary ms values, never animate layout properties (`width`, `height`, `margin`, `top`). If a value seems missing, add a token to `tema.css` and use it in both themes.
+- **Section skeleton.** `<section className="seccion">` (or `seccion seccion--suave` for a banded background, `seccion--ajustada` for tight vertical rhythm) → `<div className="contenedor">` → header `.seccion-cabecera` (or `.seccion-cabecera--centrada`) with `.etiqueta-seccion` + `.titulo-seccion` + `.texto-seccion`, and `.enlace-seccion` for a "ver todos" link → content. One `h1` per page (the page hero); inner sections use `h2` and reference it with `aria-labelledby`.
+- **Reusable bands** (compose, don't reinvent):
+  - `.catalogo-hero` — page header: `--bg-soft`, centered `h1` + subtitle, bottom `--line` (used by `/productos`).
+  - `.banda-editorial` — image + text divisor, 2 columns, collapses on mobile (`Componentes/BandaEditorial.jsx`).
+  - `.banda-beneficios` — icon strip, 4 columns divided by `--line` (`Componentes/BandaBeneficios.jsx`).
+  - `.estado` + `.estado-titulo` + `.estado-texto` — empty/error blocks.
+  - `.esqueleto*`, `RejillaEsqueleto`, `DtfEsqueleto` — loading skeletons (pulse uses `--pulse-*`).
+- **Grids (single source of truth).** Products: `.grid-productos` → 3 cols, 2 at ≤1023, 1 at ≤479 (`componentes.css`). DTF: `.dtf-grid` (+ `.dtf-grid-item` children) → 3 cols, 2 at ≤1023, defined **only** in `DtfCard.css`. Reuse these classes; do not declare a second `grid-template-columns` for the same class in another file — duplicated rules already caused stale overrides because Vite/OneDrive can serve old CSS.
+- **Catalog pattern (`/productos`).** Intro (`.catalogo-intro`: label/title/description left, `.catalogo-conteo` with `aria-live` right) → filter band `.catalogo-filtros` (grid of `.filtros-grupo` rows, closed by `border-bottom: 1px solid var(--line)`, so the split with the results is **horizontal**) → `.catalogo-resultados`. Chips are `.filtro-chip` with `aria-pressed`; `.activo` inverts to `--ink` / `--bg-page`. Filter state lives in the URL (`?coleccion=…&categoria=…`) so it is shareable and route transitions don't remount the page.
+- **Async sections** need all three states and must not shift layout when swapping them (same grid/`min-height`): skeleton while loading (`RejillaEsqueleto` / `DtfEsqueleto`, or `.cargador` inline), and the `.estado` + `.estado-titulo` + `.estado-texto` block for both empty and error (there is no `.estado--error`; tint the text with `--danger` when it is an error). Track a "request started" flag so the empty state never flashes before the first fetch.
+- **Motion.** Entrance: `.revelar` + `useEnVista()` with `.revelar-linea` children (stagger via `--mov-stagger`); grids use `.rejilla-entrada` / `.is-visible`. Hover/focus: only `transform`, `opacity` and colors, with `--mov-*` durations and `--foco-*` ring. `prefers-reduced-motion` is neutralised globally in `tema.css`/`movimiento.css` — don't re-implement it per component, and never add JS animation loops.
+- **Media**: wrappers carry an explicit `aspect-ratio` and images use `loading="lazy"` so bands and cards don't reflow.
+- **Check**: `npm run build` (lint is broken), then the page at 912×670 (the 1023/991 px breakpoints stack layouts) and in both themes, plus 0 console errors.
+
 ## Meta Pixel + cookie consent (Ley 1581 de 2012, Colombia)
 
 - Pixel ID `1417915269868850` (public, lives in `Cliente/src/metaPixel.js`). **Do NOT add the Meta snippet to `index.html`** — the pixel loads **only after cookie consent** via `loadMetaPixel()` (idempotent: fires `init` + initial `PageView`). No `<noscript>` fallback by design — it can't be consent-gated.

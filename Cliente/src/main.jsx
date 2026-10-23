@@ -7,6 +7,9 @@ import { ContextProvaider } from "./context/ContextProvaider.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./index.css";
+import "./estilos/tema.css";
+import "./estilos/componentes.css";
+import "./estilos/movimiento.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 

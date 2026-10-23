@@ -87,9 +87,9 @@
   border-radius: var(--pill-radius);
   cursor: pointer;
   transition:
-    color 0.25s ease,
-    background 0.25s ease,
-    transform 0.12s ease;
+    color var(--transicion),
+    background-color var(--transicion),
+    transform var(--mov-rapido) var(--mov-ease-hover);
   text-decoration: none;
   display: inline-block;
 }
@@ -152,8 +152,8 @@
 .li-navbar-hover {
   color: var(--muted);
   transition:
-    background 0.25s ease,
-    color 0.25s ease;
+    background-color var(--transicion),
+    color var(--transicion);
   cursor: pointer;
 }
 .li-navbar-hover:hover {

@@ -1,14 +1,21 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faEye,
   faImage,
+  faPenToSquare,
   faPlus,
-  faUpload,
   faSpinner,
+  faTrash,
+  faUpload,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { Col, Spinner } from "react-bootstrap";
 import { API_URL } from "../config";
 import axios from "axios";
 
@@ -23,144 +30,40 @@ const CONFIG = {
   MAX_IMAGES: 4,
   UPLOAD_TIMEOUT: 30000,
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-  DEBOUNCE_DELAY: 300,
 };
-
-const BUTTON_STYLES = {
-  delete: {
-    width: "1.3rem",
-    height: "1.3rem",
-    fontSize: "18px",
-    fontFamily: "monospace",
-    borderRadius: "50%",
-    background: "#d32f2f",
-    cursor: "pointer",
-    position: "relative",
-    top: "0.95rem",
-    left: "1.8rem",
-    color: "#fff",
-    transition: "background 0.3s ease",
-    zIndex: 1,
-  },
-};
-
-// ============ COMPONENTES ============
-const DeleteButton = ({ onClick }) => (
-  <div
-    style={BUTTON_STYLES.delete}
-    onClick={onClick}
-    onMouseEnter={(e) => (e.currentTarget.style.background = "#b71c1c")}
-    onMouseLeave={(e) => (e.currentTarget.style.background = "#d32f2f")}
-    title="Eliminar imagen"
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => e.key === "Enter" && onClick()}
-  >
-    ×
-  </div>
-);
-
-const ThumbnailItem = React.memo(
-  ({ imageUrl, index, isProcessing, onImageChange, onDelete, onView }) => {
-    const hasImage = Boolean(imageUrl);
-
-    return (
-      <div className="d-flex flex-column align-items-center justify-content-center m-2">
-        {hasImage && <DeleteButton onClick={() => onDelete(index)} />}
-
-        <label
-          className="mb-2"
-          style={{
-            cursor: isProcessing ? "not-allowed" : "pointer",
-            opacity: isProcessing ? 0.6 : 1,
-            transition: "opacity 0.3s ease",
-          }}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => onImageChange(e, index)}
-            disabled={isProcessing}
-            aria-label={`Cargar imagen ${index + 1}`}
-          />
-
-          {hasImage ? (
-            <div style={{ position: "relative" }}>
-              <img
-                className="add-img"
-                src={imageUrl}
-                alt={`Foto ${index + 1}`}
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  objectFit: "cover",
-                  borderRadius: "4px",
-                  opacity: isProcessing ? 0.6 : 1,
-                }}
-              />
-              {isProcessing && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  aria-hidden="true"
-                >
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    className="fa-spin"
-                    style={{ color: "#6C6868", fontSize: "1.2rem" }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="add-hover">
-              <FontAwesomeIcon icon={faPlus} />
-            </div>
-          )}
-        </label>
-
-        {hasImage && (
-          <span
-            className="fs-5"
-            role="button"
-            tabIndex={0}
-            style={{
-              cursor: "pointer",
-              color: "#6C6868",
-              transition: "opacity 0.3s ease",
-            }}
-            onClick={() => onView(index)}
-            onKeyDown={(e) => e.key === "Enter" && onView(index)}
-            title="Ver imagen grande"
-          >
-            <FontAwesomeIcon icon={faEye} />
-          </span>
-        )}
-      </div>
-    );
-  },
-);
-
-ThumbnailItem.displayName = "ThumbnailItem";
 
 // ============ COMPONENTE PRINCIPAL ============
 const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
   // Estado
-  const [images, setImages] = useState(banner?.img ? [...banner.img] : []);
+  const [images, setImages] = useState(() =>
+    Array.isArray(banner?.img) ? [...banner.img] : [],
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingIndices, setUploadingIndices] = useState(new Set());
+
+  /* Vista previa local (blob) por índice mientras la imagen viaja a
+     Cloudinary. La imagen remota solo se reemplaza cuando la subida
+     termina bien, así un fallo no borra la foto que ya estaba. */
+  const [uploads, setUploads] = useState({});
+  const [arrastrando, setArrastrando] = useState(false);
+
+  /* Blob URLs vivas: se revocan al desmontar (cerrar el editor). */
+  const blobsRef = useRef(new Set());
+  const uploadingSlotsRef = useRef(new Set());
+
+  useEffect(
+    () => () => {
+      blobsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      blobsRef.current.clear();
+    },
+    [],
+  );
 
   /**
    * Valida archivo antes de subir
    */
   const validateFile = useCallback((file) => {
-    if (!file.type.startsWith("image/")) {
+    if (!file.type?.startsWith("image/")) {
       throw new Error("Solo se permiten archivos de imagen");
     }
 
@@ -175,6 +78,10 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
    * Sube una imagen a Cloudinary
    */
   const uploadImageToCloudinary = useCallback(async (file) => {
+    if (!CLOUDINARY_CONFIG.preset || !import.meta.env.VITE_CLOUDINARY_NAME) {
+      throw new Error("La configuración de Cloudinary no está disponible");
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", CLOUDINARY_CONFIG.preset);
@@ -197,12 +104,14 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
   }, []);
 
   /**
-   * Maneja el cambio de imagen con validaciones y subida
+   * Sube una imagen y la coloca en el índice indicado.
    */
-  const handleImageChange = useCallback(
-    (e, index) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const subirImagen = useCallback(
+    async (file, index) => {
+      if (uploadingSlotsRef.current.has(index)) {
+        toast.info("Ya hay una imagen cargándose en este espacio.");
+        return;
+      }
 
       try {
         validateFile(file);
@@ -211,33 +120,165 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
         return;
       }
 
-      // Marcar como en carga
-      setUploadingIndices((prev) => new Set([...prev, index]));
+      const previewUrl = URL.createObjectURL(file);
+      uploadingSlotsRef.current.add(index);
+      blobsRef.current.add(previewUrl);
+      setUploads((prev) => ({ ...prev, [index]: previewUrl }));
 
-      // Subir a Cloudinary inmediatamente
-      uploadImageToCloudinary(file)
-        .then((cloudinaryUrl) => {
-          setImages((prev) => {
-            const newImages = [...prev];
-            newImages[index] = cloudinaryUrl;
-            return newImages;
-          });
+      try {
+        const cloudinaryUrl = await uploadImageToCloudinary(file);
 
-          setSelectedImageIndex(index);
-          toast.success("Imagen cargada exitosamente");
-        })
-        .catch((error) => {
-          toast.error(error.message);
-        })
-        .finally(() => {
-          setUploadingIndices((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(index);
-            return newSet;
-          });
+        setImages((prev) => {
+          const newImages = [...prev];
+          newImages[index] = cloudinaryUrl;
+          return newImages;
         });
+        setSelectedImageIndex(index);
+        toast.success("Imagen cargada");
+      } catch (error) {
+        toast.error(error.message || "No se pudo cargar la imagen");
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+        blobsRef.current.delete(previewUrl);
+        uploadingSlotsRef.current.delete(index);
+        setUploads((prev) => {
+          if (prev[index] !== previewUrl) return prev;
+          const next = { ...prev };
+          delete next[index];
+          return next;
+        });
+      }
     },
     [uploadImageToCloudinary, validateFile],
+  );
+
+  const subiendoAlgo = Object.keys(uploads).length > 0;
+
+  const totalImagenes = useMemo(
+    () =>
+      images.filter((img) => typeof img === "string" && img.trim().length > 0)
+        .length,
+    [images],
+  );
+
+  /* Índices sin imagen y sin subida en curso. */
+  const indicesLibres = useMemo(() => {
+    const libres = [];
+    for (let index = 0; index < CONFIG.MAX_IMAGES; index += 1) {
+      if (!images[index] && !uploads[index]) libres.push(index);
+    }
+    return libres;
+  }, [images, uploads]);
+
+  /* Imagen que se muestra en grande: la elegida o la primera válida. */
+  const indiceVista = useMemo(() => {
+    const actual = images[selectedImageIndex];
+    if (typeof actual === "string" && actual.trim()) return selectedImageIndex;
+
+    const primero = images.findIndex(
+      (img) => typeof img === "string" && img.trim(),
+    );
+    return primero === -1 ? 0 : primero;
+  }, [images, selectedImageIndex]);
+
+  const imagenVista = images[indiceVista] || null;
+  const previewVista = uploads[indiceVista] || null;
+  const urlVista = previewVista || imagenVista;
+  const destinoPrincipal = imagenVista ? indiceVista : (indicesLibres[0] ?? 0);
+
+  /**
+   * Reparte los archivos recibidos entre los huecos libres (o reemplaza
+   * la imagen en vista cuando es un único archivo).
+   */
+  const iniciarSubidas = useCallback(
+    (files, indicePreferido = 0) => {
+      const seleccionados = Array.from(files || []);
+      const archivos = seleccionados.filter(
+        (file) => file && file.type?.startsWith("image/"),
+      );
+
+      if (!archivos.length) {
+        if (seleccionados.length) {
+          toast.error("Solo se permiten archivos de imagen");
+        }
+        return;
+      }
+
+      if (archivos.length !== seleccionados.length) {
+        toast.error("Se omitieron archivos que no son imágenes.");
+      }
+
+      const slotPreferido =
+        Number.isInteger(indicePreferido) &&
+        indicePreferido >= 0 &&
+        indicePreferido < CONFIG.MAX_IMAGES
+          ? indicePreferido
+          : null;
+      const huecosDisponibles = indicesLibres.filter(
+        (index) => !uploadingSlotsRef.current.has(index),
+      );
+      const destinos =
+        archivos.length === 1
+          ? [
+              slotPreferido ??
+                (imagenVista ? indiceVista : (huecosDisponibles[0] ?? 0)),
+            ]
+          : huecosDisponibles.slice(0, archivos.length);
+
+      if (!destinos.length) {
+        toast.info(
+          `El banner ya tiene ${CONFIG.MAX_IMAGES} imágenes. Elimina una para cambiarla.`,
+        );
+        return;
+      }
+
+      archivos.slice(0, destinos.length).forEach((file, posicion) => {
+        subirImagen(file, destinos[posicion]);
+      });
+
+      if (archivos.length > destinos.length) {
+        toast.info(
+          `Solo se cargaron ${destinos.length} de ${archivos.length} imágenes.`,
+        );
+      }
+    },
+    [imagenVista, indiceVista, indicesLibres, subirImagen],
+  );
+
+  /**
+   * Input de archivo de una miniatura o del lienzo principal.
+   */
+  const handleFileInput = useCallback(
+    (event, index) => {
+      /* La FileList de un input es "viva": si se limpia el value antes
+         de copiar los archivos, la lista queda vacía y no sube nada. */
+      const archivos = Array.from(event.target.files || []);
+      // Permite volver a elegir el mismo archivo después de un error.
+      event.target.value = "";
+      if (archivos.length) iniciarSubidas(archivos, index);
+    },
+    [iniciarSubidas],
+  );
+
+  const handleDragOver = useCallback((event) => {
+    if (!event.dataTransfer?.types?.includes("Files")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setArrastrando(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setArrastrando(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      setArrastrando(false);
+      const { files } = event.dataTransfer || {};
+      if (files?.length) iniciarSubidas(files, destinoPrincipal);
+    },
+    [destinoPrincipal, iniciarSubidas],
   );
 
   /**
@@ -245,13 +286,21 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
    */
   const deleteImage = useCallback(
     (index) => {
+      if (subiendoAlgo || uploadingSlotsRef.current.size > 0) return;
+
       setImages((prev) => prev.filter((_, i) => i !== index));
-      if (selectedImageIndex === index) {
-        setSelectedImageIndex(0);
-      }
+      setSelectedImageIndex((prev) => {
+        if (prev > index) return prev - 1;
+        if (prev === index) return Math.max(0, index - 1);
+        return prev;
+      });
     },
-    [selectedImageIndex],
+    [subiendoAlgo],
   );
+
+  const cerrarEditor = useCallback(() => {
+    seteditorVisible?.(false);
+  }, [seteditorVisible]);
 
   /**
    * Valida imágenes antes de guardar
@@ -317,6 +366,11 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (uploadingSlotsRef.current.size > 0) {
+      toast.info("Espera a que terminen las cargas antes de guardar.");
+      return;
+    }
+
     try {
       // Validar imágenes
       const validImages = validateImages();
@@ -329,7 +383,7 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
 
       // Refrescar datos y cerrar editor
       await refreshBannerData();
-      seteditorVisible?.(false);
+      cerrarEditor();
     } catch (error) {
       console.error("Error al guardar banner:", error);
 
@@ -350,90 +404,272 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
     }
   };
 
-  const currentImageUrl = images[selectedImageIndex];
-  const isLoading = isSubmitting || uploadingIndices.size > 0;
-  const canSubmit = images.length > 0 && !isLoading;
+  const canSubmit = totalImagenes > 0 && !isSubmitting && !subiendoAlgo;
+  const cargandoCount = Object.keys(uploads).length;
+
+  const tituloGuardar = isSubmitting
+    ? "Guardando…"
+    : subiendoAlgo
+      ? "Espera a que terminen las cargas"
+      : totalImagenes === 0
+        ? "Agrega al menos una imagen"
+        : "Guardar banner";
 
   return (
-    <div className="d-flex flex-column align-items-center">
-      <Col
-        xs={12}
-        md={12}
-        className="d-flex flex-column align-items-center gap-2"
-      >
-        {/* Vista Previa Principal */}
-        <div className="banner-frame banner-editor-preview">
-          {currentImageUrl ? (
-            <img
-              src={currentImageUrl}
-              alt="Vista previa del banner"
-              className="banner-img banner-editor-image"
-              onError={() =>
-                toast.error("Error al cargar la vista previa de la imagen")
-              }
-            />
-          ) : (
-            <div className="d-flex flex-column align-items-center gap-2 p-md-5">
-              <FontAwesomeIcon icon={faImage} className="fs-1" />
-              <p>Sube tus imágenes de banner</p>
-            </div>
-          )}
+    <section className="banner-editor" aria-labelledby="banner-editor-titulo">
+      <header className="banner-editor-cabecera">
+        <div className="banner-editor-intro">
+          <span className="etiqueta-seccion">Panel ByGio</span>
+          <h2 className="banner-editor-titulo" id="banner-editor-titulo">
+            Editar banner
+          </h2>
+          <p className="banner-editor-texto">
+            Sube hasta {CONFIG.MAX_IMAGES} imágenes. La primera abre el
+            carrusel del inicio; arrástralas sobre la vista previa o usa el
+            botón de cada recuadro.
+          </p>
         </div>
 
-        {/* Miniaturas y Botón */}
-        <div className="thumbnail-images d-flex flex-row align-items-center justify-content-center w-100 flex-wrap">
-          {Array.from({ length: CONFIG.MAX_IMAGES }).map((_, index) => (
-            <ThumbnailItem
-              key={index}
-              imageUrl={images[index] || null}
-              index={index}
-              isProcessing={uploadingIndices.has(index) || isSubmitting}
-              onImageChange={handleImageChange}
-              onDelete={deleteImage}
-              onView={setSelectedImageIndex}
-            />
-          ))}
+        <div className="banner-editor-meta">
+          <span
+            className="banner-editor-contador"
+            data-completo={totalImagenes >= CONFIG.MAX_IMAGES}
+            aria-live="polite"
+          >
+            <FontAwesomeIcon icon={faImage} aria-hidden="true" />
+            {totalImagenes} de {CONFIG.MAX_IMAGES} imágenes
+          </span>
 
-          {/* Botón de Envío */}
           <button
             type="button"
-            className="btn btn-dark btn-lg fs-4 d-flex align-items-center justify-content-center"
-            style={{
-              width: "6rem",
-              height: "3rem",
-              marginLeft: "1rem",
-              marginBottom: "1rem",
-              transition: "opacity 0.3s ease",
-            }}
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            aria-busy={isSubmitting}
-            title={
-              images.length === 0
-                ? "Agrega al menos una imagen"
-                : uploadingIndices.size > 0
-                  ? "Espera a que terminen las cargas..."
-                  : isSubmitting
-                    ? "Guardando..."
-                    : "Guardar banner"
-            }
+            className="banner-editor-cerrar"
+            onClick={cerrarEditor}
+            aria-label="Cerrar editor de banner"
           >
-            {isSubmitting ? (
-              <Spinner
-                className="p-2"
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />
-            ) : (
-              <FontAwesomeIcon icon={faUpload} />
-            )}
+            <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
           </button>
         </div>
-      </Col>
-    </div>
+      </header>
+
+      <div className="banner-editor-cuerpo">
+        {/* Vista previa principal */}
+        <div className="banner-editor-vista">
+          <div
+            className="banner-editor-lienzo"
+            data-arrastrando={arrastrando}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {urlVista ? (
+              <img
+                className="banner-editor-imagen"
+                src={urlVista}
+                alt="Vista previa del banner seleccionado"
+                onError={() =>
+                  toast.error("No se pudo cargar la vista previa de la imagen")
+                }
+              />
+            ) : (
+              <div className="banner-editor-vacio">
+                <span className="banner-editor-vacio-icono" aria-hidden="true">
+                  <FontAwesomeIcon icon={faImage} />
+                </span>
+                <p className="banner-editor-vacio-titulo">
+                  Arrastra una imagen aquí
+                </p>
+                <p className="banner-editor-vacio-texto">
+                  JPG, PNG o WebP · máximo 5 MB
+                </p>
+              </div>
+            )}
+
+            {previewVista && (
+              <div className="banner-editor-cargando" role="status">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  className="fa-spin"
+                  aria-hidden="true"
+                />
+                <span>Subiendo imagen…</span>
+              </div>
+            )}
+
+            {arrastrando && (
+              <div className="banner-editor-soltar" aria-hidden="true">
+                Suelta para cargar
+              </div>
+            )}
+
+            <label className="banner-editor-subir">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileInput(e, destinoPrincipal)}
+                disabled={isSubmitting}
+              />
+              <FontAwesomeIcon icon={faUpload} aria-hidden="true" />
+              <span>{urlVista ? "Cambiar imagen" : "Subir imagen"}</span>
+            </label>
+          </div>
+
+          <p className="banner-editor-pie-texto">
+            Formato recomendado 16:7. Las imágenes se recortan al centro.
+          </p>
+        </div>
+
+        {/* Miniaturas + acciones */}
+        <div className="banner-editor-panel">
+          <div className="banner-editor-panel-cabecera">
+            <h3 className="banner-editor-subtitulo">Imágenes del banner</h3>
+            <p className="banner-editor-ayuda">
+              Arrastra varias a la vez o usa el botón de cada recuadro. Pulsa
+              una miniatura para verla en grande.
+            </p>
+          </div>
+
+          <ul className="banner-editor-miniaturas">
+            {Array.from({ length: CONFIG.MAX_IMAGES }).map((_, index) => {
+              const subiendoSlot = Boolean(uploads[index]);
+              const urlSlot = uploads[index] || images[index] || null;
+              const activa = Boolean(images[index]) && index === indiceVista;
+
+              return (
+                <li key={index}>
+                  <div
+                    className="banner-editor-miniatura"
+                    data-activa={activa}
+                    data-vacia={!urlSlot}
+                  >
+                    {urlSlot ? (
+                      <button
+                        type="button"
+                        className="banner-editor-miniatura-seleccionar"
+                        onClick={() => setSelectedImageIndex(index)}
+                        aria-label={`Ver imagen ${index + 1} en grande`}
+                        aria-pressed={activa}
+                      >
+                        <img
+                          src={urlSlot}
+                          alt={`Miniatura ${index + 1}`}
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : (
+                      <label className="banner-editor-miniatura-agregar">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileInput(e, index)}
+                          disabled={isSubmitting}
+                          aria-label={`Cargar imagen ${index + 1}`}
+                        />
+                        <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+                        <span>Imagen {index + 1}</span>
+                      </label>
+                    )}
+
+                    {subiendoSlot && (
+                      <span
+                        className="banner-editor-miniatura-cargando"
+                        aria-hidden="true"
+                      >
+                        <FontAwesomeIcon icon={faSpinner} className="fa-spin" />
+                      </span>
+                    )}
+
+                    {urlSlot && !subiendoSlot && (
+                      <div className="banner-editor-miniatura-acciones">
+                        <label
+                          className="banner-editor-miniatura-reemplazar"
+                          title="Cambiar imagen"
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileInput(e, index)}
+                            disabled={isSubmitting}
+                            aria-label={`Cambiar imagen ${index + 1}`}
+                          />
+                          <FontAwesomeIcon
+                            icon={faPenToSquare}
+                            aria-hidden="true"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className="banner-editor-miniatura-eliminar"
+                          onClick={() => deleteImage(index)}
+                          disabled={subiendoAlgo || isSubmitting}
+                          aria-label={`Eliminar imagen ${index + 1}`}
+                        >
+                          <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
+
+                    {activa && (
+                      <span className="banner-editor-miniatura-etiqueta">
+                        En vista
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {subiendoAlgo && (
+            <p className="banner-editor-estado" role="status">
+              Cargando {cargandoCount}{" "}
+              {cargandoCount === 1 ? "imagen" : "imágenes"}… espera un momento.
+            </p>
+          )}
+
+          <div className="banner-editor-acciones">
+            <button
+              type="button"
+              className="btn-tema btn-tema--primario"
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              aria-busy={isSubmitting}
+              title={tituloGuardar}
+            >
+              {isSubmitting ? (
+                <>
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="fa-spin"
+                    aria-hidden="true"
+                  />
+                  Guardando…
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faUpload} aria-hidden="true" />
+                  {banner?.id ? "Guardar cambios" : "Publicar banner"}
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className="btn-tema btn-tema--contorno"
+              onClick={cerrarEditor}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <p className="banner-editor-nota">
+            Los cambios se aplican al guardar. Si cierras sin guardar, el
+            banner conserva sus imágenes actuales.
+          </p>
+        </div>
+      </div>
+    </section>
   );
 };
 

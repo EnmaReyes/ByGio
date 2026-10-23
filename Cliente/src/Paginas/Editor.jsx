@@ -217,7 +217,15 @@ const Editor = () => {
   };
 
   return (
-    <Container className="mb-4" style={{ paddingTop: "90px" }}>
+    <Container className="mb-4 editor-pagina">
+      <header className="editor-cabecera">
+        <span className="etiqueta-seccion">Panel ByGio</span>
+        <h1 className="titulo-seccion">Nuevo producto</h1>
+        <p className="texto-seccion">
+          Completa la información y publica la prenda en el catálogo.
+        </p>
+      </header>
+
       <Row>
         <Col
           xs={12}
@@ -423,6 +431,7 @@ const Editor = () => {
               className="w-100 mt-3 titulos"
               variant="dark"
               disabled={loading}
+              aria-busy={loading}
               size="lg"
               onClick={handleClick}
             >
@@ -436,7 +445,7 @@ const Editor = () => {
                     role="status"
                     aria-hidden="true"
                   />
-                  Loading
+                  Guardando...
                 </>
               ) : state ? (
                 "Actualizar Articulo"

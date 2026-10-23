@@ -315,7 +315,7 @@ const Registro = () => {
       <div className="strength-bar">
         <div
           className={`strength-fill ${passwordStrength.color}`}
-          style={{ width: `${(passwordStrength.level / 4) * 100}%` }}
+          style={{ transform: `scaleX(${passwordStrength.level / 4})` }}
         />
       </div>
       <span className="strength-text">

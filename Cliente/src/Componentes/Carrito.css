@@ -5,8 +5,8 @@
   color: #111;
   cursor: pointer;
   transition:
-    transform 0.25s ease,
-    color 0.25s ease;
+    transform var(--mov-base) var(--mov-ease-hover),
+    color var(--transicion);
 }
 
 .carrito-responsive .cart-trigger:hover {
@@ -15,7 +15,7 @@
 }
 
 .carrito-responsive .cart-trigger:focus-visible {
-  outline: 2px solid #111;
+  outline: var(--foco-ancho) solid var(--brand);
   outline-offset: 5px;
   border-radius: 5px;
 }
@@ -39,35 +39,94 @@
   line-height: 1;
 }
 
+/* Latido del contador al añadir (receta number-pop-in). Solo escala:
+   no mueve el icono ni cambia la cabecera. La clase la pone y la
+   quita Carrito.jsx. */
+.cart-counter--late {
+  animation: contador-late var(--mov-base) var(--mov-ease-hover) both;
+}
+
+@keyframes contador-late {
+  from {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Panel del carrito: cajon lateral derecho a toda altura. Antes era una
+   tarjeta flotante pequena; ahora ocupa el costado y deja la cabecera
+   visible (ahi siguen el disparador y la X). */
 .carrito-responsive .dropdown-menu.cart-menu {
   position: fixed;
-  top: 78px;
-  right: 12px;
+  top: var(--header-h);
+  right: 0;
   left: auto;
   display: none;
-  width: min(92vw, 390px);
-  max-height: min(76vh, 620px);
+  width: min(440px, 100vw);
+  height: calc(100dvh - var(--header-h));
+  max-height: none;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #e5e5e5;
-  border-radius: 16px;
+  border: 0;
+  border-left: 1px solid #e5e5e5;
+  border-radius: 0;
   background: #fff;
-  box-shadow: 0 18px 50px rgb(0 0 0 / 18%);
+  box-shadow: var(--shadow-drawer);
   z-index: 1100;
+  overscroll-behavior: contain;
 }
 
 .carrito-responsive .dropdown-menu.cart-menu.show {
   display: flex;
   flex-direction: column;
-  animation: cart-menu-enter 220ms ease-out both;
+  animation: cart-menu-enter var(--panel-abrir) var(--mov-ease-hover) both;
 }
 
 .cart-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 1rem 1.1rem 0.9rem;
   border-bottom: 1px solid #e9e9e9;
   background: #fff;
+}
+
+/* Cierre explícito del panel: con `position: fixed` bajo la cabecera el
+   disparador sigue visible, pero la X garantiza que siempre haya una
+   salida a mano (además de clic fuera y Escape). */
+.cart-close {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    color var(--mov-rapido) var(--mov-ease-hover),
+    background-color var(--mov-rapido) var(--mov-ease-hover),
+    border-color var(--mov-rapido) var(--mov-ease-hover);
+}
+
+.cart-close:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.cart-close:focus-visible {
+  outline: var(--foco-ancho) solid var(--brand);
+  outline-offset: var(--foco-offset);
 }
 
 .cart-header > div {
@@ -90,6 +149,7 @@
 }
 
 .cart-products {
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -111,8 +171,8 @@
   padding: 0.85rem 1rem;
   border-bottom: 1px solid #eee;
   background: #fff;
-  transition: background-color 180ms ease;
-  animation: cart-item-enter 240ms ease both;
+  transition: background-color var(--transicion);
+  animation: cart-item-enter var(--mov-base) var(--mov-ease) both;
 }
 
 .cart-item:hover {
@@ -137,7 +197,7 @@
   height: 100%;
   padding: 7px;
   object-fit: contain;
-  transition: transform 220ms ease;
+  transition: transform var(--mov-base) var(--mov-ease-hover);
 }
 
 .cart-item:hover .cart-item-image img {
@@ -183,10 +243,10 @@
   color: #666;
   cursor: pointer;
   transition:
-    color 180ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    transform 180ms ease;
+    color var(--transicion),
+    background-color var(--transicion),
+    border-color var(--transicion),
+    transform var(--mov-base) var(--mov-ease-hover);
 }
 
 .cart-remove-button:hover {
@@ -198,7 +258,7 @@
 
 .cart-remove-button:focus-visible,
 .cart-actions .btn:focus-visible {
-  outline: 2px solid #111;
+  outline: var(--foco-ancho) solid var(--brand);
   outline-offset: 3px;
 }
 
@@ -231,10 +291,11 @@
   font-family: "Space Grotesk", sans-serif;
   font-size: 1rem;
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    background-color 180ms ease,
-    color 180ms ease;
+    transform var(--mov-base) var(--mov-ease-hover),
+    box-shadow var(--transicion),
+    background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion);
 }
 
 .cart-actions .btn:hover {
@@ -263,8 +324,10 @@
 
 .cart-empty {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
   padding: 2rem 1.25rem 2.2rem;
   color: #111;
@@ -280,14 +343,16 @@
   font-family: "Space Grotesk", sans-serif;
 }
 
+/* Entrada del cajon: se desliza desde el borde derecho en vez de caer
+   desde arriba (que era cuando era una tarjeta pequena). */
 @keyframes cart-menu-enter {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.985);
+    transform: translateX(48px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0);
   }
 }
 
@@ -304,11 +369,14 @@
 
 @media (max-width: 767px) {
   .carrito-responsive .dropdown-menu.cart-menu {
-    top: 72px;
-    right: 8px;
-    left: 8px;
-    width: auto;
-    max-height: calc(100dvh - 88px);
+    /* En movil el cajon ocupa todo el ancho, igual que el costado
+       derecho en escritorio: misma pieza, mismo alto bajo la cabecera. */
+    top: var(--header-h);
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100dvh - var(--header-h));
+    border-left: 0;
   }
 }
 
@@ -340,14 +408,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .carrito-responsive .cart-trigger,
-  .cart-item,
-  .cart-item-image img,
-  .cart-remove-button,
-  .cart-actions .btn {
-    transition: none;
-  }
-
+  /* El bloque global de tema.css ya cancela los cambios de posicion y
+     tamano; aqui solo quedan las animaciones de entrada. */
   .carrito-responsive .dropdown-menu.cart-menu.show,
   .cart-item {
     animation: none;

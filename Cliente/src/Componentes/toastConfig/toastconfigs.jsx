@@ -1,5 +1,5 @@
 import React from "react";
-import {Bounce, Slide } from "react-toastify";
+import { Slide } from "react-toastify";
 import Swal from "sweetalert2";
 import "react-toastify/dist/ReactToastify.css";
 import "sweetalert2/src/sweetalert2.scss";
@@ -13,13 +13,21 @@ export const toastpromise = {
   pauseOnHover: true,
   draggable: true,
   progress: undefined,
-  theme: "colored",
-  transition: Bounce,
+  /* "light" en vez de "colored": el color va en el icono y en la
+     barra de progreso (ver componentes.css), la tarjeta sigue el
+     tema claro/oscuro del sitio. */
+  theme: "light",
+  /* Slide en vez de Bounce: el rebote no pertenece a la curva del
+     sitio, que no sobrepasa. */
+  transition: Slide,
 };
 
 export const toastComments = {
   position: "bottom-right",
-  autoClose: 700,
+  /* 700 ms no daba tiempo a leer el aviso; ahora que el botón también
+     confirma la acción (botón y contador), el aviso puede quedarse un
+     poco más sin tapar el contenido. */
+  autoClose: 2400,
   hideProgressBar: false,
   closeOnClick: true,
   pauseOnHover: true,

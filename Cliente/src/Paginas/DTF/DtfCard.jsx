@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Button, Modal } from "react-bootstrap";
-import { useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBagShopping, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { useCarrito } from "../../carrito/CarritoProvider";
 import {
   getCartItemIdentity,
   getCartTotals,
 } from "../../Componentes/cartUtils";
+import useConfirmacion from "../../hooks/useConfirmacion";
 import { shirts } from "../../assets/Camisetas/camisetas.js";
 import "./DtfCard.css";
 const DTF_SCALE = {
@@ -18,10 +21,14 @@ const getDtfImageUrl = (item) =>
 
 const DtfCard = ({ items = [] }) => {
   const { allProducts, setAllProducts, setTotal, setCountProducts } =
-    useOutletContext();
+    useCarrito();
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedShirt, setSelectedShirt] = useState(shirts[0]);
   const [dtfSize, setDtfSize] = useState("basic");
+
+  /* Qué diseño acaba de añadirse: el botón de esa tarjeta (y el del
+     modal, si es el mismo) pasa a "Añadido" un momento. */
+  const [agregadoId, confirmarAgregado] = useConfirmacion();
 
   const addDtfToCart = (item, shirt, size) => {
     const imageUrl = getDtfImageUrl(item);
@@ -58,6 +65,7 @@ const DtfCard = ({ items = [] }) => {
     setAllProducts(updatedProducts);
     setTotal(total);
     setCountProducts(count);
+    confirmarAgregado(item.id);
     toast.success("Diseño DTF añadido al carrito", {
       position: "bottom-right",
       autoClose: 1500,
@@ -75,8 +83,12 @@ const DtfCard = ({ items = [] }) => {
 
   return (
     <>
-      {items.map((item) => (
-        <article key={item.id} className="dtf-grid-item">
+      {items.map((item, indice) => (
+        <article
+          key={item.id}
+          className="dtf-grid-item"
+          style={{ "--i": indice }}
+        >
           <div
             className="dtf-product-card"
             onContextMenu={(e) => e.preventDefault()}
@@ -111,11 +123,36 @@ const DtfCard = ({ items = [] }) => {
               <Button
                 type="button"
                 variant="dark"
-                className="w-100 mt-2"
+                className="w-100 mt-2 d-inline-flex align-items-center justify-content-center gap-2"
                 disabled={!getDtfImageUrl(item)}
                 onClick={() => addDtfToCart(item)}
               >
-                <span>Carrito</span>
+                <span
+                  className="icono-intercambio"
+                  data-estado={agregadoId === item.id ? "b" : "a"}
+                  aria-hidden="true"
+                >
+                  <FontAwesomeIcon icon={faBagShopping} data-icono="a" />
+                  <FontAwesomeIcon icon={faCheck} data-icono="b" />
+                </span>
+
+                {/* "Carrito" y "Añadido" comparten celda: el botón no
+                    cambia de ancho mientras se intercambian. */}
+                <span
+                  className="intercambio-texto"
+                  data-estado={agregadoId === item.id ? "b" : "a"}
+                  aria-hidden="true"
+                >
+                  <span data-texto="a">Carrito</span>
+                  <span data-texto="b">Añadido</span>
+                </span>
+
+                {/* Nombre accesible del botón. */}
+                <span className="solo-lector">
+                  {agregadoId === item.id
+                    ? "Diseño añadido al carrito"
+                    : "Añadir al carrito"}
+                </span>
               </Button>
             </div>
           </div>
@@ -228,10 +265,37 @@ const DtfCard = ({ items = [] }) => {
           <Button
             type="button"
             variant="dark"
+            className="d-inline-flex align-items-center justify-content-center gap-2"
             disabled={!selectedItem || !getDtfImageUrl(selectedItem)}
             onClick={() => addDtfToCart(selectedItem, selectedShirt, dtfSize)}
           >
-            <span>Carrito</span>
+            <span
+              className="icono-intercambio"
+              data-estado={
+                selectedItem && agregadoId === selectedItem.id ? "b" : "a"
+              }
+              aria-hidden="true"
+            >
+              <FontAwesomeIcon icon={faBagShopping} data-icono="a" />
+              <FontAwesomeIcon icon={faCheck} data-icono="b" />
+            </span>
+
+            <span
+              className="intercambio-texto"
+              data-estado={
+                selectedItem && agregadoId === selectedItem.id ? "b" : "a"
+              }
+              aria-hidden="true"
+            >
+              <span data-texto="a">Carrito</span>
+              <span data-texto="b">Añadido</span>
+            </span>
+
+            <span className="solo-lector">
+              {selectedItem && agregadoId === selectedItem.id
+                ? "Diseño añadido al carrito"
+                : "Añadir al carrito"}
+            </span>
           </Button>
         </Modal.Footer>
       </Modal>

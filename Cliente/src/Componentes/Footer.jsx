@@ -1,78 +1,118 @@
-import React from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { resetConsent } from "../metaPixel";
-import logo from "../assets/Logo/logo_blanco.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import "../App.css";
+import { resetConsent } from "../metaPixel";
+import logo from "../assets/Logo/logo_blanco.png";
+
 const Footer = () => {
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+  const anioActual = new Date().getFullYear();
 
   return (
-    <footer className="site-footer">
-      <Container className="site-footer-inner">
-        <Row className="align-items-center gy-4">
-          <Col xs={12} md={6} className="text-center text-md-start">
-            <Card.Img
-              src={logo}
-              variant="top"
-              className=" img-fluid"
-              style={{ width: "150px" }}
-            />
-          </Col>
+    <footer className="pie">
+      <div className="pie-inner">
+        <div className="pie-marca">
+          <img src={logo} alt="ByGio" className="pie-logo" />
+          <p className="pie-texto">
+            Moda femenina hecha en Colombia. Franelas básicas, oversize y
+            diseños DTF para vestir tu estilo todos los días.
+          </p>
+          <div className="pie-redes">
+            <a
+              className="pie-red"
+              href="https://www.instagram.com/bygiostore.co?utm_source=ig_web_button_share_sheet&srtk=ZDNlZDc0MzIxNw=="
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram de ByGio"
+            >
+              <FontAwesomeIcon icon={faInstagram} aria-hidden="true" />
+            </a>
+            <a
+              className="pie-red"
+              href={`https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp de ByGio"
+            >
+              <FontAwesomeIcon icon={faWhatsapp} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
 
-          <Col xs={12} md={6} className="mt-2 mt-md-0">
-            <h1 className="fs-3 text-center text-light">Contactanos</h1>
-            <div className="text-center ">
+        <nav aria-label="Navegación del sitio">
+          <h2 className="pie-titulo">Explora</h2>
+          <ul className="pie-lista">
+            <li>
+              <Link to="/" className="pie-enlace">
+                Inicio
+              </Link>
+            </li>
+            <li>
+              <Link to="/productos" className="pie-enlace">
+                Productos
+              </Link>
+            </li>
+            <li>
+              <Link to="/productos?coleccion=dtf" className="pie-enlace">
+                Diseños DTF
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        <div>
+          <h2 className="pie-titulo">Atención</h2>
+          <ul className="pie-lista">
+            <li>
               <a
-                className="display-6 m-2 text-light "
-                href="https://www.instagram.com/bygio_modafemenina?igsh=MXVkaTRpeHBsZXU3ag=="
-                target="_blank"
-              >
-                <FontAwesomeIcon icon={faInstagram} />
-              </a>
-              <a
+                className="pie-enlace"
                 href={`https://wa.me/${PhoneNumber}?text=%C2%A1Hola%20byGio!%20Quiero%20hacer%20un%20pedido`}
                 target="_blank"
-                className="display-6 m-2 text-light"
+                rel="noopener noreferrer"
               >
-                <FontAwesomeIcon icon={faWhatsapp} />
+                <FontAwesomeIcon icon={faWhatsapp} aria-hidden="true" />
+                Escríbenos por WhatsApp
               </a>
-            </div>
-          </Col>
-        </Row>
+            </li>
+            <li>
+              <a
+                className="pie-enlace"
+                href="https://www.instagram.com/bygiostore.co?utm_source=ig_web_button_share_sheet&srtk=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIcon icon={faInstagram} aria-hidden="true" />
+                @byGio | Camisetas & DTF
+              </a>
+            </li>
+            <li>
+              <Link to="/login" className="pie-enlace">
+                Mi cuenta
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-        <Row className="mt-4">
-          <Col xs={12} className="text-center">
-            <Link
-              to="/privacidad"
-              className="text-light small mx-2"
-              style={{ textDecoration: "underline", cursor: "pointer" }}
-            >
-              Política de Privacidad
-            </Link>
-            <Link
-              to="/terminos"
-              className="text-light small mx-2"
-              style={{ textDecoration: "underline", cursor: "pointer" }}
-            >
-              Términos y Condiciones
-            </Link>
-            <button
-              type="button"
-              className="btn btn-link text-light small mx-2 p-0 align-baseline"
-              style={{ textDecoration: "underline" }}
-              onClick={() => {
-                resetConsent();
-                window.location.reload();
-              }}
-            >
-              Preferencias de cookies
-            </button>
-          </Col>
-        </Row>
-      </Container>
+      <div className="pie-legal">
+        <Link to="/privacidad" className="pie-legal-enlace">
+          Política de privacidad
+        </Link>
+        <Link to="/terminos" className="pie-legal-enlace">
+          Términos y condiciones
+        </Link>
+        <button
+          type="button"
+          className="pie-legal-enlace"
+          onClick={() => {
+            resetConsent();
+            window.location.reload();
+          }}
+        >
+          Preferencias de cookies
+        </button>
+        <span className="pie-copy">© {anioActual} ByGio</span>
+      </div>
     </footer>
   );
 };

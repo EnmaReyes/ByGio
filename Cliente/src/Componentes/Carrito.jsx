@@ -1,60 +1,70 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   faBagShopping,
   faCircleXmark,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "react-bootstrap";
-import { getCartItemIdentity, getCartTotals, isDtfProduct } from "./cartUtils";
+import {
+  getCartItemIdentity,
+  getCartTotals,
+  getCartPreviewImage,
+  isDtfProduct,
+} from "./cartUtils";
 import "./Carrito.css";
 
-const ProductItem = ({ product, onDelete }) => (
-  <li className="cart-item">
-    {isDtfProduct(product) && (
-      <div className="cart-item-image" aria-hidden="true">
-        <img src={product.img} alt="" />
-      </div>
-    )}
-    <div className="cart-item-info">
-      <strong className="cart-item-title">
-        {product.cantidad} x{" "}
-        {isDtfProduct(product)
-          ? `Diseño DTF · ${product.category}`
-          : product.title}
-      </strong>
-      {isDtfProduct(product) ? (
-        <>
-          {product.shirtName && (
-            <small className="cart-item-detail">
-              Franela: {product.shirtName}
-            </small>
-          )}
-          {product.dtfSize && (
-            <small className="cart-item-detail">
-              Tamaño: {product.dtfSize === "oversize" ? "Oversize" : "Básico"}
-            </small>
-          )}
-        </>
-      ) : (
-        <>
-          <small className="cart-item-detail">Talla: {product.talla}</small>
-          <small className="cart-item-detail">
-            Valor: ${(Number(product.cost) || 0).toLocaleString()}
-          </small>
-        </>
+const ProductItem = ({ product, onDelete }) => {
+  const esDtf = isDtfProduct(product);
+  const imagen = getCartPreviewImage(product);
+
+  return (
+    <li className="cart-item">
+      {/* Vista previa: la misma pieza para artículos y diseños DTF. */}
+      {imagen && (
+        <div className="cart-item-image" aria-hidden="true">
+          <img src={imagen} alt="" loading="lazy" />
+        </div>
       )}
-    </div>
-    <button
-      type="button"
-      className="cart-remove-button"
-      onClick={() => onDelete(product)}
-      aria-label={`Quitar ${isDtfProduct(product) ? "diseño DTF" : product.title} del carrito`}
-      title="Quitar del carrito"
-    >
-      <FontAwesomeIcon icon={faCircleXmark} />
-    </button>
-  </li>
-);
+      <div className="cart-item-info">
+        <strong className="cart-item-title">
+          {product.cantidad} x{" "}
+          {esDtf ? `Diseño DTF · ${product.category}` : product.title}
+        </strong>
+        {esDtf ? (
+          <>
+            {product.shirtName && (
+              <small className="cart-item-detail">
+                Franela: {product.shirtName}
+              </small>
+            )}
+            {product.dtfSize && (
+              <small className="cart-item-detail">
+                Tamaño: {product.dtfSize === "oversize" ? "Oversize" : "Básico"}
+              </small>
+            )}
+          </>
+        ) : (
+          <>
+            <small className="cart-item-detail">Talla: {product.talla}</small>
+            <small className="cart-item-detail">
+              Valor: ${(Number(product.cost) || 0).toLocaleString()}
+            </small>
+          </>
+        )}
+      </div>
+      <button
+        type="button"
+        className="cart-remove-button"
+        onClick={() => onDelete(product)}
+        aria-label={`Quitar ${esDtf ? "diseño DTF" : product.title} del carrito`}
+        title="Quitar del carrito"
+      >
+        <FontAwesomeIcon icon={faCircleXmark} />
+      </button>
+    </li>
+  );
+};
 
 const CartSummary = ({ total, onBuy, onClear }) => (
   <div className="cart-summary">
@@ -93,6 +103,62 @@ const Carrito = ({
   setCountProducts,
 }) => {
   const phoneNumber = import.meta.env.VITE_NUMBER_PHONE;
+  const disparadorRef = useRef(null);
+  const menuRef = useRef(null);
+  const cerrarRef = useRef(null);
+
+  /* Latido del contador: solo cuando el número sube (añadir), no al
+     bajar (quitar) ni en la primera carga. La clase se retira en
+     `onAnimationEnd`, sin temporizadores. */
+  const [contadorLate, setContadorLate] = useState(false);
+  const conteoPrevioRef = useRef(countProducts);
+
+  useEffect(() => {
+    if (countProducts > conteoPrevioRef.current) {
+      setContadorLate(true);
+    }
+    conteoPrevioRef.current = countProducts;
+  }, [countProducts]);
+
+  /* Foco con teclado en el cajón (Bootstrap solo lo abre):
+     - al abrir, el foco entra en el cajón (botón de cerrar), así el
+       siguiente Tab recorre los productos en vez de saltar a la
+       página que queda debajo;
+     - al cerrar, si el foco estaba dentro, vuelve al disparador.
+     Si el cierre viene de un clic fuera, el foco se queda donde el
+     usuario hizo clic y no se roba. */
+  useEffect(() => {
+    const disparador = disparadorRef.current;
+    const menu = menuRef.current;
+    if (!disparador || !menu) return undefined;
+
+    const alAbrir = () => cerrarRef.current?.focus();
+
+    const alCerrar = () => {
+      if (menu.contains(document.activeElement)) disparador.focus();
+    };
+
+    disparador.addEventListener("shown.bs.dropdown", alAbrir);
+    disparador.addEventListener("hidden.bs.dropdown", alCerrar);
+    return () => {
+      disparador.removeEventListener("shown.bs.dropdown", alAbrir);
+      disparador.removeEventListener("hidden.bs.dropdown", alCerrar);
+    };
+  }, []);
+
+  /* El panel se coloca con CSS (`position: fixed` justo debajo de la
+     cabecera). Dejar que Popper lo mueva daba una posición incoherente:
+     el recuadro se pintaba encima del botón y no había forma de cerrarlo
+     (auto-cierre desactivado y sin botón de cierre). Ahora hay tres
+     salidas: la X, clic fuera y Escape. */
+  const cerrarCarrito = () => {
+    const instancia = window.bootstrap?.Dropdown?.getInstance(
+      disparadorRef.current,
+    );
+
+    if (instancia) instancia.hide();
+    else disparadorRef.current?.click();
+  };
 
   const updateCart = (updatedProducts) => {
     const { total: newTotal, count: newCount } = getCartTotals(updatedProducts);
@@ -133,7 +199,7 @@ const Carrito = ({
           return `${p.cantidad} Diseño DTF - Categoría: ${p.category}${configuration ? `\n${configuration}` : ""}\nImagen:\n${p.img}`;
         }
 
-        const imageUrl = p.img?.[0] ? `${p.img[0]}` : "";
+        const imageUrl = getCartPreviewImage(p);
         return `${p.cantidad} ${p.title}\nTalla: ${p.talla}\nValor: $${p.cost?.toLocaleString()}${imageUrl ? `\nImagen:\n${imageUrl}` : ""}`;
       })
       .join("\n\n")}`;
@@ -141,21 +207,28 @@ const Carrito = ({
   }, [allProducts, phoneNumber]);
 
   return (
-    <div className="navbar-collapse me-4 carrito-responsive">
+    <div className="carrito-responsive">
       <ul className="navbar-nav">
         <li className="nav-item dropdown cart-dropdown">
           <button
             type="button"
+            ref={disparadorRef}
             className="nav-link fs-3 p-0 d-inline-flex align-items-center cart-trigger"
             data-bs-toggle="dropdown"
-            data-bs-auto-close="false"
+            data-bs-auto-close="outside"
+            data-bs-display="static"
             aria-expanded="false"
             aria-label={`Abrir carrito, ${countProducts} productos`}
           >
             <span className="icon-badge">
               <FontAwesomeIcon icon={faBagShopping} />
               {countProducts > 0 && (
-                <span className="cart-counter">
+                <span
+                  className={`cart-counter${
+                    contadorLate ? " cart-counter--late" : ""
+                  }`}
+                  onAnimationEnd={() => setContadorLate(false)}
+                >
                   {countProducts > 99 ? "99+" : countProducts}
                 </span>
               )}
@@ -163,6 +236,7 @@ const Carrito = ({
           </button>
 
           <ul
+            ref={menuRef}
             className="dropdown-menu dropdown-menu-end cart-menu"
             aria-label="Contenido del carrito"
           >
@@ -174,6 +248,16 @@ const Carrito = ({
                   {countProducts === 1 ? "artículo" : "artículos"}
                 </span>
               </div>
+              <button
+                type="button"
+                ref={cerrarRef}
+                className="cart-close"
+                onClick={cerrarCarrito}
+                aria-label="Cerrar carrito"
+                title="Cerrar carrito"
+              >
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
             </li>
             {allProducts.length > 0 ? (
               <>

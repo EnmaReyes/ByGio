@@ -54,9 +54,9 @@
   justify-content: center;
 
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    transform var(--mov-base) var(--mov-ease-hover),
+    box-shadow var(--transicion),
+    border-color var(--transicion);
 }
 /* =========================
    CATEGORY CONTENT
@@ -86,7 +86,7 @@
   white-space: nowrap;
   overflow: visible;
 
-  transition: transform 0.3s ease;
+  transition: transform var(--mov-base) var(--mov-ease-hover);
 }
 
 /* =========================
@@ -143,10 +143,40 @@
   margin-top: 2rem;
 }
 
-.dtf-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+/* =========================
+   ESQUELETO DE CARGA
+   Misma geometria que .dtf-product-card (borde, media cuadrada,
+   bloque de informacion) para que al llegar los disenos la rejilla
+   no se mueva. El pulso y el desfase los pone .esqueleto.
+========================= */
+
+.dtf-esqueleto {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  pointer-events: none;
+}
+
+/* La media real llega hasta el borde de la tarjeta: sin esquinas. */
+.dtf-esqueleto .esqueleto-media {
+  border-radius: 0;
+}
+
+.dtf-esqueleto-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.dtf-esqueleto-boton {
+  width: 100%;
+  height: 34px;
+  margin-top: 0.35rem;
 }
 
 .dtf-product-card {
@@ -275,7 +305,7 @@
   object-fit: contain;
   transform-origin: center;
   pointer-events: none;
-  transition: transform 180ms ease-out;
+  transition: transform var(--mov-base) var(--mov-ease-hover);
 }
 
 /* =========================
@@ -372,9 +402,9 @@
   cursor: pointer;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transicion),
+    box-shadow var(--transicion),
+    transform var(--mov-base) var(--mov-ease-hover);
 }
 
 .dtf-size-option:hover {
@@ -419,10 +449,6 @@
   .dtf-category-card {
     min-height: 135px;
   }
-
-  .dtf-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 /* =========================
@@ -461,11 +487,6 @@
 
   .dtf-category-card:hover .dtf-category-name {
     transform: scale(1.05);
-  }
-
-  .dtf-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
   }
 
   .dtf-category-results {
@@ -511,9 +532,5 @@
 
   .dtf-category-name {
     font-size: 0.65rem;
-  }
-
-  .dtf-grid {
-    gap: 0.5rem;
   }
 }
