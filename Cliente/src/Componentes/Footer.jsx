@@ -14,8 +14,9 @@ const Footer = () => {
         <div className="pie-marca">
           <img src={logo} alt="ByGio" className="pie-logo" />
           <p className="pie-texto">
-            Moda femenina hecha en Colombia. Franelas básicas, oversize y
-            diseños DTF para vestir tu estilo todos los días.
+            Camisetas básicas, oversize y diseños originales en DTF, creados
+            para expresar tu estilo cada día. Hechas en Colombia, pensadas para
+            ti.
           </p>
           <div className="pie-redes">
             <a
