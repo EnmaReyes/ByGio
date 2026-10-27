@@ -1304,10 +1304,14 @@ html[data-theme] .banner-section--vacia {
 }
 
 html[data-theme] .banner-frame {
+  /* 16:9 = medida estándar del banner (1920x1080). Marco e imagen
+     comparten proporción, así `contain` no deja franjas en el caso
+     habitual y no recorta fotos con otra proporción. */
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 0;
-  min-height: clamp(220px, 30vw, 460px);
+  min-height: 0;
   background: linear-gradient(135deg, var(--surface-2), var(--bg-soft));
 }
 
@@ -1317,11 +1321,94 @@ html[data-theme] .banner-frame .banner-slide {
   min-height: inherit;
 }
 
+html[data-theme] .banner-slide {
+  position: relative;
+  overflow: hidden;
+}
+
+/* La imagen se ve completa: sin recortes ni deformación. */
 html[data-theme] .banner-img {
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   width: 100%;
   height: 100%;
   min-height: inherit;
+}
+
+/* Fundido entre diapositivas: la entrada dura --mov-lento y la salida
+   --mov-salida (~65%), con opacidad y un zoom mínimo de 1.2%.
+   Sin `z-index`: el orden del DOM ya deja la nueva encima de la anterior
+   y las flechas (z-index 1 de Bootstrap) quedan siempre por delante. */
+html[data-theme] .banner-img--actual {
+  position: absolute;
+  inset: 0;
+  animation: banner-entrada var(--mov-lento) var(--mov-ease-suave) both;
+}
+
+html[data-theme] .banner-img--previa {
+  position: absolute;
+  inset: 0;
+  animation: banner-salida var(--mov-salida) var(--mov-ease-suave) both;
+}
+
+@keyframes banner-entrada {
+  from {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes banner-salida {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Pausa de la rotación automática (WCAG 2.2.2 / auto-rotation-controls). */
+html[data-theme] .banner-frame .carousel-control-pausa {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.8rem;
+  opacity: 0.92;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    opacity var(--transicion),
+    background-color var(--transicion);
+}
+
+html[data-theme] .banner-frame .carousel-control-pausa:hover,
+html[data-theme] .banner-frame .carousel-control-pausa:focus-visible {
+  opacity: 1;
+  background: var(--surface-2);
+}
+
+@media (max-width: 767px) {
+  html[data-theme] .banner-frame .carousel-control-pausa {
+    right: 12px;
+    bottom: 12px;
+    width: 36px;
+    height: 36px;
+  }
 }
 
 /* Flechas del banner: círculos con la flecha del color del tema. */
@@ -2157,10 +2244,6 @@ html[data-theme="dark"] .swiper-slide {
 
 .banner-editor {
   width: 100%;
-  max-width: var(--ancho-max);
-  margin-inline: auto;
-  padding-inline: var(--espacio-lateral);
-  padding-block: 2rem;
 }
 
 /* --- Cabecera --- */
@@ -2265,7 +2348,7 @@ html[data-theme="dark"] .swiper-slide {
 .banner-editor-lienzo {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 7;
+  aspect-ratio: 16 / 9;
   min-height: clamp(200px, 25vw, 420px);
   border: 2px dashed var(--line-strong);
   border-radius: var(--radius-lg);
@@ -2613,11 +2696,6 @@ html[data-theme="dark"] .swiper-slide {
 }
 
 @media (max-width: 479px) {
-  .banner-editor {
-    padding-inline: 16px;
-    padding-block: 1.25rem;
-  }
-
   .banner-editor-cabecera {
     flex-direction: column;
     gap: 0.75rem;

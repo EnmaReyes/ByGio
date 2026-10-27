@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState } from "react";
 import {
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
@@ -7,17 +7,32 @@ import {
 } from "react-router-dom";
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 
-/* Mismo reparto de tiempos que el resto del sitio: la salida es más
-   corta que la entrada (como el desplegable: 150/250). Con `mode="wait"`
-   una navegación tarda 180 + 320 ms y no hay dos páginas superpuestas. */
-const ENTRADA = { duration: 0.32, ease: [0.22, 1, 0.36, 1] };
-const SALIDA = { duration: 0.18, ease: [0.22, 1, 0.36, 1] };
+/* Tiempos alineados con los tokens del sitio (--mov-rapido 160 ms de
+   salida y --mov-base 260 ms de entrada): la salida dura ~62% de la
+   entrada (recipe exit-faster-than-enter) y la navegación completa pasa
+   de 500 ms a 420 ms. Con `mode="wait"` no hay dos páginas superpuestas. */
+const ENTRADA = { duration: 0.26, ease: [0.22, 1, 0.36, 1] };
+const SALIDA = { duration: 0.16, ease: [0.22, 1, 0.36, 1] };
 
 /* Con movimiento reducido el fundido sigue existiendo (una opacidad no
    desplaza nada), pero es más corto y lineal: cambiar de página no debe
    ser un corte seco ni una animación larga. */
 const ENTRADA_REDUCIDA = { duration: 0.16, ease: "linear" };
 const SALIDA_REDUCIDA = { duration: 0.12, ease: "linear" };
+
+/* `html { scroll-behavior: smooth }` convertiría el salto a "arriba" en
+   un recorrido animado. Se fuerza "auto" en la raíz y se provoca un
+   recálculo de estilo antes de mover: sin ese recálculo, el navegador
+   alcanza a lanzar el scroll suave con el valor anterior. */
+const desplazarSinAnimar = (top) => {
+  const raiz = document.documentElement;
+  const previo = raiz.style.scrollBehavior;
+
+  raiz.style.scrollBehavior = "auto";
+  void raiz.scrollTop;
+  window.scrollTo(0, Math.max(0, top));
+  raiz.style.scrollBehavior = previo;
+};
 
 /*
  * ContenidoRuta
@@ -45,6 +60,19 @@ const ContenidoRuta = () => {
   const ubicacionActual = useLocation();
   const [ubicacionPropia] = useState(ubicacionActual);
   const saliendo = ubicacionActual.pathname !== ubicacionPropia.pathname;
+
+  /* La copia nueva monta cuando la anterior ya salió y arranca en
+     opacidad 0: subir el scroll aquí ocurre antes del primer pintado,
+     así que no se ve el recorrido desde el pie. Aplica a cualquier
+     navegación (colección, producto, atrás/adelante) para que el
+     resultado sea siempre predecible. */
+  useLayoutEffect(() => {
+    if (saliendo) return;
+
+    desplazarSinAnimar(0);
+    // Solo al montar: la copia nueva es la única que ejecuta este efecto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const ubicacionViva = useContext(UNSAFE_LocationContext);
   const rutaViva = useContext(UNSAFE_RouteContext);

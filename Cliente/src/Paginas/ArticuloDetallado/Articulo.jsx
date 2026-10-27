@@ -211,7 +211,6 @@ const Articulo = () => {
         setLoading(true);
         const res = await axios.get(`${URL}/api/posts/${postid}`);
         setSelected(res.data);
-        window.scrollTo(0, 0);
       } catch (error) {
         console.error("Error al obtener el producto:", error);
         toast.error("Error al cargar el producto");

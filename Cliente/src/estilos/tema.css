@@ -37,6 +37,8 @@
   --mov-rapido: 160ms;
   --mov-base: 260ms; /* = --transicion */
   --mov-lento: 420ms;
+  /* Salidas: ~65% de la entrada (recipe exit-faster-than-enter). */
+  --mov-salida: 280ms;
   --mov-entrada: 420ms;
   --mov-stagger: 100ms;
   /* Rejillas: con 100ms una lista de 12 tarjetas tardaria mas de

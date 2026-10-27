@@ -1166,7 +1166,7 @@ a {
 }
 .banner-frame {
   width: 100%;
-  aspect-ratio: 16 / 7;
+  aspect-ratio: 16 / 9;
   background: #f2eee7;
 }
 
@@ -1221,7 +1221,7 @@ a {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: inherit;
+  object-fit: contain;
   object-position: center;
 }
 .add-img {
@@ -1538,7 +1538,7 @@ a {
 
   .carrusel-banner,
   .banner-frame {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
   }
 
   .inital-Container {

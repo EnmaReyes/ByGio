@@ -1,13 +1,20 @@
-import { useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/authContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPause,
+  faPenToSquare,
+  faPlay,
+} from "@fortawesome/free-solid-svg-icons";
 import EditBanner from "./EditBanner";
 import { API_URL } from "../config";
 
 const URL = API_URL;
+
+/* Cada cuánto avanza la diapositiva automáticamente. */
+const ROTACION_MS = 2000;
 
 const Banner = () => {
   const [banner, setBanner] = useState([]);
@@ -19,6 +26,41 @@ const Banner = () => {
   /* Imagen visible y control de las imágenes que ya no existen en el CDN. */
   const [indice, setIndice] = useState(0);
   const [imagenesFallidas, setImagenesFallidas] = useState([]);
+
+  /* Rotación automática: se detiene si el usuario la pausa, si el
+     puntero/teclado está dentro del carrusel (WAI: auto-rotation-controls)
+     o si el sistema pide movimiento reducido. */
+  const [pausaManual, setPausaManual] = useState(false);
+  const [pausaFoco, setPausaFoco] = useState(false);
+  const [movimientoReducido, setMovimientoReducido] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches),
+  );
+
+  /* Imagen que sale: se mantiene un instante detrás de la nueva para
+     hacer el fundido sin que se vea el fondo. */
+  const [imagenPrevia, setImagenPrevia] = useState(null);
+
+  /* La preferencia de movimiento puede cambiar mientras la página está
+     abierta (ajustes del sistema). */
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sincronizar = () => setMovimientoReducido(media.matches);
+
+    sincronizar();
+
+    if (media.addEventListener) {
+      media.addEventListener("change", sincronizar);
+      return () => media.removeEventListener("change", sincronizar);
+    }
+
+    // Navegadores antiguos (Safari < 14).
+    media.addListener(sincronizar);
+    return () => media.removeListener(sincronizar);
+  }, []);
 
   /**
    * Función reutilizable para obtener datos del banner
@@ -74,6 +116,17 @@ const Banner = () => {
   useEffect(() => {
     setIndice(0);
     setImagenesFallidas([]);
+    setImagenPrevia(null);
+  }, [claveImagenes]);
+
+  /* Precarga: con una rotación de 2 s, la imagen siguiente debe estar en
+     caché para que el fundido no muestre un hueco. */
+  useEffect(() => {
+    (banner?.img || []).forEach((url) => {
+      if (typeof url !== "string" || !url.trim()) return;
+      const precarga = new Image();
+      precarga.src = url;
+    });
   }, [claveImagenes]);
 
   /* Índices de las imágenes que sí existen en el CDN. */
@@ -112,7 +165,23 @@ const Banner = () => {
     );
   };
 
-  /* Navegación del carrusel (sin depender del JS de Bootstrap). */
+  /**
+   * Cambia de diapositiva guardando la anterior para el fundido.
+   */
+  const irAIndice = useCallback(
+    (nuevoIndice) => {
+      if (nuevoIndice === indiceVisible) return;
+
+      const anterior = banner?.img?.[indiceVisible];
+      setImagenPrevia(
+        typeof anterior === "string" && anterior.trim() ? anterior : null,
+      );
+      setIndice(nuevoIndice);
+    },
+    [banner?.img, indiceVisible],
+  );
+
+  /* Navegación manual del carrusel (sin depender del JS de Bootstrap). */
   const cambiarSlide = (paso) => {
     if (disponibles.length < 2) return;
 
@@ -120,8 +189,35 @@ const Banner = () => {
     const siguiente =
       (posicionActual + paso + disponibles.length) % disponibles.length;
 
-    setIndice(disponibles[siguiente]);
+    irAIndice(disponibles[siguiente]);
   };
+
+  /* Avance automático: usa la lista de imágenes disponibles para saltarse
+     las que fallaron en el CDN. */
+  const avanzar = useCallback(() => {
+    if (disponibles.length < 2) return;
+
+    const posicionActual = disponibles.indexOf(indiceVisible);
+    const siguiente = disponibles[(posicionActual + 1) % disponibles.length];
+
+    irAIndice(siguiente);
+  }, [disponibles, indiceVisible, irAIndice]);
+
+  const rotacionPausada =
+    pausaManual || pausaFoco || movimientoReducido || editorVisible;
+
+  /* Un temporizador (no un interval) por diapositiva: se reinicia solo al
+     cambiar de imagen, sea automático o manual. */
+  useEffect(() => {
+    if (loading || rotacionPausada || disponibles.length < 2) return undefined;
+
+    const temporizador = window.setTimeout(avanzar, ROTACION_MS);
+
+    return () => window.clearTimeout(temporizador);
+  }, [avanzar, disponibles.length, loading, rotacionPausada]);
+
+  const mostrarControlPausa =
+    disponibles.length > 1 && !loading && !movimientoReducido;
 
   return (
     <div
@@ -139,6 +235,15 @@ const Banner = () => {
         <div
           id="carouselExampleControls"
           className="carousel slide carrusel-banner banner-frame"
+          role="region"
+          aria-roledescription="carrusel"
+          aria-label="Promociones ByGio"
+          onFocus={() => setPausaFoco(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setPausaFoco(false);
+            }
+          }}
         >
           <div className="carousel-inner">
             {loading ? (
@@ -147,16 +252,30 @@ const Banner = () => {
               </div>
             ) : (
               <div className="carousel-item banner-slide active">
+                {imagenPrevia && (
+                  <img
+                    key={`previa-${imagenPrevia}`}
+                    src={imagenPrevia}
+                    className="banner-img banner-img--previa"
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    onAnimationEnd={() => setImagenPrevia(null)}
+                  />
+                )}
+
                 <img
-                  key={indiceVisible}
+                  key={`actual-${indiceVisible}`}
                   src={banner?.img?.[indiceVisible]}
-                  className="banner-img"
+                  className="banner-img banner-img--actual"
                   alt="Promoción ByGio"
+                  decoding="async"
                   onError={manejarErrorImagen}
                 />
               </div>
             )}
           </div>
+
           {disponibles.length > 1 && (
             <>
               <button
@@ -182,6 +301,25 @@ const Banner = () => {
                 <span className="visually-hidden">Siguiente</span>
               </button>
             </>
+          )}
+
+          {mostrarControlPausa && (
+            <button
+              type="button"
+              className="carousel-control-pausa"
+              onClick={() => setPausaManual((pausada) => !pausada)}
+              aria-label={
+                pausaManual
+                  ? "Reanudar rotación automática"
+                  : "Pausar rotación automática"
+              }
+              aria-pressed={pausaManual}
+            >
+              <FontAwesomeIcon
+                icon={pausaManual ? faPlay : faPause}
+                aria-hidden="true"
+              />
+            </button>
           )}
         </div>
       ) : null}

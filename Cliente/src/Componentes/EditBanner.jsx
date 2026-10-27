@@ -514,7 +514,8 @@ const EditBanner = ({ banner, seteditorVisible, onBannerUpdated }) => {
           </div>
 
           <p className="banner-editor-pie-texto">
-            Formato recomendado 16:7. Las imágenes se recortan al centro.
+            Formato recomendado 16:9 (1920 × 1080). La imagen se ve completa,
+            sin recortes.
           </p>
         </div>
 
