@@ -28,15 +28,21 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Debe usarse despues de requireAuth.
+// Verifica la sesion y el rol de administrador en una sola pieza: puede usarse
+// solo (rutas de catalogo) o despues de requireAuth (panel admin).
 const requireAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json("No estás autenticado");
-  }
-  if (!req.user.admin) {
-    return res.status(403).json("No tienes permisos de administrador");
-  }
-  return next();
+  const checkRole = () => {
+    if (!req.user) {
+      return res.status(401).json("No estás autenticado");
+    }
+    if (!req.user.admin) {
+      return res.status(403).json("No tienes permisos de administrador");
+    }
+    return next();
+  };
+
+  if (req.user) return checkRole();
+  return requireAuth(req, res, checkRole);
 };
 
 // No bloquea: solo adjunta req.user si hay cookie valida.

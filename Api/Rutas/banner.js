@@ -1,4 +1,5 @@
 const express = require("express");
+const { requireAdmin } = require("../Middleware/auth.js");
 const {
   getBanner,
   addBanner,
@@ -8,9 +9,9 @@ const {
 
 const router = express.Router();
 
-router.post("/addbanner", addBanner);
-router.put("/:id", EditBanner);
-router.delete("/:id", deleteBanner);
 router.get("/", getBanner);
+router.post("/addbanner", requireAdmin, addBanner);
+router.put("/:id", requireAdmin, EditBanner);
+router.delete("/:id", requireAdmin, deleteBanner);
 
 module.exports = router;

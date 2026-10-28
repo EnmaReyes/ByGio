@@ -1,4 +1,5 @@
 const express = require("express");
+const { requireAdmin } = require("../Middleware/auth.js");
 
 const {
   addDtf,
@@ -11,7 +12,7 @@ const router = express.Router();
 
 router.get("/", getDtf);
 router.get("/category", getDtfByCategory);
-router.post("/add", addDtf);
-router.put("/:id", updateDtf);
+router.post("/add", requireAdmin, addDtf);
+router.put("/:id", requireAdmin, updateDtf);
 
 module.exports = router;

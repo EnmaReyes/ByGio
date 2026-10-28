@@ -1,20 +1,10 @@
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config.js");
 const { Category } = require("../DataBase/models/Category.js");
+
+// Rutas de escritura protegidas con requireAdmin (ver Rutas/category.js).
 
 //--------------------- Add Category ---------------------//
 const addCategory = async (req, res) => {
   try {
-    const token = req.cookies.access_token;
-
-    if (!token) {
-      return res
-        .status(401)
-        .json("No estás autenticado para añadir categorías!");
-    }
-
-    jwt.verify(token, JWT_SECRET);
-
     const { name } = req.body;
 
     if (!name || !name.trim()) {
@@ -41,16 +31,6 @@ const addCategory = async (req, res) => {
 //--------------------- Update Category ---------------------//
 const updateCategory = async (req, res) => {
   try {
-    const token = req.cookies.access_token;
-
-    if (!token) {
-      return res
-        .status(401)
-        .json("No estás autenticado para modificar categorías!");
-    }
-
-    jwt.verify(token, JWT_SECRET);
-
     const { id } = req.params;
     const { name } = req.body;
 

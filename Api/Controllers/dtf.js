@@ -1,9 +1,10 @@
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET, DTF_PRICE_BASICO, DTF_PRICE_OVERSIZE } = require("../config.js");
+const { DTF_PRICE_BASICO, DTF_PRICE_OVERSIZE } = require("../config.js");
 const { Dtf } = require("../DataBase/models/Dtf");
 const { Category } = require("../DataBase/models/Category");
 const { DtfPriceVariant } = require("../DataBase/models/DtfPriceVariant");
 const { sequelize } = require("../DataBase/db.js");
+
+// Las rutas de escritura estan protegidas con requireAdmin (ver Rutas/dtf.js).
 
 // Precios por defecto: hoy el unico diferenciador es el tipo.
 const DEFAULT_DTF_PRICES = [
@@ -30,15 +31,6 @@ const addDtf = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const token = req.cookies.access_token;
-
-    if (!token) {
-      await transaction.rollback();
-      return res.status(401).json("No estás autenticado para añadir DTF!");
-    }
-
-    const userInfo = jwt.verify(token, JWT_SECRET);
-
     const { categoryId, img, stock, priceVariants } = req.body;
 
     const categoryExists = await Category.findByPk(categoryId);
@@ -62,7 +54,7 @@ const addDtf = async (req, res) => {
         categoryId,
         img,
         stock,
-        uid: userInfo.id,
+        uid: req.user.id,
       },
       { transaction },
     );
@@ -112,45 +104,90 @@ const getDtf = async (req, res) => {
 };
 
 //? Update DTF
+// Actualizacion parcial: solo se tocan los campos enviados. Tambien acepta
+// priceVariants para editar los precios desde el panel de administracion.
 const updateDtf = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const token = req.cookies.access_token;
-
-    if (!token) {
-      return res.status(401).json("No estás autenticado para actualizar DTF!");
-    }
-
-    jwt.verify(token, JWT_SECRET);
-
     const dtfId = req.params.id;
 
-    const { categoryId, img, stock } = req.body;
+    const dtf = await Dtf.findByPk(dtfId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
 
-    const categoryExists = await Category.findByPk(categoryId);
-
-    if (!categoryExists) {
-      return res.status(400).json("La categoría no existe");
-    }
-
-    const [rowsUpdated] = await Dtf.update(
-      {
-        categoryId,
-        img,
-        stock,
-      },
-      {
-        where: {
-          id: dtfId,
-        },
-      },
-    );
-
-    if (rowsUpdated === 0) {
+    if (!dtf) {
+      await transaction.rollback();
       return res.status(404).json("No se encontró el DTF para actualizar");
     }
 
+    const { categoryId, img, stock, priceVariants } = req.body || {};
+
+    if (categoryId !== undefined) {
+      const categoryExists = await Category.findByPk(categoryId, {
+        transaction,
+      });
+      if (!categoryExists) {
+        await transaction.rollback();
+        return res.status(400).json("La categoría no existe");
+      }
+      dtf.categoryId = categoryId;
+    }
+
+    if (img !== undefined) dtf.img = img;
+    if (stock !== undefined) dtf.stock = Boolean(stock);
+
+    await dtf.save({ transaction });
+
+    if (Array.isArray(priceVariants)) {
+      for (const variant of priceVariants) {
+        const precio = Number(variant?.precio);
+        const tipo = String(variant?.tipo || "").trim();
+
+        if (!tipo || !Number.isFinite(precio) || precio < 0) {
+          await transaction.rollback();
+          return res.status(400).json("Variante de precio inválida");
+        }
+
+        const data = {
+          tipo,
+          precio,
+          medidas: variant.medidas ? String(variant.medidas).trim() : null,
+          color: variant.color ? String(variant.color).trim() : null,
+          activo: variant.activo === undefined ? true : Boolean(variant.activo),
+        };
+
+        if (variant.id) {
+          const [rowsUpdated] = await DtfPriceVariant.update(data, {
+            where: { id: variant.id, dtfId },
+            transaction,
+          });
+          if (rowsUpdated === 0) {
+            await transaction.rollback();
+            return res.status(404).json("Variante de precio no encontrada");
+          }
+        } else {
+          await DtfPriceVariant.create(
+            { ...data, dtfId },
+            { transaction },
+          );
+        }
+      }
+    }
+
+    await transaction.commit();
+
     res.status(200).json("DTF actualizado con éxito!");
   } catch (error) {
+    await transaction.rollback();
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res
+        .status(409)
+        .json("Ese diseño ya tiene una variante con el mismo tipo/medida/color");
+    }
+
     console.error(error);
 
     res.status(500).json("Error interno del servidor");

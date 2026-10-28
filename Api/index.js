@@ -7,6 +7,7 @@ const dtfRoutes = require("./Rutas/dtf.js");
 const categoryRoutes = require("./Rutas/category.js");
 const ordersRoutes = require("./Rutas/orders.js");
 const shippingRoutes = require("./Rutas/shipping.js");
+const adminOrdersRoutes = require("./Rutas/adminOrders.js");
 
 const { sequelize } = require("./DataBase/db.js");
 
@@ -50,6 +51,7 @@ app.use("/api/dtf", dtfRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/admin/orders", adminOrdersRoutes);
 
 // Conexión a la base de datos
 (async () => {

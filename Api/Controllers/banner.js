@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config.js");
 const { Banner } = require("../DataBase/models/Banner.js");
+
+// Rutas de escritura protegidas con requireAdmin (ver Rutas/banner.js).
 
 const getBanner = async (req, res) => {
   try {
@@ -17,22 +17,12 @@ const getBanner = async (req, res) => {
 
 const addBanner = async (req, res) => {
   try {
-    const token = req.cookies.access_token;
-
-    if (!token) {
-      return res
-        .status(401)
-        .json("No estás autenticado para añadir articulos!");
-    }
-
-    const userInfo = jwt.verify(token, JWT_SECRET);
-
     // Convertir array a JSON string igual que en EditBanner
     const newBanner = {
       img: Array.isArray(req.body.img)
         ? JSON.stringify(req.body.img)
         : req.body.img,
-      uid: userInfo.id,
+      uid: req.user.id,
     };
 
     const createdBanner = await Banner.create(newBanner);
@@ -47,34 +37,17 @@ const addBanner = async (req, res) => {
 
 const EditBanner = async (req, res) => {
   try {
-    const token = req.cookies.access_token;
+    const banner = await Banner.findByPk(req.params.id);
 
-    if (!token) {
-      return res
-        .status(401)
-        .json("No estás autenticado para actualizar Banner!");
-    }
-
-    const userInfo = jwt.verify(token, JWT_SECRET);
-    const bannerId = req.params.id;
-
-    // Convertir array a JSON string si es necesario
-    const updateBanner = {
-      img: Array.isArray(req.body.img)
-        ? JSON.stringify(req.body.img)
-        : req.body.img,
-    };
-
-    const [rowsUpdated] = await Banner.update(updateBanner, {
-      where: {
-        id: bannerId,
-        uid: userInfo.id,
-      },
-    });
-
-    if (rowsUpdated === 0) {
+    if (!banner) {
       return res.status(404).json("No se encontró el Banner para actualizar");
     }
+
+    // Convertir array a JSON string si es necesario
+    banner.img = Array.isArray(req.body.img)
+      ? JSON.stringify(req.body.img)
+      : req.body.img;
+    await banner.save();
 
     res.status(200).json({ message: "Banner actualizado con éxito!" });
   } catch (error) {
@@ -84,41 +57,21 @@ const EditBanner = async (req, res) => {
 };
 
 const deleteBanner = async (req, res) => {
-  const token = req.cookies.access_token;
-
-  if (!token) {
-    return res
-      .status(401)
-      .json("No estás autenticado para eliminar el Banner!");
-  }
-
   try {
-    const userInfo = jwt.verify(token, JWT_SECRET);
-    const BannerID = req.params.id;
+    const banner = await Banner.findByPk(req.params.id);
 
-    const Banners = await Banner.findOne({
-      where: {
-        id: BannerID,
-        uid: userInfo.id, // Solo permite eliminar si el post pertenece al usuario
-      },
-    });
-
-    if (!Banners) {
-      return res
-        .status(404)
-        .json("No se encontró el Banner o no tienes permisos para eliminarlo");
+    if (!banner) {
+      return res.status(404).json("No se encontró el Banner");
     }
 
-    await Banners.destroy();
+    await banner.destroy();
     return res.json("Banner eliminado con éxito!");
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return res.status(403).json("Token no válido");
-    }
     console.error("Error en deleteBanner:", error);
     return res.status(500).json("Error en el servidor");
   }
 };
+
 module.exports = {
   getBanner,
   addBanner,

@@ -1,0 +1,80 @@
+const {
+  listOrdersAdmin,
+  getOrderAdmin,
+  changeOrderStatus,
+  updateTracking,
+  orderStats,
+} = require("../Services/adminOrders.js");
+const { sendError } = require("../Utils/respond.js");
+
+// GET /api/admin/orders?status&paymentStatus&q&from&to&limit&offset
+const list = async (req, res) => {
+  try {
+    const { status, paymentStatus, q, from, to, limit, offset } = req.query;
+    const result = await listOrdersAdmin({
+      status,
+      paymentStatus,
+      q,
+      from,
+      to,
+      limit,
+      offset,
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudieron cargar los pedidos");
+  }
+};
+
+// GET /api/admin/orders/stats
+const stats = async (req, res) => {
+  try {
+    const result = await orderStats();
+    return res.status(200).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudo cargar el resumen");
+  }
+};
+
+// GET /api/admin/orders/:id
+const detail = async (req, res) => {
+  try {
+    const order = await getOrderAdmin(req.params.id);
+    return res.status(200).json(order);
+  } catch (error) {
+    return sendError(res, error, "No se pudo cargar el pedido");
+  }
+};
+
+// PATCH /api/admin/orders/:id/status  { status, note? }
+const changeStatus = async (req, res) => {
+  try {
+    const { status, note } = req.body || {};
+    const order = await changeOrderStatus({
+      orderId: req.params.id,
+      status,
+      note,
+      adminId: req.user.id,
+    });
+    return res.status(200).json(order);
+  } catch (error) {
+    return sendError(res, error, "No se pudo actualizar el estado");
+  }
+};
+
+// PATCH /api/admin/orders/:id/tracking  { trackingCarrier?, trackingNumber? }
+const tracking = async (req, res) => {
+  try {
+    const { trackingCarrier, trackingNumber } = req.body || {};
+    const order = await updateTracking({
+      orderId: req.params.id,
+      trackingCarrier,
+      trackingNumber,
+    });
+    return res.status(200).json(order);
+  } catch (error) {
+    return sendError(res, error, "No se pudo actualizar el envío");
+  }
+};
+
+module.exports = { list, stats, detail, changeStatus, tracking };
