@@ -59,7 +59,7 @@ const Order = sequelize.define(
       defaultValue: CURRENCY,
     },
 
-    // Montos en pesos COP (enteros), igual que articulos.cost
+    // Montos en pesos COP (enteros), igual que la tarifa de precios
     subtotal: {
       type: DataTypes.INTEGER,
       allowNull: false,

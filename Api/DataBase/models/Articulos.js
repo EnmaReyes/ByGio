@@ -34,26 +34,18 @@ const Articulos = sequelize.define(
       allowNull: false,
       defaultValue: true,
     },
-    cost: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     stock: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
-    },
-    descuento: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
     },
     destacadas: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
     },
-    // Articulo que se vende como combo (precio/conjunto especial)
+    // Articulo que se vende con precio de combo. El monto vive en
+    // product_prices (kind = "combo"); este flag solo lo distingue en la UI.
     combo: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

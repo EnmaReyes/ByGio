@@ -16,7 +16,10 @@ const CartaInicial = () => {
   const { articulos, loadingArticulos } = useContextProvaider();
 
   const destacados = useMemo(
-    () => articulos.filter((articulo) => articulo.destacadas === true).slice(0, 6),
+    () =>
+      articulos
+        .filter((articulo) => articulo.destacadas === true && !articulo.combo)
+        .slice(0, 6),
     [articulos],
   );
 

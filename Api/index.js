@@ -8,8 +8,10 @@ const categoryRoutes = require("./Rutas/category.js");
 const ordersRoutes = require("./Rutas/orders.js");
 const shippingRoutes = require("./Rutas/shipping.js");
 const adminOrdersRoutes = require("./Rutas/adminOrders.js");
+const pricesRoutes = require("./Rutas/prices.js");
 
 const { sequelize } = require("./DataBase/db.js");
+const { ensurePricingSchema } = require("./DataBase/ensurePricing.js");
 
 // Carga todos los modelos y asociaciones antes de cualquier consulta/sync.
 require("./DataBase/models/index.js");
@@ -21,6 +23,38 @@ const { FRONTEND_URL } = require("./config.js");
 const port = process.env.PORT || 3000;
 
 const app = express();
+
+// Inicializacion de la base de datos. Se espera antes de atender cualquier
+// request: en Vercel el modulo puede recibir trafico apenas arranca.
+const dbReady = (async () => {
+  console.log("🔌 Intentando conectar a Neon...");
+
+  await sequelize.authenticate();
+  console.log("✅ Conexión inicial exitosa");
+
+  // Solo desarrollo: crea tablas que falten. No elimina columnas viejas.
+  if (process.env.NODE_ENV !== "production") {
+    await sequelize.sync();
+  }
+
+  // Local y produccion: migracion idempotente del esquema de precios.
+  await ensurePricingSchema();
+})();
+
+// Evita un unhandled rejection si la base falla antes del primer request.
+dbReady.catch((error) => {
+  console.error("❌ Error inicializando la base de datos:", error);
+});
+
+app.use(async (req, res, next) => {
+  try {
+    await dbReady;
+    next();
+  } catch (error) {
+    console.error("❌ Base de datos no disponible:", error);
+    res.status(503).json("Base de datos no disponible");
+  }
+});
 
 // Middlewares
 app.use(express.json());
@@ -52,31 +86,20 @@ app.use("/api/category", categoryRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/admin/orders", adminOrdersRoutes);
+app.use("/api/prices", pricesRoutes);
 
-// Conexión a la base de datos
-(async () => {
-  try {
-    console.log("🔌 Intentando conectar a Neon...");
-
-    await sequelize.authenticate();
-
-    console.log("✅ Conexión inicial exitosa");
-
-    // Solo desarrollo
-    if (process.env.NODE_ENV !== "production") {
-      await sequelize.sync();
-    }
-  } catch (error) {
-    console.error("❌ Error conectando con la base de datos:");
-    console.error(error);
-  }
-})();
-
-// Servidor local
+// Servidor local: se escucha solo cuando la base ya esta lista.
 if (process.env.NODE_ENV !== "production") {
-  app.listen(port, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
-  });
+  dbReady
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("❌ No se pudo iniciar el servidor:", error);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

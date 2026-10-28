@@ -56,7 +56,7 @@ const DtfCard = ({ items = [] }) => {
       img: imageUrl,
       category: item.category?.name || item.categoryName || "Sin categoría",
       cantidad: 1,
-      cost: precio,
+      precio,
       dtfSize: dtfSizeFinal,
       priceVariants: item.priceVariants || [],
       ...(shirt && {

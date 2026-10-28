@@ -39,16 +39,12 @@ const OrderItem = sequelize.define(
       allowNull: true,
     },
 
-    // Variante de precio usada (solo DTF). Si se borra, el snapshot manda.
+    // Identificador de la fila de precio usada (price_variants o
+    // product_prices). Sin FK a proposito: el precio puede cambiar o
+    // eliminarse y el pedido debe conservar su snapshot.
     variantId: {
       type: DataTypes.UUID,
       allowNull: true,
-      references: {
-        model: "dtf_price_variants",
-        key: "id",
-      },
-      onUpdate: "CASCADE",
-      onDelete: "SET NULL",
     },
 
     title: {
@@ -102,6 +98,13 @@ const OrderItem = sequelize.define(
 
     // Copia completa del producto en el momento de la compra
     productSnapshot: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: {},
+    },
+
+    // Copia exacta del precio aplicado (tarifa global o excepcion).
+    priceSnapshot: {
       type: DataTypes.JSONB,
       allowNull: false,
       defaultValue: {},

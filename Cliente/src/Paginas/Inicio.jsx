@@ -2,7 +2,10 @@ import Hero from "../Componentes/Hero";
 import CartaInicial from "../Componentes/CartaInicial";
 import Banner from "../Componentes/Banner";
 import Colecciones from "../Componentes/Colecciones";
-import { ArtiulosOferta } from "../Componentes/CartaDeArticulos";
+import {
+  ArticulosCombo,
+  ArtiulosOferta,
+} from "../Componentes/CartaDeArticulos";
 import BandaBeneficios from "../Componentes/BandaBeneficios";
 
 /*
@@ -19,6 +22,8 @@ const Inicio = () => (
     <Banner />
 
     <Colecciones />
+
+    <ArticulosCombo limite={4} />
 
     <ArtiulosOferta limite={4} />
 

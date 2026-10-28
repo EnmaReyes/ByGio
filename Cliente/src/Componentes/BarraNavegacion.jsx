@@ -1,4 +1,10 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,7 +22,7 @@ import "../App.css";
 const enlacesPrincipales = [
   { to: "/", label: "Inicio" },
   { to: "/productos", label: "Productos" },
-  { to: "/dtf", label: "DTF" },
+  { to: "/dtf", label: "Crea" },
 ];
 
 /*
@@ -259,7 +265,7 @@ const BarraNavegacion = ({
                           className="nav-enlace"
                           onClick={cerrar}
                         >
-                          Precios DTF
+                          Precios
                         </Link>
                       </li>
                     </>
@@ -298,7 +304,11 @@ const BarraNavegacion = ({
                     </Link>
                   </li>
                   <li>
-                    <Link to="/register" className="nav-enlace" onClick={cerrar}>
+                    <Link
+                      to="/register"
+                      className="nav-enlace"
+                      onClick={cerrar}
+                    >
                       Crear cuenta
                     </Link>
                   </li>
@@ -398,7 +408,7 @@ const BarraNavegacion = ({
                         className="nav-enlace"
                         onClick={() => setMenuAbierto(false)}
                       >
-                        Precios DTF
+                        Precios
                       </Link>
                     </li>
                   </>
