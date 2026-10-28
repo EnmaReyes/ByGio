@@ -81,10 +81,13 @@ const resolveArticle = async (item, transaction) => {
   }
 
   const cost = Number(articulo.cost) || 0;
-  const descuento = Number(articulo.descuento) || 0;
-  // "descuento" en la BD es el precio final rebajado (no un porcentaje).
-  const unitPrice = descuento > 0 ? descuento : cost;
-  const discount = descuento > 0 && cost > descuento ? cost - descuento : 0;
+  // `cost` es el precio de venta actual. `descuento` es el precio anterior
+  // que el catalogo muestra tachado: no se cobra ni genera descuento.
+  if (cost <= 0) {
+    throw new HttpError(409, "El producto no tiene un precio valido");
+  }
+  const unitPrice = cost;
+  const discount = 0;
 
   return {
     line: {
