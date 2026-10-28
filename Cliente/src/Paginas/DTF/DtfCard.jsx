@@ -5,8 +5,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBagShopping, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { useCarrito } from "../../carrito/CarritoProvider";
 import {
+  formatPrice,
   getCartItemIdentity,
   getCartTotals,
+  getDtfUnitPrice,
 } from "../../Componentes/cartUtils";
 import useConfirmacion from "../../hooks/useConfirmacion";
 import { shirts } from "../../assets/Camisetas/camisetas.js";
@@ -36,17 +38,30 @@ const DtfCard = ({ items = [] }) => {
       return;
     }
 
+    const dtfSizeFinal = size || "basic";
+    const precio = getDtfUnitPrice({ ...item, dtfSize: dtfSizeFinal });
+
+    if (precio <= 0) {
+      toast.error("Este diseño no tiene precio configurado todavía.", {
+        position: "bottom-right",
+        autoClose: 2500,
+        hideProgressBar: true,
+      });
+      return;
+    }
+
     const cartItem = {
       id: item.id,
       cartType: "dtf",
       img: imageUrl,
       category: item.category?.name || item.categoryName || "Sin categoría",
       cantidad: 1,
-      cost: 0,
+      cost: precio,
+      dtfSize: dtfSizeFinal,
+      priceVariants: item.priceVariants || [],
       ...(shirt && {
         shirtColor: shirt.color,
         shirtName: shirt.name,
-        dtfSize: size,
       }),
     };
     const identity = getCartItemIdentity(cartItem);
@@ -112,6 +127,12 @@ const DtfCard = ({ items = [] }) => {
             </button>
 
             <div className="dtf-product-info">
+              <p className="dtf-precio">
+                Desde{" "}
+                <strong>
+                  {formatPrice(getDtfUnitPrice({ ...item, dtfSize: "basic" }))}
+                </strong>
+              </p>
               <Button
                 type="button"
                 variant="outline-dark"
@@ -124,7 +145,10 @@ const DtfCard = ({ items = [] }) => {
                 type="button"
                 variant="dark"
                 className="w-100 mt-2 d-inline-flex align-items-center justify-content-center gap-2"
-                disabled={!getDtfImageUrl(item)}
+                disabled={
+                  !getDtfImageUrl(item) ||
+                  getDtfUnitPrice({ ...item, dtfSize: "basic" }) <= 0
+                }
                 onClick={() => addDtfToCart(item)}
               >
                 <span
@@ -243,6 +267,11 @@ const DtfCard = ({ items = [] }) => {
                       aria-pressed={dtfSize === "basic"}
                     >
                       <span>Básico</span>
+                      <span className="dtf-size-precio">
+                        {formatPrice(
+                          getDtfUnitPrice({ ...selectedItem, dtfSize: "basic" }),
+                        )}
+                      </span>
                     </button>
 
                     <button
@@ -254,6 +283,14 @@ const DtfCard = ({ items = [] }) => {
                       aria-pressed={dtfSize === "oversize"}
                     >
                       <span>Oversize</span>
+                      <span className="dtf-size-precio">
+                        {formatPrice(
+                          getDtfUnitPrice({
+                            ...selectedItem,
+                            dtfSize: "oversize",
+                          }),
+                        )}
+                      </span>
                     </button>
                   </div>
                 </section>
@@ -266,7 +303,11 @@ const DtfCard = ({ items = [] }) => {
             type="button"
             variant="dark"
             className="d-inline-flex align-items-center justify-content-center gap-2"
-            disabled={!selectedItem || !getDtfImageUrl(selectedItem)}
+            disabled={
+              !selectedItem ||
+              !getDtfImageUrl(selectedItem) ||
+              getDtfUnitPrice({ ...selectedItem, dtfSize }) <= 0
+            }
             onClick={() => addDtfToCart(selectedItem, selectedShirt, dtfSize)}
           >
             <span

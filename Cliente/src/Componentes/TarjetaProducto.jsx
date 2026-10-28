@@ -68,7 +68,10 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
     ? calcularPorcentaje(articulo?.descuento, articulo?.cost)
     : 0;
 
-  const tieneStock = Boolean(articulo?.stock);
+  const descuento = Number(articulo?.descuento) || 0;
+  const tieneDescuento = mostrarDescuento && descuento > precio;
+
+  const tieneStock = articulo?.stock !== false;
 
   return (
     <li className="tarjeta-producto" style={{ "--i": indice }}>
@@ -145,14 +148,14 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
         )}
 
         <div className="tarjeta-precios">
-          {mostrarDescuento && Number(articulo?.descuento) > 0 && (
+          {tieneDescuento && (
             <span className="tarjeta-precio tarjeta-precio--anterior">
-              ${Number(articulo.descuento).toLocaleString()}
+              ${descuento.toLocaleString()}
             </span>
           )}
           <span
             className={`tarjeta-precio ${
-              mostrarDescuento ? "tarjeta-precio--descuento" : ""
+              tieneDescuento ? "tarjeta-precio--descuento" : ""
             }`}
           >
             ${precio.toLocaleString()}

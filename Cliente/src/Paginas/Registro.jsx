@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import "../index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +18,7 @@ import axios from "axios";
 import { API_URL } from "../config";
 import { Form } from "react-bootstrap";
 import SocialAuthButtons from "../Componentes/SocialAuthButtons";
+import { safeRedirectPath } from "../Componentes/redirectUtils";
 
 const URL = API_URL;
 
@@ -125,6 +126,8 @@ const Registro = () => {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"));
 
   // Validation rules (accepts a snapshot of the inputs so cross-field
   // checks always use the latest values, even inside event handlers)
@@ -248,7 +251,15 @@ const Registro = () => {
       });
       setSubmitSuccess(true);
       // Redirect after brief success display
-      setTimeout(() => navigate("/login"), 1500);
+      setTimeout(
+        () =>
+          navigate(
+            redirectTo === "/"
+              ? "/login"
+              : `/login?redirect=${encodeURIComponent(redirectTo)}`,
+          ),
+        1500,
+      );
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -474,7 +485,10 @@ const Registro = () => {
           </button>
         </Form>
 
-        <SocialAuthButtons onError={setSubmitError} />
+        <SocialAuthButtons
+          onError={setSubmitError}
+          redirectTo={redirectTo}
+        />
 
         {/* Login Link */}
         <p className="signup-text parrafos">

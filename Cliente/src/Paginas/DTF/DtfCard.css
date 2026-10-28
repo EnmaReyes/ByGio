@@ -93,6 +93,26 @@
   margin-top: 0.35rem;
 }
 
+/* Precio de referencia del diseño (variante basica). */
+.dtf-precio {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.dtf-precio strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Precio dentro de cada opcion de tamano del modal. */
+.dtf-size-option .dtf-size-precio {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
 /* =========================
    PREVIEW BUTTON
 ========================= */

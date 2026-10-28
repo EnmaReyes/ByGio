@@ -2,6 +2,74 @@ export const CART_STORAGE_KEY = "bygio-cart";
 
 export const isDtfProduct = (product) => product.cartType === "dtf";
 
+export const formatPrice = (value) =>
+  `$${(Number(value) || 0).toLocaleString()}`;
+
+/* Precio unitario real de un articulo: `cost` es el precio actual y
+   `descuento` solo es el precio anterior que se muestra tachado. */
+export const getUnitPrice = (product) => Number(product?.cost) || 0;
+
+export const DTF_SIZE_LABELS = {
+  basic: "Básico",
+  basico: "Básico",
+  oversize: "Oversize",
+};
+
+const normalizarTipoDtf = (size) =>
+  String(size || "").toLowerCase() === "oversize" ? "oversize" : "basico";
+
+/* Variante de precio del DTF. En BD el tipo es "basico"/"oversize"; la
+   vista usa "basic"/"oversize". */
+export const getDtfVariant = (product, size) => {
+  const tipo = normalizarTipoDtf(size ?? product?.dtfSize);
+  const variantes = Array.isArray(product?.priceVariants)
+    ? product.priceVariants
+    : [];
+
+  return (
+    variantes.find(
+      (variante) => variante.tipo === tipo && variante.activo !== false,
+    ) || null
+  );
+};
+
+export const getDtfUnitPrice = (product) => {
+  const variante = getDtfVariant(product, product?.dtfSize);
+  const precio = Number(variante?.precio);
+
+  if (Number.isFinite(precio) && precio > 0) return precio;
+
+  // Respaldo para carritos viejos que ya guardaban el precio en `cost`.
+  const respaldo = Number(product?.cost);
+  return Number.isFinite(respaldo) && respaldo > 0 ? respaldo : 0;
+};
+
+/* Titulo legible para cualquier linea del carrito o pedido. */
+export const cartItemTitle = (product) => {
+  if (!isDtfProduct(product)) return product?.title || "Producto";
+
+  const categoria =
+    typeof product?.category === "string"
+      ? product.category
+      : product?.category?.name || product?.categoryName || "";
+
+  return `Diseño DTF · ${categoria || "Sin categoría"}`;
+};
+
+/* Detalles de la variante, en el orden en que se leen en el carrito. */
+export const cartItemDetails = (product) => {
+  if (!isDtfProduct(product)) {
+    return [product?.talla ? `Talla: ${product.talla}` : ""].filter(Boolean);
+  }
+
+  return [
+    product?.shirtName ? `Franela: ${product.shirtName}` : "",
+    product?.dtfSize
+      ? `Tamaño: ${DTF_SIZE_LABELS[product.dtfSize] || product.dtfSize}`
+      : "",
+  ].filter(Boolean);
+};
+
 export const getCartItemIdentity = (product) =>
   isDtfProduct(product)
     ? `dtf-${product.id}-${product.shirtColor || ""}-${product.dtfSize || ""}`
@@ -9,10 +77,16 @@ export const getCartItemIdentity = (product) =>
 
 export const getCartTotals = (products) =>
   products.reduce(
-    (totals, product) => ({
-      total: totals.total + product.cantidad * (Number(product.cost) || 0),
-      count: totals.count + product.cantidad,
-    }),
+    (totals, product) => {
+      const unitario = isDtfProduct(product)
+        ? getDtfUnitPrice(product)
+        : getUnitPrice(product);
+
+      return {
+        total: totals.total + product.cantidad * unitario,
+        count: totals.count + product.cantidad,
+      };
+    },
     { total: 0, count: 0 },
   );
 

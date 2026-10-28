@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   faBagShopping,
   faCircleXmark,
@@ -7,9 +8,14 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "react-bootstrap";
 import {
+  cartItemDetails,
+  cartItemTitle,
+  formatPrice,
   getCartItemIdentity,
   getCartTotals,
   getCartPreviewImage,
+  getDtfUnitPrice,
+  getUnitPrice,
   isDtfProduct,
 } from "./cartUtils";
 import "./Carrito.css";
@@ -17,6 +23,7 @@ import "./Carrito.css";
 const ProductItem = ({ product, onDelete }) => {
   const esDtf = isDtfProduct(product);
   const imagen = getCartPreviewImage(product);
+  const precioUnitario = esDtf ? getDtfUnitPrice(product) : getUnitPrice(product);
 
   return (
     <li className="cart-item">
@@ -28,30 +35,17 @@ const ProductItem = ({ product, onDelete }) => {
       )}
       <div className="cart-item-info">
         <strong className="cart-item-title">
-          {product.cantidad} x{" "}
-          {esDtf ? `Diseño DTF · ${product.category}` : product.title}
+          {product.cantidad} x {cartItemTitle(product)}
         </strong>
-        {esDtf ? (
-          <>
-            {product.shirtName && (
-              <small className="cart-item-detail">
-                Franela: {product.shirtName}
-              </small>
-            )}
-            {product.dtfSize && (
-              <small className="cart-item-detail">
-                Tamaño: {product.dtfSize === "oversize" ? "Oversize" : "Básico"}
-              </small>
-            )}
-          </>
-        ) : (
-          <>
-            <small className="cart-item-detail">Talla: {product.talla}</small>
-            <small className="cart-item-detail">
-              Valor: ${(Number(product.cost) || 0).toLocaleString()}
-            </small>
-          </>
-        )}
+        {cartItemDetails(product).map((detalle) => (
+          <small key={detalle} className="cart-item-detail">
+            {detalle}
+          </small>
+        ))}
+        <small className="cart-item-detail">
+          {formatPrice(precioUnitario)} c/u ·{" "}
+          {formatPrice(precioUnitario * product.cantidad)}
+        </small>
       </div>
       <button
         type="button"
@@ -66,23 +60,22 @@ const ProductItem = ({ product, onDelete }) => {
   );
 };
 
-const CartSummary = ({ total, onBuy, onClear }) => (
+const CartSummary = ({ total, whatsappLink, onClear, onCheckout }) => (
   <div className="cart-summary">
     {total > 0 && (
       <div className="cart-total">
         <span>Total</span>
-        <strong>${total.toLocaleString()}</strong>
+        <strong>{formatPrice(total)}</strong>
       </div>
     )}
     <div className="cart-actions">
-      <a
-        href={onBuy()}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        to="/checkout"
         className="btn btn-dark rounded-pill titulos cart-buy-button"
+        onClick={onCheckout}
       >
-        Comprar
-      </a>
+        Finalizar compra
+      </Link>
       <Button
         variant="outline-dark"
         className="rounded-pill titulos cart-clear-button"
@@ -91,6 +84,14 @@ const CartSummary = ({ total, onBuy, onClear }) => (
         Vaciar
       </Button>
     </div>
+    <a
+      href={whatsappLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="cart-whatsapp-link"
+    >
+      ¿Prefieres pedir por WhatsApp?
+    </a>
   </div>
 );
 
@@ -196,7 +197,7 @@ const Carrito = ({
           ]
             .filter(Boolean)
             .join("\n");
-          return `${p.cantidad} Diseño DTF - Categoría: ${p.category}${configuration ? `\n${configuration}` : ""}\nImagen:\n${p.img}`;
+          return `${p.cantidad} Diseño DTF - Categoría: ${p.category}${configuration ? `\n${configuration}` : ""}\nValor: $${getDtfUnitPrice(p).toLocaleString()}\nImagen:\n${p.img}`;
         }
 
         const imageUrl = getCartPreviewImage(p);
@@ -275,7 +276,8 @@ const Carrito = ({
                 <li>
                   <CartSummary
                     total={total}
-                    onBuy={() => generateWhatsAppLink}
+                    whatsappLink={generateWhatsAppLink}
+                    onCheckout={cerrarCarrito}
                     onClear={onClear}
                   />
                 </li>

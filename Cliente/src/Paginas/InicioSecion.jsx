@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,6 +16,7 @@ import "../index.css";
 import { API_URL } from "../config";
 import { Form } from "react-bootstrap";
 import SocialAuthButtons from "../Componentes/SocialAuthButtons";
+import { safeRedirectPath } from "../Componentes/redirectUtils";
 
 const URL = API_URL;
 
@@ -118,6 +119,8 @@ const InicioSecion = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"));
   const { login } = useContext(AuthContext);
 
   // Validation rules (accepts a snapshot of the inputs for consistency)
@@ -200,7 +203,7 @@ const InicioSecion = () => {
 
     try {
       await login(inputs);
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -317,7 +320,10 @@ const InicioSecion = () => {
           </button>
         </Form>
 
-        <SocialAuthButtons onError={setSubmitError} />
+        <SocialAuthButtons
+          onError={setSubmitError}
+          redirectTo={redirectTo}
+        />
 
         {/* Sign Up */}
         <p className="signup-text parrafos">

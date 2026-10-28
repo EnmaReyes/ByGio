@@ -244,8 +244,35 @@ const BarraNavegacion = ({
                           Crear diseño DTF
                         </Link>
                       </li>
+                      <li>
+                        <Link
+                          to="/admin/pedidos"
+                          className="nav-enlace"
+                          onClick={cerrar}
+                        >
+                          Pedidos
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/admin/dtf"
+                          className="nav-enlace"
+                          onClick={cerrar}
+                        >
+                          Precios DTF
+                        </Link>
+                      </li>
                     </>
                   )}
+                  <li>
+                    <Link
+                      to="/mis-pedidos"
+                      className="nav-enlace"
+                      onClick={cerrar}
+                    >
+                      Mis pedidos
+                    </Link>
+                  </li>
                   <li>
                     <button
                       type="button"
@@ -356,8 +383,35 @@ const BarraNavegacion = ({
                         Crear diseño DTF
                       </Link>
                     </li>
+                    <li>
+                      <Link
+                        to="/admin/pedidos"
+                        className="nav-enlace"
+                        onClick={() => setMenuAbierto(false)}
+                      >
+                        Pedidos
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/admin/dtf"
+                        className="nav-enlace"
+                        onClick={() => setMenuAbierto(false)}
+                      >
+                        Precios DTF
+                      </Link>
+                    </li>
                   </>
                 )}
+                <li>
+                  <Link
+                    to="/mis-pedidos"
+                    className="nav-enlace"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    Mis pedidos
+                  </Link>
+                </li>
                 <li>
                   <button
                     type="button"

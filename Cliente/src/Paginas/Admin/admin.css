@@ -1,0 +1,254 @@
+/* =========================================
+   PANEL DE ADMINISTRACIÓN
+   ========================================= */
+
+.admin-page {
+  max-width: 1240px;
+}
+
+.admin-muted {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.admin-nowrap {
+  white-space: nowrap;
+}
+
+/* =========================================
+   RESUMEN
+   ========================================= */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 4%);
+}
+
+.admin-stat span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-stat strong {
+  font-size: 1.7rem;
+  line-height: 1.1;
+}
+
+.admin-stat small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+/* =========================================
+   FILTROS
+   ========================================= */
+
+.admin-filters-grid {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.6fr) repeat(4, minmax(120px, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-filters-grid .form-label {
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-filters-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.admin-filters-actions .admin-muted {
+  margin-left: auto;
+}
+
+/* =========================================
+   TABLA DE PEDIDOS
+   ========================================= */
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 4%);
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.admin-table thead th {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--brand-soft);
+}
+
+.admin-link {
+  color: var(--ink);
+  font-size: 0.92rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-link:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.admin-table-link {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: 0.78rem;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.admin-table-link:hover {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+/* =========================================
+   PRECIOS DTF
+   ========================================= */
+
+.admin-price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.1rem;
+}
+
+.admin-price-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 0;
+}
+
+.admin-price-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.admin-price-head > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.admin-price-image {
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  object-fit: cover;
+}
+
+.admin-price-image-empty {
+  border: 1px dashed var(--line);
+}
+
+.admin-price-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-price-fields .form-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-price-fields .form-control {
+  margin-bottom: 0.15rem;
+}
+
+.admin-price-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.admin-price-actions .btn {
+  flex: 1 1 140px;
+  font-size: 0.85rem;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 991px) {
+  .admin-filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .admin-filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stat strong {
+    font-size: 1.4rem;
+  }
+}

@@ -14,7 +14,7 @@ const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
 // Botones "Continuar con Google/Facebook". Solo se renderizan si hay IDs
 // configurados. El backend valida cada credencial antes de crear la sesion.
-const SocialAuthButtons = ({ onError }) => {
+const SocialAuthButtons = ({ onError, redirectTo = "/" }) => {
   const { loginWithSocial } = useContext(AuthContext);
   const [loadingFacebook, setLoadingFacebook] = useState(false);
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const SocialAuthButtons = ({ onError }) => {
         { withCredentials: true },
       );
       loginWithSocial(res.data);
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       onError?.(resolveError(err, "No se pudo iniciar sesión con Google"));
     }
@@ -46,7 +46,7 @@ const SocialAuthButtons = ({ onError }) => {
         { withCredentials: true },
       );
       loginWithSocial(res.data);
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       onError?.(
         err.response

@@ -322,6 +322,25 @@
   color: #fff;
 }
 
+/* Salida secundaria: el pedido por WhatsApp de siempre. */
+.cart-whatsapp-link {
+  display: block;
+  margin-top: 0.7rem;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color var(--transicion);
+}
+
+.cart-whatsapp-link:hover,
+.cart-whatsapp-link:focus-visible {
+  color: var(--ink);
+}
+
 .cart-empty {
   display: flex;
   flex: 1 1 auto;

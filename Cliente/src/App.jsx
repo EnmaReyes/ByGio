@@ -21,6 +21,12 @@ import BannerCookies from "./Componentes/BannerCookies";
 import PoliticaPrivacidad from "./Paginas/PoliticaPrivacidad";
 import TerminosCondiciones from "./Paginas/TerminosCondiciones";
 import Productos from "./Paginas/Productos";
+import Checkout from "./Paginas/Checkout";
+import MisPedidos from "./Paginas/MisPedidos";
+import PedidoDetalle from "./Paginas/PedidoDetalle";
+import AdminPedidos from "./Paginas/Admin/AdminPedidos";
+import AdminPedidoDetalle from "./Paginas/Admin/AdminPedidoDetalle";
+import AdminDtfPrecios from "./Paginas/Admin/AdminDtfPrecios";
 import { TemaProvider } from "./tema/TemaProvider";
 import { CarritoProvider, useCarrito } from "./carrito/CarritoProvider";
 import TransicionRuta from "./Componentes/TransicionRuta";
@@ -123,6 +129,30 @@ const router = createBrowserRouter(
         {
           path: "/terminos",
           element: <TerminosCondiciones />,
+        },
+        {
+          path: "/checkout",
+          element: <Checkout />,
+        },
+        {
+          path: "/mis-pedidos",
+          element: <MisPedidos />,
+        },
+        {
+          path: "/mis-pedidos/:id",
+          element: <PedidoDetalle />,
+        },
+        {
+          path: "/admin/pedidos",
+          element: <AdminPedidos />,
+        },
+        {
+          path: "/admin/pedidos/:id",
+          element: <AdminPedidoDetalle />,
+        },
+        {
+          path: "/admin/dtf",
+          element: <AdminDtfPrecios />,
         },
         {
           path: "/:id",

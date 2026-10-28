@@ -250,6 +250,8 @@ const Articulo = () => {
 
   // Agregar al carrito con lógica limpia
   const handleAddToCart = useCallback(() => {
+    if (selected?.stock === false) return;
+
     const existingProduct = allProducts.find(
       (item) => item.id === selected.id && item.talla === medidas,
     );
@@ -316,6 +318,9 @@ const Articulo = () => {
   // Producto que acaba de añadirse (para el texto "Añadido" del botón).
   const recienAgregado = agregadoId !== null && agregadoId === selected?.id;
 
+  // Stock booleano: `false` significa agotado (sin cantidades).
+  const agotado = selected?.stock === false;
+
   return (
     <div className="producto-detalle">
       <Container>
@@ -362,51 +367,59 @@ const Articulo = () => {
                 </div>
 
                 <div className="detalle-acciones">
-                  <a
-                    href={generateWhatsAppLink()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-pedido"
-                  >
-                    Hacer pedido
-                  </a>
+                  {agotado ? (
+                    <p className="detalle-agotado" role="status">
+                      Este producto está agotado por el momento.
+                    </p>
+                  ) : (
+                    <>
+                      <a
+                        href={generateWhatsAppLink()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-pedido"
+                      >
+                        Hacer pedido
+                      </a>
 
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className={`btn-anadir${
-                      recienAgregado ? " btn-anadir--hecho" : ""
-                    }`}
-                  >
-                    <span
-                      className="icono-intercambio"
-                      data-estado={recienAgregado ? "b" : "a"}
-                      aria-hidden="true"
-                    >
-                      <FontAwesomeIcon
-                        icon={faBagShopping}
-                        data-icono="a"
-                      />
-                      <FontAwesomeIcon icon={faCheck} data-icono="b" />
-                    </span>
+                      <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        className={`btn-anadir${
+                          recienAgregado ? " btn-anadir--hecho" : ""
+                        }`}
+                      >
+                        <span
+                          className="icono-intercambio"
+                          data-estado={recienAgregado ? "b" : "a"}
+                          aria-hidden="true"
+                        >
+                          <FontAwesomeIcon
+                            icon={faBagShopping}
+                            data-icono="a"
+                          />
+                          <FontAwesomeIcon icon={faCheck} data-icono="b" />
+                        </span>
 
-                    <span
-                      className="intercambio-texto"
-                      data-estado={recienAgregado ? "b" : "a"}
-                      aria-hidden="true"
-                    >
-                      <span data-texto="a">Añadir al carrito</span>
-                      <span data-texto="b">Añadido</span>
-                    </span>
+                        <span
+                          className="intercambio-texto"
+                          data-estado={recienAgregado ? "b" : "a"}
+                          aria-hidden="true"
+                        >
+                          <span data-texto="a">Añadir al carrito</span>
+                          <span data-texto="b">Añadido</span>
+                        </span>
 
-                    {/* Nombre accesible del botón: el texto visible está
-                        duplicado (apilado) para el intercambio. */}
-                    <span className="solo-lector">
-                      {recienAgregado
-                        ? "Añadido al carrito"
-                        : "Añadir al carrito"}
-                    </span>
-                  </button>
+                        {/* Nombre accesible del botón: el texto visible está
+                            duplicado (apilado) para el intercambio. */}
+                        <span className="solo-lector">
+                          {recienAgregado
+                            ? "Añadido al carrito"
+                            : "Añadir al carrito"}
+                        </span>
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <ul className="detalle-puntos">
