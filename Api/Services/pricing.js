@@ -1,10 +1,16 @@
 const {
   Articulos,
   Dtf,
-  DtfPriceVariant,
   Category,
 } = require("../DataBase/models/index.js");
 const HttpError = require("../Utils/HttpError.js");
+const {
+  articleTipo,
+  resolvePrice,
+  COMBO_TIPO,
+  decorateArticle,
+  decorateDtf,
+} = require("./prices.js");
 
 // El precio y la disponibilidad SIEMPRE se resuelven en el backend.
 // Lo que envie el cliente (cost, precio, total) se ignora por completo.
@@ -49,6 +55,18 @@ const parseQuantity = (quantity) => {
   return parsed;
 };
 
+const buildPriceSnapshot = (price, productType, tipo, kind) => ({
+  source: price.source,
+  priceVariantId: price.priceVariantId,
+  productPriceId: price.productPriceId,
+  productType,
+  tipo,
+  kind,
+  precio: Number(price.precio),
+  precioAnterior: price.precioAnterior ?? null,
+  capturedAt: new Date().toISOString(),
+});
+
 // ------------------------------- Articulos -------------------------------
 const resolveArticle = async (item, transaction) => {
   const quantity = parseQuantity(item.quantity);
@@ -80,20 +98,36 @@ const resolveArticle = async (item, transaction) => {
     size = requested;
   }
 
-  const cost = Number(articulo.cost) || 0;
-  // `cost` es el precio de venta actual. `descuento` es el precio anterior
-  // que el catalogo muestra tachado: no se cobra ni genera descuento.
-  if (cost <= 0) {
-    throw new HttpError(409, "El producto no tiene un precio valido");
+  // Un combo es un articulo con un precio distinto. El monto vive en
+  // product_prices (kind = "combo"), no en la tabla de articulos.
+  const kind = articulo.combo ? "combo" : "unit";
+  const tipo = articulo.combo ? COMBO_TIPO : articleTipo(articulo);
+
+  const price = await resolvePrice({
+    productType: "articulo",
+    productId: articulo.id,
+    tipo,
+    kind,
+    transaction,
+  });
+
+  if (!price) {
+    throw new HttpError(
+      409,
+      articulo.combo
+        ? "El combo no tiene un precio configurado"
+        : "El producto no tiene un precio configurado",
+    );
   }
-  const unitPrice = cost;
-  const discount = 0;
+
+  const unitPrice = Number(price.precio);
+  const decorated = await decorateArticle(articulo, transaction);
 
   return {
     line: {
       productType: "articulo",
       productId: articulo.id,
-      variantId: null,
+      variantId: price.productPriceId || price.priceVariantId || null,
       title: articulo.title,
       imageUrl: firstImage(articulo.img),
       size,
@@ -104,47 +138,19 @@ const resolveArticle = async (item, transaction) => {
       unitPrice,
       quantity,
       lineTotal: unitPrice * quantity,
-      productSnapshot: articulo.toJSON(),
+      productSnapshot: decorated,
+      priceSnapshot: buildPriceSnapshot(
+        price,
+        "articulo",
+        tipo,
+        kind,
+      ),
     },
-    discount: discount * quantity,
+    discount: 0,
   };
 };
 
 // --------------------------------- DTF ----------------------------------
-const resolveVariant = async (dtf, item, transaction) => {
-  if (item.variantId) {
-    const variant = await DtfPriceVariant.findOne({
-      where: { id: item.variantId, dtfId: dtf.id, activo: true },
-      transaction,
-    });
-    if (!variant) {
-      throw new HttpError(409, "La variante de precio ya no está disponible");
-    }
-    return variant;
-  }
-
-  const tipo = DTF_TIPO_MAP[String(item.dtfSize || "").trim().toLowerCase()];
-  if (!tipo) {
-    throw new HttpError(400, "Selecciona el tamaño del DTF");
-  }
-
-  const variant = await DtfPriceVariant.findOne({
-    where: {
-      dtfId: dtf.id,
-      tipo,
-      activo: true,
-      medidas: null,
-      color: null,
-    },
-    transaction,
-  });
-
-  if (!variant) {
-    throw new HttpError(409, "El diseño DTF no tiene precio configurado");
-  }
-  return variant;
-};
-
 const resolveDtf = async (item, transaction) => {
   const quantity = parseQuantity(item.quantity);
 
@@ -162,36 +168,52 @@ const resolveDtf = async (item, transaction) => {
     throw new HttpError(409, "El diseño DTF está agotado");
   }
 
-  const category = await Category.findByPk(dtf.categoryId, { transaction });
-  const variant = await resolveVariant(dtf, item, transaction);
-  const unitPrice = Number(variant.precio) || 0;
+  const tipo = DTF_TIPO_MAP[String(item.dtfSize || "").trim().toLowerCase()];
+  if (!tipo) {
+    throw new HttpError(400, "Selecciona el tamaño del DTF");
+  }
 
+  const category = await Category.findByPk(dtf.categoryId, { transaction });
+  const price = await resolvePrice({
+    productType: "dtf",
+    productId: dtf.id,
+    tipo,
+    kind: "unit",
+    transaction,
+  });
+
+  if (!price) {
+    throw new HttpError(409, "El diseño DTF no tiene un precio configurado");
+  }
+
+  const unitPrice = Number(price.precio);
   if (unitPrice <= 0) {
     throw new HttpError(409, "El diseño DTF no tiene un precio válido");
   }
 
   const categoryName = category?.name || "Sin categoría";
+  const decorated = await decorateDtf(dtf, transaction);
 
   return {
     line: {
       productType: "dtf",
       productId: dtf.id,
-      variantId: variant.id,
+      variantId: price.productPriceId || price.priceVariantId || null,
       title: `Diseño DTF · ${categoryName}`,
       imageUrl: dtf.img || null,
       size: null,
-      oversize: variant.tipo === "oversize",
+      oversize: tipo === "oversize",
       shirtColor: item.shirtColor ? String(item.shirtColor).slice(0, 50) : null,
       shirtName: item.shirtName ? String(item.shirtName).slice(0, 100) : null,
-      dtfSize: variant.tipo,
+      dtfSize: tipo,
       unitPrice,
       quantity,
       lineTotal: unitPrice * quantity,
       productSnapshot: {
-        ...dtf.toJSON(),
+        ...decorated,
         category: category ? category.toJSON() : null,
-        variant: variant.toJSON(),
       },
+      priceSnapshot: buildPriceSnapshot(price, "dtf", tipo, "unit"),
     },
     discount: 0,
   };

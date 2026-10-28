@@ -1,6 +1,7 @@
-// Runner local de la migracion 003 (envios, numeracion y precios DTF).
+// Runner local de la migracion 003 (envios y numeracion).
 // Uso: node migrations/runShipping.js   (ejecutar desde Api/)
 // Idempotente: seguro ejecutarlo varias veces.
+// Los precios DTF se migraron al esquema global; ver DataBase/ensurePricing.js.
 // Produccion (Neon) se migra a mano con
 // migrations/003_shipping_and_dtf_prices.sql.
 
@@ -54,15 +55,6 @@ const statements = [
      SELECT 1 FROM shipping_rates s WHERE s.zone = v.zone AND s.label = v.label
    );`,
 
-  `INSERT INTO dtf_price_variants (id, "dtfId", tipo, precio, medidas, color, activo, "createdAt", "updatedAt")
-   SELECT gen_random_uuid(), d.id, v.tipo, v.precio, NULL, NULL, true, now(), now()
-   FROM dtfs d
-   CROSS JOIN (VALUES ('basico', 22000), ('oversize', 32000)) AS v(tipo, precio)
-   WHERE NOT EXISTS (
-     SELECT 1 FROM dtf_price_variants p
-      WHERE p."dtfId" = d.id AND p.tipo = v.tipo
-        AND p.medidas IS NULL AND p.color IS NULL
-   );`,
 ];
 
 const run = async () => {
@@ -89,14 +81,6 @@ const run = async () => {
   );
   console.log("\n🚚 Tarifas de envio:");
   console.table(rates);
-
-  const [prices] = await sequelize.query(
-    `SELECT p.tipo, p.precio, count(*)::int AS disenos
-       FROM dtf_price_variants p
-      GROUP BY p.tipo, p.precio ORDER BY p.tipo;`,
-  );
-  console.log("\n🎨 Variantes DTF:");
-  console.table(prices);
 
   const [seq] = await sequelize.query(
     `SELECT last_value, is_called FROM order_number_seq;`,

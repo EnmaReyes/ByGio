@@ -1,22 +1,30 @@
 const { Op } = require("sequelize");
 const { Articulos } = require("../DataBase/models/Articulos.js");
+const { ProductPrice } = require("../DataBase/models/ProductPrice.js");
+const { sequelize } = require("../DataBase/db.js");
+const {
+  COMBO_TIPO,
+  decorateArticles,
+  decorateArticle,
+} = require("../Services/prices.js");
 
 // CRUD de articulos.
 // Las rutas de escritura estan protegidas con requireAdmin (ver Rutas/posts.js),
 // por eso aqui se asume que req.user existe y es administrador.
 // Las respuestas siguen la convencion de la API: strings planos.
 
+// El precio unitario ya no vive en articulos: se resuelve desde la tarifa
+// global (price_variants) o una excepcion (product_prices). El combo solo
+// aporta su flag de presentacion y su precio propio.
 const ARTICLE_FIELDS = [
   "title",
   "desc",
   "img",
   "sizes",
   "oversize",
-  "cost",
   "stock",
   "destacadas",
   "combo",
-  "descuento",
 ];
 
 // Construye el objeto de escritura solo con los campos enviados, para no
@@ -29,19 +37,82 @@ const pickArticleFields = (body = {}) => {
   return data;
 };
 
+const parsePositivePrice = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const parsePreviousPrice = (value, currentPrice) => {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  if (parsed <= currentPrice) return null;
+  return parsed;
+};
+
+const comboPriceData = (articuloId, precio, precioAnterior) => ({
+  productType: "articulo",
+  productId: articuloId,
+  tipo: COMBO_TIPO,
+  kind: "combo",
+  precio,
+  precioAnterior: precioAnterior ?? null,
+  activo: true,
+});
+
 const addArticle = async (req, res) => {
   try {
-    const newArticule = {
-      ...pickArticleFields(req.body),
-      uid: req.user.id,
-    };
+    const data = pickArticleFields(req.body);
+    const esCombo = Boolean(data.combo);
 
-    const createdArt = await Articulos.create(newArticule);
+    let precioCombo = null;
+    let precioAnteriorCombo = null;
 
-    res.status(201).json({
-      message: "Artículo creado con éxito!",
-      article: createdArt,
-    });
+    if (esCombo) {
+      precioCombo = parsePositivePrice(req.body.precioCombo);
+      if (!precioCombo) {
+        return res
+          .status(400)
+          .json("Un artículo combo necesita un precio de combo mayor a cero");
+      }
+
+      precioAnteriorCombo = parsePreviousPrice(
+        req.body.precioAnteriorCombo,
+        precioCombo,
+      );
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      const createdArt = await Articulos.create(
+        { ...data, uid: req.user.id },
+        { transaction },
+      );
+
+      if (esCombo) {
+        await ProductPrice.create(
+          comboPriceData(
+            createdArt.id,
+            precioCombo,
+            precioAnteriorCombo,
+          ),
+          { transaction },
+        );
+      }
+
+      await transaction.commit();
+
+      const article = await decorateArticle(createdArt);
+
+      return res.status(201).json({
+        message: "Artículo creado con éxito!",
+        article,
+      });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       return res
@@ -49,22 +120,22 @@ const addArticle = async (req, res) => {
         .json(error.errors?.[0]?.message || "Datos del artículo inválidos");
     }
     console.error("Error en addArticle:", error);
-    res.status(500).json("Error interno del servidor del post");
+    return res.status(500).json("Error interno del servidor del post");
   }
 };
 
 const getArticle = async (req, res) => {
   try {
-    const Article = await Articulos.findAll({
+    const articulos = await Articulos.findAll({
       order: [["createdAt", "DESC"]], // Último creado primero
     });
-    if (!Article || Article.length === 0) {
+    if (!articulos || articulos.length === 0) {
       return res.status(404).json("No Hay Articulos");
     }
-    res.status(200).json(Article);
+    return res.status(200).json(await decorateArticles(articulos));
   } catch (error) {
     console.error("Error en getArticle:", error);
-    res.status(500).json("Error interno del servidor");
+    return res.status(500).json("Error interno del servidor");
   }
 };
 
@@ -86,7 +157,7 @@ const getArticleByTitle = async (req, res) => {
     });
 
     // Lista vacia es una respuesta valida, no un error.
-    return res.status(200).json(posts);
+    return res.status(200).json(await decorateArticles(posts));
   } catch (error) {
     console.error("Error en getArticleByTitle:", error);
     return res.status(500).json("Error interno del servidor");
@@ -94,34 +165,125 @@ const getArticleByTitle = async (req, res) => {
 };
 
 const deleteArticle = async (req, res) => {
-  try {
-    const Article = await Articulos.findByPk(req.params.id);
+  const transaction = await sequelize.transaction();
 
-    if (!Article) {
+  try {
+    const article = await Articulos.findByPk(req.params.id, { transaction });
+
+    if (!article) {
+      await transaction.rollback();
       return res.status(404).json("No se encontró el artículo");
     }
 
-    await Article.destroy();
+    await ProductPrice.destroy({
+      where: { productType: "articulo", productId: article.id },
+      transaction,
+    });
+    await article.destroy({ transaction });
+
+    await transaction.commit();
     return res.json("Post eliminado con éxito!");
   } catch (error) {
+    await transaction.rollback();
     console.error("Error en deleteArticle:", error);
     return res.status(500).json("Error en el servidor");
   }
 };
 
 const updateArticle = async (req, res) => {
-  try {
-    const Article = await Articulos.findByPk(req.params.id);
+  const transaction = await sequelize.transaction();
 
-    if (!Article) {
+  try {
+    const article = await Articulos.findByPk(req.params.id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!article) {
+      await transaction.rollback();
       return res.status(404).json("No se encontró el post para actualizar");
     }
 
-    const updatedArticle = pickArticleFields(req.body);
-    await Article.update(updatedArticle);
+    const data = pickArticleFields(req.body);
+    const targetCombo =
+      data.combo !== undefined ? Boolean(data.combo) : article.combo;
 
+    let comboData = null;
+
+    if (targetCombo) {
+      const existing = await ProductPrice.findOne({
+        where: {
+          productType: "articulo",
+          productId: article.id,
+          tipo: COMBO_TIPO,
+          kind: "combo",
+        },
+        transaction,
+      });
+
+      const precio = parsePositivePrice(
+        req.body.precioCombo !== undefined
+          ? req.body.precioCombo
+          : existing?.precio,
+      );
+
+      if (!precio) {
+        await transaction.rollback();
+        return res
+          .status(400)
+          .json("Un artículo combo necesita un precio de combo mayor a cero");
+      }
+
+      const previous = parsePreviousPrice(
+        req.body.precioAnteriorCombo !== undefined
+          ? req.body.precioAnteriorCombo
+          : existing?.precioAnterior,
+        precio,
+      );
+
+      comboData = comboPriceData(article.id, precio, previous);
+    }
+
+    await article.update(data, { transaction });
+
+    if (targetCombo) {
+      const [combo, created] = await ProductPrice.findOrCreate({
+        where: {
+          productType: "articulo",
+          productId: article.id,
+          tipo: COMBO_TIPO,
+          kind: "combo",
+        },
+        defaults: comboData,
+        transaction,
+      });
+
+      if (!created) {
+        await combo.update(
+          {
+            precio: comboData.precio,
+            precioAnterior: comboData.precioAnterior,
+            activo: true,
+          },
+          { transaction },
+        );
+      }
+    } else {
+      await ProductPrice.destroy({
+        where: {
+          productType: "articulo",
+          productId: article.id,
+          kind: "combo",
+        },
+        transaction,
+      });
+    }
+
+    await transaction.commit();
     return res.json("Post actualizado con éxito!");
   } catch (error) {
+    await transaction.rollback();
+
     if (error.name === "SequelizeValidationError") {
       return res
         .status(400)
@@ -134,16 +296,15 @@ const updateArticle = async (req, res) => {
 
 const getArticleByID = async (req, res) => {
   try {
-    const articleId = req.params.id;
-    const article = await Articulos.findByPk(articleId);
+    const article = await Articulos.findByPk(req.params.id);
 
     if (!article) {
       return res.status(404).json("No Hay Articulos por ID");
     }
-    res.status(200).json(article);
+    return res.status(200).json(await decorateArticle(article));
   } catch (error) {
     console.error(error);
-    res.status(500).json("Error interno del servidor");
+    return res.status(500).json("Error interno del servidor");
   }
 };
 

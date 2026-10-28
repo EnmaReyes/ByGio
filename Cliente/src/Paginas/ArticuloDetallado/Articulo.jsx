@@ -39,6 +39,10 @@ import useConfirmacion from "../../hooks/useConfirmacion";
 import ArticulosSimilares from "./ArticulosSimilares";
 import BandaEditorial from "../../Componentes/BandaEditorial";
 import BandaBeneficios from "../../Componentes/BandaBeneficios";
+import {
+  getPreviousPrice,
+  getUnitPrice,
+} from "../../Componentes/cartUtils";
 
 const URL = API_URL;
 
@@ -271,7 +275,7 @@ const Articulo = () => {
       ]);
     }
 
-    setTotal(total + selected.cost * conteo);
+    setTotal(total + getUnitPrice(selected) * conteo);
     setCountProducts(countProducts + conteo);
     confirmarAgregado(selected.id);
     toast.success("Producto añadido al carrito", toastComments);
@@ -290,12 +294,14 @@ const Articulo = () => {
 
   // Generar link de WhatsApp
   const generateWhatsAppLink = useCallback(() => {
-    if (!selected?.title || !selected?.cost || !imagens?.[0]) {
+    const precio = getUnitPrice(selected);
+
+    if (!selected?.title || !precio || !imagens?.[0]) {
       return "#";
     }
 
     const talla = selected.oversize ? "Over Size" : medidas;
-    const message = `¡Hola!😁 Estoy interesado en:\n${conteo} ${selected.title}\nTalla: ${talla}\nValor: $${selected.cost.toLocaleString()} por unidad`;
+    const message = `¡Hola!😁 Estoy interesado en:\n${conteo} ${selected.title}\nTalla: ${talla}\nValor: $${precio.toLocaleString()} por unidad`;
     const imageLink = imagens[0];
 
     return `https://wa.me/${PhoneNumber}?text=${encodeURIComponent(message)}%0A%0A${encodeURIComponent(imageLink)}`;
@@ -346,8 +352,8 @@ const Articulo = () => {
                 <h1 className="detalle-titulo">{selected?.title}</h1>
 
                 <PriceInfo
-                  price={selected?.cost}
-                  previousPrice={selected?.descuento}
+                  price={getUnitPrice(selected)}
+                  previousPrice={getPreviousPrice(selected)}
                   quantity={conteo}
                 />
 

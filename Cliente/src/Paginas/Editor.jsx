@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { API_URL } from "../config";
 import { Col, Container, Row, Button, Form } from "react-bootstrap";
 import axios from "axios";
@@ -44,12 +44,17 @@ const Editor = () => {
     Array.isArray(parsedSizes) ? parsedSizes : ["S", "M", "L"],
   );
 
-  const [overSize, setOverSize] = useState(state?.overSize ?? false);
+  const [overSize, setOverSize] = useState(state?.oversize ?? false);
   const [stock, setStock] = useState(state?.stock ?? true);
-  const [cost, setCost] = useState(state?.cost || "");
-  const [descuento, setDescuento] = useState(state?.descuento ?? 0);
   const [loading, setLoading] = useState(false);
   const [destacadas, setDestacadas] = useState(state?.destacadas ?? false);
+  const [combo, setCombo] = useState(state?.combo ?? false);
+  const [precioCombo, setPrecioCombo] = useState(
+    state?.precioCombo ?? "",
+  );
+  const [precioAnteriorCombo, setPrecioAnteriorCombo] = useState(
+    state?.precioAnteriorCombo ?? "",
+  );
 
   // Rastrea las blob URLs activas para poder revocarlas y evitar memory leaks
   const blobUrlsRef = useRef(new Set());
@@ -144,8 +149,22 @@ const Editor = () => {
   const handleClick = async (e) => {
     e.preventDefault();
 
-    if (!title || !description || !cost || !sizes.some((size) => size)) {
+    if (!title || !description || !sizes.some((size) => size)) {
       toast.error("Falta información para subir el artículo!");
+      return;
+    }
+
+    if (combo && !(Number(precioCombo) > 0)) {
+      toast.error("Un artículo combo necesita un precio de combo.");
+      return;
+    }
+
+    if (
+      combo &&
+      Number(precioAnteriorCombo) > 0 &&
+      Number(precioAnteriorCombo) <= Number(precioCombo)
+    ) {
+      toast.error("El precio anterior del combo debe ser mayor al actual.");
       return;
     }
 
@@ -177,10 +196,16 @@ const Editor = () => {
         img: validUrls,
         sizes,
         oversize: overSize,
-        cost,
         stock,
-        descuento,
         destacadas,
+        combo,
+        ...(combo && {
+          precioCombo: Number(precioCombo),
+          precioAnteriorCombo:
+            Number(precioAnteriorCombo) > 0
+              ? Number(precioAnteriorCombo)
+              : null,
+        }),
       };
 
       const promise = state
@@ -330,33 +355,62 @@ const Editor = () => {
                 placeholder="Descripción del producto"
               />
             </Form.Group>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3" controlId="formPrice">
-                  <Form.Label className="titulos">Precio</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={cost}
-                    onChange={(e) => setCost(e.target.value)}
-                    placeholder="Precio"
-                  />
-                </Form.Group>
-              </Col>
+            <p className="texto-seccion mb-3">
+              El precio base se configura una sola vez en{" "}
+              <Link to="/admin/dtf" className="enlace-seccion">
+                Precios globales
+              </Link>
+              . Aquí solo se
+              define el precio propio si el artículo es combo.
+            </p>
 
-              <Col md={6}>
-                <Form.Group className="mb-3" controlId="formDescuento">
-                  <Form.Label className="titulos">Precio anterior</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={descuento}
-                    onChange={(e) => setDescuento(e.target.value)}
-                    placeholder="Descuento"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+            <Form.Group className="d-flex align-items-center mb-3 gap-3">
+              <Form.Label className="titulos">Combo</Form.Label>
+              <Form.Switch
+                className="fs-5"
+                checked={combo}
+                onChange={() => setCombo(!combo)}
+              />
+            </Form.Group>
+
+            {combo && (
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3" controlId="formPrecioCombo">
+                    <Form.Label className="titulos">
+                      Precio del combo
+                    </Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      value={precioCombo}
+                      onChange={(e) => setPrecioCombo(e.target.value)}
+                      placeholder="Precio del combo"
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formPrecioAnteriorCombo"
+                  >
+                    <Form.Label className="titulos">
+                      Precio anterior del combo
+                    </Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      value={precioAnteriorCombo}
+                      onChange={(e) =>
+                        setPrecioAnteriorCombo(e.target.value)
+                      }
+                      placeholder="Opcional"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            )}
 
             <Form.Group
               className="d-flex align-items-center justifyContent-center mb-3 gap-3"

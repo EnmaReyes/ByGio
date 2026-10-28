@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useContextProvaider } from "../context/ContextProvaider.jsx";
 import RejillaProductos from "./RejillaProductos";
 import RejillaEsqueleto from "./RejillaEsqueleto";
+import { getPreviousPrice, getUnitPrice } from "./cartUtils";
 
 const EstadoCarga = () => <RejillaEsqueleto mensaje="Cargando productos…" />;
 
@@ -62,7 +63,12 @@ export const CartaDeArticulos = ({
 
   const lista = useMemo(() => {
     const base =
-      articulosPropios ?? articulos.filter((articulo) => !(articulo.descuento > 0));
+      articulosPropios ??
+      articulos.filter(
+        (articulo) =>
+          !articulo.combo &&
+          !(getPreviousPrice(articulo) > getUnitPrice(articulo)),
+      );
     return typeof limite === "number" ? base.slice(0, limite) : base;
   }, [articulosPropios, articulos, limite]);
 
@@ -91,12 +97,53 @@ export const CartaDeArticulos = ({
   );
 };
 
+/* Artículos combo. Comparten el resto de valores con su artículo base, pero
+   tienen un precio propio y se muestran en esta sección aparte. */
+export const ArticulosCombo = ({ limite } = {}) => {
+  const { articulos, loadingArticulos } = useContextProvaider();
+
+  const combos = useMemo(() => {
+    const lista = articulos.filter((articulo) => articulo.combo === true);
+    return typeof limite === "number" ? lista.slice(0, limite) : lista;
+  }, [articulos, limite]);
+
+  if (!loadingArticulos && combos.length === 0) return null;
+
+  return (
+    <section className="seccion" aria-labelledby="combos-titulo">
+      <div className="contenedor">
+        <div className="seccion-cabecera">
+          <div>
+            <span className="etiqueta-seccion">Precio especial</span>
+            <h2 id="combos-titulo" className="titulo-seccion">
+              Combos
+            </h2>
+            <p className="texto-seccion">
+              Piezas con un precio de combo, pensadas para completar tu look.
+            </p>
+          </div>
+        </div>
+
+        {loadingArticulos ? (
+          <EstadoCarga />
+        ) : (
+          <RejillaProductos articulos={combos} mostrarDescuento />
+        )}
+      </div>
+    </section>
+  );
+};
+
 /* Artículos con precio anterior (ofertas). Se mantiene la exportación. */
 export const ArtiulosOferta = ({ limite } = {}) => {
   const { articulos, loadingArticulos } = useContextProvaider();
 
   const ofertas = useMemo(() => {
-    const lista = articulos.filter((articulo) => articulo.descuento > 0);
+    const lista = articulos.filter(
+      (articulo) =>
+        !articulo.combo &&
+        getPreviousPrice(articulo) > getUnitPrice(articulo),
+    );
     return typeof limite === "number" ? lista.slice(0, limite) : lista;
   }, [articulos, limite]);
 

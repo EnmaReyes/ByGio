@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { getPreviousPrice, getUnitPrice } from "./cartUtils";
 
 const parseJsonValue = (valor) => {
   if (typeof valor !== "string") return valor;
@@ -26,7 +27,7 @@ const obtenerTallas = (articulo) => {
 
 const generarEnlaceWhatsApp = (articulo, telefono) => {
   const talla = articulo?.oversize ? "Over size" : "S/M/L";
-  const precio = Number(articulo?.cost) || 0;
+  const precio = getUnitPrice(articulo);
   const mensaje = `¡Hola!😁 Estoy interesado en:\n${articulo?.title}\nValor: $${precio.toLocaleString()} por unidad\n¿Está disponible en ${talla}?`;
   const imagen = obtenerImagen(articulo);
   const base = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
@@ -46,7 +47,7 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
   const telefono = import.meta.env.VITE_NUMBER_PHONE;
   const imagen = obtenerImagen(articulo);
   const tallas = obtenerTallas(articulo);
-  const precio = Number(articulo?.cost) || 0;
+  const precio = getUnitPrice(articulo);
 
   useEffect(() => {
     setErrorImagen(false);
@@ -64,12 +65,12 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
     [articulo, telefono],
   );
 
+  const precioAnterior = getPreviousPrice(articulo);
   const porcentaje = mostrarDescuento
-    ? calcularPorcentaje(articulo?.descuento, articulo?.cost)
+    ? calcularPorcentaje(precioAnterior, precio)
     : 0;
 
-  const descuento = Number(articulo?.descuento) || 0;
-  const tieneDescuento = mostrarDescuento && descuento > precio;
+  const tieneDescuento = mostrarDescuento && precioAnterior > precio;
 
   const tieneStock = articulo?.stock !== false;
 
@@ -85,6 +86,9 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
         }`}
       >
         <span className="tarjeta-badges">
+          {articulo?.combo && (
+            <span className="tarjeta-badge tarjeta-badge--combo">Combo</span>
+          )}
           {porcentaje > 0 && (
             <span className="tarjeta-badge">-{porcentaje}%</span>
           )}
@@ -150,7 +154,7 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
         <div className="tarjeta-precios">
           {tieneDescuento && (
             <span className="tarjeta-precio tarjeta-precio--anterior">
-              ${descuento.toLocaleString()}
+              ${precioAnterior.toLocaleString()}
             </span>
           )}
           <span

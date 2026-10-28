@@ -981,6 +981,11 @@ html[data-theme="dark"] .marca-logo {
   border: 1px solid var(--line);
 }
 
+.tarjeta-badge--combo {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
 .tarjeta-cuerpo {
   display: flex;
   flex-direction: column;

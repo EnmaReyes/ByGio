@@ -11,7 +11,8 @@ const { Articulos } = require("./Articulos.js");
 const { Banner } = require("./Banner.js");
 const { Category } = require("./Category.js");
 const { Dtf } = require("./Dtf.js");
-const { DtfPriceVariant } = require("./DtfPriceVariant.js");
+const { PriceVariant } = require("./PriceVariant.js");
+const { ProductPrice } = require("./ProductPrice.js");
 const { ShippingRate } = require("./ShippingRate.js");
 const { Usuarios } = require("./Usuarios.js");
 const { Order } = require("./Order.js");
@@ -29,7 +30,8 @@ module.exports = {
   Banner,
   Category,
   Dtf,
-  DtfPriceVariant,
+  PriceVariant,
+  ProductPrice,
   ShippingRate,
   Usuarios,
   Order,

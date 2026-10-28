@@ -5,9 +5,15 @@ export const isDtfProduct = (product) => product.cartType === "dtf";
 export const formatPrice = (value) =>
   `$${(Number(value) || 0).toLocaleString()}`;
 
-/* Precio unitario real de un articulo: `cost` es el precio actual y
-   `descuento` solo es el precio anterior que se muestra tachado. */
-export const getUnitPrice = (product) => Number(product?.cost) || 0;
+/* Precio unitario real de un articulo. La API entrega `precio` ya resuelto
+   (tarifa global, excepcion o combo). `cost` queda como respaldo para
+   carritos viejos guardados en localStorage. */
+export const getUnitPrice = (product) =>
+  Number(product?.precio ?? product?.cost) || 0;
+
+/* Precio anterior real (solo para mostrar tachado). */
+export const getPreviousPrice = (product) =>
+  Number(product?.precioAnterior ?? product?.descuento) || 0;
 
 export const DTF_SIZE_LABELS = {
   basic: "Básico",
@@ -40,7 +46,7 @@ export const getDtfUnitPrice = (product) => {
   if (Number.isFinite(precio) && precio > 0) return precio;
 
   // Respaldo para carritos viejos que ya guardaban el precio en `cost`.
-  const respaldo = Number(product?.cost);
+  const respaldo = Number(product?.precio ?? product?.cost);
   return Number.isFinite(respaldo) && respaldo > 0 ? respaldo : 0;
 };
 

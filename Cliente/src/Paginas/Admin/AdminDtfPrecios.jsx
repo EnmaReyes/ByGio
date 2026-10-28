@@ -10,10 +10,14 @@ import { getApiErrorMessage } from "../../Componentes/orderUtils";
 import "../pedidos.css";
 import "./admin.css";
 
-const DTf_LABELS = {
-  basico: "Básico",
-  oversize: "Oversize",
-};
+const PRICE_FIELDS = [
+  { productType: "articulo", tipo: "basico", label: "Artículos · Básico" },
+  { productType: "articulo", tipo: "oversize", label: "Artículos · Oversize" },
+  { productType: "dtf", tipo: "basico", label: "DTF · Básico" },
+  { productType: "dtf", tipo: "oversize", label: "DTF · Oversize" },
+];
+
+const priceKey = (productType, tipo) => `${productType}:${tipo}`;
 
 const parseImage = (value) => {
   if (typeof value !== "string") return value?.[0] || "";
@@ -25,7 +29,14 @@ const parseImage = (value) => {
   }
 };
 
-const priceKey = (dtfId, variantId) => `${dtfId}:${variantId}`;
+const pricesToMap = (prices) =>
+  (prices || []).reduce((acc, price) => {
+    acc[priceKey(price.productType, price.tipo)] = {
+      precio: String(price.precio ?? ""),
+      precioAnterior: String(price.precioAnterior ?? ""),
+    };
+    return acc;
+  }, {});
 
 const AdminDtfPrecios = () => {
   const { currentUser } = useContext(AuthContext);
@@ -33,37 +44,41 @@ const AdminDtfPrecios = () => {
 
   const [items, setItems] = useState([]);
   const [prices, setPrices] = useState({});
+  const [initialPrices, setInitialPrices] = useState({});
+  const [overrides, setOverrides] = useState({ articulo: 0, dtf: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [savingId, setSavingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [savingStockId, setSavingStockId] = useState(null);
+  const [normalizing, setNormalizing] = useState(false);
 
-  const hydratePrices = (list) => {
-    const map = {};
-    list.forEach((dtf) => {
-      (dtf.priceVariants || []).forEach((variant) => {
-        map[priceKey(dtf.id, variant.id)] = String(variant.precio ?? "");
-      });
-    });
+  const applyPricesResponse = useCallback((data) => {
+    const map = pricesToMap(data?.prices);
     setPrices(map);
-  };
+    setInitialPrices(map);
+    setOverrides(data?.overrides || { articulo: 0, dtf: 0 });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const res = await axios.get(`${API_URL}/api/dtf`);
-      const list = Array.isArray(res.data) ? res.data : [];
-      setItems(list);
-      hydratePrices(list);
+      const [pricesRes, dtfRes] = await Promise.all([
+        axios.get(`${API_URL}/api/prices`),
+        axios.get(`${API_URL}/api/dtf`),
+      ]);
+
+      applyPricesResponse(pricesRes.data);
+      setItems(Array.isArray(dtfRes.data) ? dtfRes.data : []);
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "No se pudieron cargar los diseños DTF."),
+        getApiErrorMessage(err, "No se pudieron cargar los precios."),
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyPricesResponse]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -71,16 +86,143 @@ const AdminDtfPrecios = () => {
     load();
   }, [isAdmin, load]);
 
-  const totals = useMemo(() => {
-    const count = items.length;
-    const missing = items.filter((dtf) =>
-      (dtf.priceVariants || []).some(
-        (variant) => !(Number(prices[priceKey(dtf.id, variant.id)]) > 0),
-      ),
-    ).length;
+  const changePrice = (productType, tipo, field, value) => {
+    const key = priceKey(productType, tipo);
+    setPrices((prev) => ({
+      ...prev,
+      [key]: {
+        ...(prev[key] || { precio: "", precioAnterior: "" }),
+        [field]: value,
+      },
+    }));
+  };
 
-    return { count, missing };
-  }, [items, prices]);
+  const dirty = useMemo(
+    () =>
+      PRICE_FIELDS.some(({ productType, tipo }) => {
+        const key = priceKey(productType, tipo);
+        const current = prices[key] || {};
+        const initial = initialPrices[key] || {};
+        return (
+          String(current.precio ?? "") !== String(initial.precio ?? "") ||
+          String(current.precioAnterior ?? "") !==
+            String(initial.precioAnterior ?? "")
+        );
+      }),
+    [prices, initialPrices],
+  );
+
+  const savePrices = async () => {
+    const payload = [];
+    let invalid = false;
+
+    PRICE_FIELDS.forEach(({ productType, tipo }) => {
+      const key = priceKey(productType, tipo);
+      const precio = Number(prices[key]?.precio);
+      const precioAnterior = Number(prices[key]?.precioAnterior);
+
+      if (!Number.isInteger(precio) || precio <= 0) {
+        invalid = true;
+        return;
+      }
+
+      if (
+        Number.isInteger(precioAnterior) &&
+        precioAnterior > 0 &&
+        precioAnterior <= precio
+      ) {
+        invalid = true;
+        return;
+      }
+
+      payload.push({
+        productType,
+        tipo,
+        precio,
+        precioAnterior:
+          Number.isInteger(precioAnterior) && precioAnterior > 0
+            ? precioAnterior
+            : null,
+      });
+    });
+
+    if (invalid) {
+      toast.error(
+        "Cada precio debe ser un entero mayor a cero y el precio anterior debe ser mayor al actual.",
+      );
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const res = await axios.put(
+        `${API_URL}/api/prices`,
+        { prices: payload },
+        { withCredentials: true },
+      );
+
+      applyPricesResponse(res.data);
+      toast.success("Precios globales actualizados");
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(err, "No se pudieron guardar los precios"),
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const normalizePrices = async () => {
+    const confirmed = window.confirm(
+      "Esto elimina los precios propios de artículos y DTF. Todos usarán la tarifa global. Los precios de combo se conservan. ¿Continuar?",
+    );
+    if (!confirmed) return;
+
+    setNormalizing(true);
+
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/prices/normalize`,
+        {},
+        { withCredentials: true },
+      );
+
+      applyPricesResponse(res.data);
+      toast.success(res.data?.message || "Precios normalizados");
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(err, "No se pudieron normalizar los precios"),
+      );
+    } finally {
+      setNormalizing(false);
+    }
+  };
+
+  const toggleStock = async (dtf) => {
+    setSavingStockId(dtf.id);
+
+    try {
+      await axios.put(
+        `${API_URL}/api/dtf/${dtf.id}`,
+        { stock: !dtf.stock },
+        { withCredentials: true },
+      );
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === dtf.id ? { ...item, stock: !dtf.stock } : item,
+        ),
+      );
+      toast.success(!dtf.stock ? "Diseño disponible" : "Diseño agotado");
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(err, "No se pudo cambiar la disponibilidad"),
+      );
+    } finally {
+      setSavingStockId(null);
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -104,238 +246,235 @@ const AdminDtfPrecios = () => {
     );
   }
 
-  const setPrice = (dtfId, variantId, value) => {
-    setPrices((prev) => ({
-      ...prev,
-      [priceKey(dtfId, variantId)]: value,
-    }));
-  };
-
-  const isDirty = (dtf) =>
-    (dtf.priceVariants || []).some(
-      (variant) =>
-        String(variant.precio) !==
-        String(prices[priceKey(dtf.id, variant.id)] ?? ""),
-    );
-
-  const savePrices = async (dtf) => {
-    const variants = dtf.priceVariants || [];
-    const invalid = variants.some((variant) => {
-      const value = Number(prices[priceKey(dtf.id, variant.id)]);
-      return !Number.isFinite(value) || value <= 0;
-    });
-
-    if (invalid) {
-      toast.error("Cada variante necesita un precio mayor a cero");
-      return;
-    }
-
-    setSavingId(dtf.id);
-
-    try {
-      await axios.put(
-        `${API_URL}/api/dtf/${dtf.id}`,
-        {
-          priceVariants: variants.map((variant) => ({
-            id: variant.id,
-            tipo: variant.tipo,
-            precio: Number(prices[priceKey(dtf.id, variant.id)]),
-            medidas: variant.medidas,
-            color: variant.color,
-            activo: variant.activo,
-          })),
-        },
-        { withCredentials: true },
-      );
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === dtf.id
-            ? {
-                ...item,
-                priceVariants: item.priceVariants.map((variant) => ({
-                  ...variant,
-                  precio: Number(prices[priceKey(dtf.id, variant.id)]),
-                })),
-              }
-            : item,
-        ),
-      );
-      toast.success("Precios actualizados");
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "No se pudieron guardar los precios"));
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  const toggleStock = async (dtf) => {
-    setSavingId(dtf.id);
-
-    try {
-      await axios.put(
-        `${API_URL}/api/dtf/${dtf.id}`,
-        { stock: !dtf.stock },
-        { withCredentials: true },
-      );
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === dtf.id ? { ...item, stock: !dtf.stock } : item,
-        ),
-      );
-      toast.success(!dtf.stock ? "Diseño disponible" : "Diseño agotado");
-    } catch (err) {
-      toast.error(
-        getApiErrorMessage(err, "No se pudo cambiar la disponibilidad"),
-      );
-    } finally {
-      setSavingId(null);
-    }
-  };
+  const totalOverrides =
+    Number(overrides.articulo || 0) + Number(overrides.dtf || 0);
 
   return (
     <>
       <header className="catalogo-hero">
         <div className="contenedor">
-          <h1 className="catalogo-hero-titulo">Precios DTF</h1>
+          <h1 className="catalogo-hero-titulo">Precios globales</h1>
           <p className="catalogo-hero-texto">
-            Ajusta el precio de cada tamaño y la disponibilidad de los diseños.
-            Los cambios aplican de inmediato en el catálogo y el checkout.
+            Cambia una sola vez el precio de todos los artículos y diseños DTF.
+            Los pedidos ya creados conservan el precio con el que se vendieron.
           </p>
         </div>
       </header>
 
       <div className="checkout-page admin-page">
-        {!loading && !error && (
-        <p className="parrafos admin-muted">
-          {totals.count} {totals.count === 1 ? "diseño" : "diseños"}
-          {totals.missing > 0
-            ? ` · ${totals.missing} sin precio completo`
-            : " · todos con precio configurado"}
-        </p>
-      )}
-
-      {loading ? (
-        <div className="checkout-loading">
-          <span className="cargador" aria-hidden="true" />
-          <p className="parrafos">Cargando diseños…</p>
-        </div>
-      ) : error ? (
-        <div className="estado">
-          <h2 className="estado-titulo">No pudimos cargar los diseños</h2>
-          <p className="estado-texto">{error}</p>
-          <button
-            type="button"
-            className="btn-tema btn-tema--contorno"
-            onClick={load}
-          >
-            Reintentar
-          </button>
-        </div>
-      ) : items.length === 0 ? (
-        <div className="estado">
-          <h2 className="estado-titulo">Todavía no hay diseños DTF</h2>
-          <p className="estado-texto">
-            Crea un diseño desde “Crear DTF” para configurar sus precios.
-          </p>
-        </div>
-      ) : (
-        <div className="admin-price-grid">
-          {items.map((dtf) => {
-            const image = parseImage(dtf.img);
-            const category =
-              typeof dtf.category === "string"
-                ? dtf.category
-                : dtf.category?.name || "Sin categoría";
-            const variants = dtf.priceVariants || [];
-            const dirty = isDirty(dtf);
-            const saving = savingId === dtf.id;
-
-            return (
-              <article key={dtf.id} className="checkout-card admin-price-card">
-                <div className="admin-price-head">
-                  {image ? (
-                    <img src={image} alt="" className="admin-price-image" />
-                  ) : (
-                    <div className="admin-price-image admin-price-image-empty" />
-                  )}
-                  <div>
-                    <strong className="parrafos">{category}</strong>
-                    <span
-                      className={`order-badge ${
-                        dtf.stock === false ? "cancelled" : "paid"
-                      }`}
-                    >
-                      {dtf.stock === false ? "Agotado" : "Disponible"}
-                    </span>
-                  </div>
-                </div>
-
-                {variants.length === 0 ? (
-                  <p className="checkout-help parrafos">
-                    Este diseño no tiene variantes de precio.
+        {loading ? (
+          <div className="checkout-loading">
+            <span className="cargador" aria-hidden="true" />
+            <p className="parrafos">Cargando precios…</p>
+          </div>
+        ) : error ? (
+          <div className="estado">
+            <h2 className="estado-titulo">No pudimos cargar los precios</h2>
+            <p className="estado-texto">{error}</p>
+            <button
+              type="button"
+              className="btn-tema btn-tema--contorno"
+              onClick={load}
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <>
+            <section className="checkout-card admin-price-card">
+              <div className="admin-price-head">
+                <div>
+                  <strong className="titulos">Tarifa global</strong>
+                  <p className="parrafos admin-muted">
+                    Aplica a todos los productos sin precio propio.
                   </p>
-                ) : (
-                  <div className="admin-price-fields">
-                    {variants
-                      .slice()
-                      .sort((a, b) => a.tipo.localeCompare(b.tipo))
-                      .map((variant) => {
-                        const key = priceKey(dtf.id, variant.id);
-                        const value = prices[key] ?? "";
+                </div>
+              </div>
 
-                        return (
-                          <Form.Group key={variant.id} controlId={key}>
-                            <Form.Label className="parrafos">
-                              {DTf_LABELS[variant.tipo] || variant.tipo}
-                            </Form.Label>
-                            <Form.Control
-                              type="number"
-                              min="0"
-                              step="500"
-                              inputMode="numeric"
-                              value={value}
-                              onChange={(event) =>
-                                setPrice(dtf.id, variant.id, event.target.value)
-                              }
-                              isInvalid={!(Number(value) > 0)}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              Precio inválido
-                            </Form.Control.Feedback>
-                            <span className="parrafos admin-muted">
-                              {formatPrice(Number(value) || 0)}
-                            </span>
-                          </Form.Group>
-                        );
-                      })}
-                  </div>
-                )}
+              <div className="admin-price-grid">
+                {PRICE_FIELDS.map(({ productType, tipo, label }) => {
+                  const key = priceKey(productType, tipo);
+                  const value = prices[key]?.precio ?? "";
+                  const previous = prices[key]?.precioAnterior ?? "";
 
+                  return (
+                    <article key={key} className="admin-price-card">
+                      <strong className="parrafos">{label}</strong>
+
+                      <div className="admin-price-fields">
+                        <Form.Group controlId={`${key}-precio`}>
+                          <Form.Label className="parrafos">
+                            Precio actual
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            min="0"
+                            step="500"
+                            inputMode="numeric"
+                            value={value}
+                            onChange={(event) =>
+                              changePrice(
+                                productType,
+                                tipo,
+                                "precio",
+                                event.target.value,
+                              )
+                            }
+                            isInvalid={!(Number(value) > 0)}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            Precio inválido
+                          </Form.Control.Feedback>
+                          <span className="parrafos admin-muted">
+                            {formatPrice(Number(value) || 0)}
+                          </span>
+                        </Form.Group>
+
+                        <Form.Group controlId={`${key}-anterior`}>
+                          <Form.Label className="parrafos">
+                            Precio anterior
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            min="0"
+                            step="500"
+                            inputMode="numeric"
+                            value={previous}
+                            onChange={(event) =>
+                              changePrice(
+                                productType,
+                                tipo,
+                                "precioAnterior",
+                                event.target.value,
+                              )
+                            }
+                            isInvalid={
+                              Number(previous) > 0 &&
+                              Number(previous) <= Number(value)
+                            }
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            Debe ser mayor al precio actual
+                          </Form.Control.Feedback>
+                          <span className="parrafos admin-muted">
+                            Opcional · {formatPrice(Number(previous) || 0)}
+                          </span>
+                        </Form.Group>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="admin-price-actions">
+                <button
+                  type="button"
+                  className="btn-tema btn-tema--primario"
+                  disabled={saving || !dirty}
+                  onClick={savePrices}
+                >
+                  {saving ? "Guardando…" : "Guardar tarifa global"}
+                </button>
+              </div>
+
+              <p className="parrafos admin-muted">
+                {totalOverrides > 0
+                  ? `${totalOverrides} productos tienen un precio propio (${overrides.articulo || 0} artículos, ${overrides.dtf || 0} DTF).`
+                  : "Todos los productos usan la tarifa global."}
+              </p>
+
+              {totalOverrides > 0 && (
                 <div className="admin-price-actions">
                   <button
                     type="button"
-                    className="btn-tema btn-tema--primario"
-                    disabled={saving || !dirty}
-                    onClick={() => savePrices(dtf)}
-                  >
-                    {saving ? "Guardando…" : "Guardar precios"}
-                  </button>
-                  <button
-                    type="button"
                     className="btn-tema btn-tema--contorno"
-                    disabled={saving}
-                    onClick={() => toggleStock(dtf)}
+                    disabled={normalizing}
+                    onClick={normalizePrices}
                   >
-                    {dtf.stock === false ? "Marcar disponible" : "Marcar agotado"}
+                    {normalizing
+                      ? "Normalizando…"
+                      : "Aplicar tarifa global a todos"}
                   </button>
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+              )}
+            </section>
+
+            <section className="admin-page">
+              <h2 className="titulo-seccion mb-3">
+                Disponibilidad de diseños
+              </h2>
+
+              {items.length === 0 ? (
+                <div className="estado">
+                  <h2 className="estado-titulo">
+                    Todavía no hay diseños DTF
+                  </h2>
+                  <p className="estado-texto">
+                    Crea un diseño desde “Crear DTF” para publicarlo en el
+                    catálogo.
+                  </p>
+                </div>
+              ) : (
+                <div className="admin-price-grid">
+                  {items.map((dtf) => {
+                    const image = parseImage(dtf.img);
+                    const category =
+                      typeof dtf.category === "string"
+                        ? dtf.category
+                        : dtf.category?.name || "Sin categoría";
+                    const savingStock = savingStockId === dtf.id;
+
+                    return (
+                      <article
+                        key={dtf.id}
+                        className="checkout-card admin-price-card"
+                      >
+                        <div className="admin-price-head">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt=""
+                              className="admin-price-image"
+                            />
+                          ) : (
+                            <div className="admin-price-image admin-price-image-empty" />
+                          )}
+                          <div>
+                            <strong className="parrafos">{category}</strong>
+                            <span
+                              className={`order-badge ${
+                                dtf.stock === false ? "cancelled" : "paid"
+                              }`}
+                            >
+                              {dtf.stock === false
+                                ? "Agotado"
+                                : "Disponible"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="admin-price-actions">
+                          <button
+                            type="button"
+                            className="btn-tema btn-tema--contorno"
+                            disabled={savingStock}
+                            onClick={() => toggleStock(dtf)}
+                          >
+                            {savingStock
+                              ? "Guardando…"
+                              : dtf.stock === false
+                                ? "Marcar disponible"
+                                : "Marcar agotado"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </>
   );

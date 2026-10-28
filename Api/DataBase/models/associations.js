@@ -9,12 +9,10 @@
 // comportamiento existente.
 
 const { Usuarios } = require("./Usuarios.js");
-const { Dtf } = require("./Dtf.js");
 const { Order } = require("./Order.js");
 const { OrderItem } = require("./OrderItem.js");
 const { Payment } = require("./Payment.js");
 const { OrderStatusHistory } = require("./OrderStatusHistory.js");
-const { DtfPriceVariant } = require("./DtfPriceVariant.js");
 
 // ------------------------------- Pedidos -------------------------------
 Usuarios.hasMany(Order, {
@@ -65,28 +63,14 @@ OrderStatusHistory.belongsTo(Usuarios, {
   as: "changedBy",
 });
 
-// --------------------------- Variantes de DTF --------------------------
-Dtf.hasMany(DtfPriceVariant, {
-  foreignKey: "dtfId",
-  as: "priceVariants",
-});
-
-DtfPriceVariant.belongsTo(Dtf, {
-  foreignKey: "dtfId",
-  as: "dtf",
-});
-
-OrderItem.belongsTo(DtfPriceVariant, {
-  foreignKey: "variantId",
-  as: "variant",
-});
+// Los precios ya no cuelgan de un DTF: se resuelven desde price_variants
+// (tarifa global) y product_prices (excepciones/combos). Los pedidos guardan
+// su propio priceSnapshot, por eso OrderItem no tiene asociacion de precio.
 
 module.exports = {
   Usuarios,
-  Dtf,
   Order,
   OrderItem,
   Payment,
   OrderStatusHistory,
-  DtfPriceVariant,
 };
