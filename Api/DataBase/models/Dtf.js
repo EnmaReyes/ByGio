@@ -34,6 +34,18 @@ const Dtf = sequelize.define(
       defaultValue: true,
     },
 
+    // Autor del DTF (la columna ya existia en la base de datos)
+    uid: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,

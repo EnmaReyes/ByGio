@@ -5,8 +5,13 @@ const userRoutes = require("./Rutas/user.js");
 const bannerRoutes = require("./Rutas/banner.js");
 const dtfRoutes = require("./Rutas/dtf.js");
 const categoryRoutes = require("./Rutas/category.js");
+const ordersRoutes = require("./Rutas/orders.js");
+const shippingRoutes = require("./Rutas/shipping.js");
 
 const { sequelize } = require("./DataBase/db.js");
+
+// Carga todos los modelos y asociaciones antes de cualquier consulta/sync.
+require("./DataBase/models/index.js");
 
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -43,6 +48,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/banner", bannerRoutes);
 app.use("/api/dtf", dtfRoutes);
 app.use("/api/category", categoryRoutes);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/shipping", shippingRoutes);
 
 // Conexión a la base de datos
 (async () => {

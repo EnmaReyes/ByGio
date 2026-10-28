@@ -1,35 +1,87 @@
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config.js");
+const { JWT_SECRET, DTF_PRICE_BASICO, DTF_PRICE_OVERSIZE } = require("../config.js");
 const { Dtf } = require("../DataBase/models/Dtf");
 const { Category } = require("../DataBase/models/Category");
+const { DtfPriceVariant } = require("../DataBase/models/DtfPriceVariant");
+const { sequelize } = require("../DataBase/db.js");
+
+// Precios por defecto: hoy el unico diferenciador es el tipo.
+const DEFAULT_DTF_PRICES = [
+  { tipo: "basico", precio: DTF_PRICE_BASICO },
+  { tipo: "oversize", precio: DTF_PRICE_OVERSIZE },
+];
+
+const sanitizeVariants = (variants) => {
+  if (!Array.isArray(variants) || variants.length === 0) {
+    return DEFAULT_DTF_PRICES;
+  }
+
+  return variants.map((variant) => ({
+    tipo: String(variant.tipo || "").trim(),
+    precio: Number(variant.precio),
+    medidas: variant.medidas ? String(variant.medidas).trim() : null,
+    color: variant.color ? String(variant.color).trim() : null,
+    activo: variant.activo === undefined ? true : Boolean(variant.activo),
+  }));
+};
 
 //? Add DTF
 const addDtf = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const token = req.cookies.access_token;
 
     if (!token) {
+      await transaction.rollback();
       return res.status(401).json("No estás autenticado para añadir DTF!");
     }
 
-    jwt.verify(token, JWT_SECRET);
+    const userInfo = jwt.verify(token, JWT_SECRET);
 
-    const { categoryId, img, stock } = req.body;
+    const { categoryId, img, stock, priceVariants } = req.body;
 
     const categoryExists = await Category.findByPk(categoryId);
 
     if (!categoryExists) {
+      await transaction.rollback();
       return res.status(400).json("La categoría no existe");
     }
 
-    const newDtf = await Dtf.create({
-      categoryId,
-      img,
-      stock,
-    });
+    const variants = sanitizeVariants(priceVariants);
+
+    for (const variant of variants) {
+      if (!variant.tipo || !Number.isFinite(variant.precio) || variant.precio < 0) {
+        await transaction.rollback();
+        return res.status(400).json("Variante de precio inválida");
+      }
+    }
+
+    const newDtf = await Dtf.create(
+      {
+        categoryId,
+        img,
+        stock,
+        uid: userInfo.id,
+      },
+      { transaction },
+    );
+
+    await DtfPriceVariant.bulkCreate(
+      variants.map((variant) => ({ ...variant, dtfId: newDtf.id })),
+      { transaction },
+    );
+
+    await transaction.commit();
 
     res.status(201).json(newDtf);
   } catch (error) {
+    await transaction.rollback();
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json("Ese diseño ya tiene una variante con el mismo tipo/medida/color");
+    }
+
     console.error(error);
 
     res.status(500).json("Error interno del servidor");
@@ -42,6 +94,11 @@ const getDtf = async (req, res) => {
     const dtfItems = await Dtf.findAll({
       include: [
         { model: Category, as: "category", attributes: ["id", "name"] },
+        {
+          model: DtfPriceVariant,
+          as: "priceVariants",
+          attributes: ["id", "tipo", "precio", "medidas", "color", "activo"],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -125,6 +182,11 @@ const getDtfByCategory = async (req, res) => {
           model: Category,
           as: "category",
           attributes: ["id", "name"],
+        },
+        {
+          model: DtfPriceVariant,
+          as: "priceVariants",
+          attributes: ["id", "tipo", "precio", "medidas", "color", "activo"],
         },
       ],
 
