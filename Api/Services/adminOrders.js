@@ -1,0 +1,366 @@
+const { Op, fn, col } = require("sequelize");
+const {
+  sequelize,
+  Order,
+  OrderItem,
+  Payment,
+  OrderStatusHistory,
+  Usuarios,
+} = require("../DataBase/models/index.js");
+const {
+  ORDER_STATUS,
+  ORDER_STATUS_VALUES,
+  ORDER_STATUS_TRANSITIONS,
+  PAYMENT_STATUS,
+  PAYMENT_STATUS_VALUES,
+  HISTORY_KIND,
+} = require("../DataBase/models/enums.js");
+const { releaseOrderStock } = require("./orders.js");
+const HttpError = require("../Utils/HttpError.js");
+
+// Consultas y acciones del panel de administracion.
+// Toda la informacion sensible del comprador se expone aqui, por eso las
+// rutas que usan este servicio estan detras de requireAdmin.
+
+const ADMIN_ORDER_INCLUDE = [
+  { model: OrderItem, as: "items" },
+  { model: Payment, as: "payments" },
+  {
+    model: OrderStatusHistory,
+    as: "history",
+    include: [
+      {
+        model: Usuarios,
+        as: "changedBy",
+        attributes: ["id", "username", "email"],
+      },
+    ],
+  },
+  {
+    model: Usuarios,
+    as: "user",
+    attributes: ["id", "username", "email", "name", "lastName", "image"],
+  },
+];
+
+const ADMIN_ORDER_SORT = [
+  [{ model: OrderItem, as: "items" }, "createdAt", "ASC"],
+  [{ model: Payment, as: "payments" }, "createdAt", "DESC"],
+  [{ model: OrderStatusHistory, as: "history" }, "createdAt", "ASC"],
+];
+
+const BOGOTA_OFFSET = "-05:00";
+
+// Las fechas del panel se interpretan como dias completos en hora de Colombia
+// (UTC-5), no en la zona del servidor.
+const parseDay = (value, field, endOfDay = false) => {
+  const raw = String(value || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    throw new HttpError(400, `Fecha inválida en "${field}" (YYYY-MM-DD)`);
+  }
+  const time = endOfDay ? "23:59:59.999" : "00:00:00.000";
+  const date = new Date(`${raw}T${time}${BOGOTA_OFFSET}`);
+  if (Number.isNaN(date.getTime())) {
+    throw new HttpError(400, `Fecha inválida en "${field}"`);
+  }
+  return date;
+};
+
+// Inicio del dia actual en Colombia, expresado en UTC.
+const startOfTodayBogota = () => {
+  const now = new Date(Date.now() - 5 * 60 * 60 * 1000);
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 5),
+  );
+};
+
+const parseLimit = (limit) => Math.min(Math.max(Number(limit) || 20, 1), 100);
+const parseOffset = (offset) => Math.max(Number(offset) || 0, 0);
+
+// GET /api/admin/orders
+const listOrdersAdmin = async ({
+  status,
+  paymentStatus,
+  q,
+  from,
+  to,
+  limit,
+  offset,
+} = {}) => {
+  const where = {};
+
+  if (status) {
+    if (!ORDER_STATUS_VALUES.includes(status)) {
+      throw new HttpError(400, "Estado de pedido inválido");
+    }
+    where.status = status;
+  }
+
+  if (paymentStatus) {
+    if (!PAYMENT_STATUS_VALUES.includes(paymentStatus)) {
+      throw new HttpError(400, "Estado de pago inválido");
+    }
+    where.paymentStatus = paymentStatus;
+  }
+
+  const search = String(q || "").trim();
+  if (search) {
+    const term = `%${search}%`;
+    where[Op.or] = [
+      { orderNumber: { [Op.iLike]: term } },
+      { email: { [Op.iLike]: term } },
+      { phone: { [Op.iLike]: term } },
+      { recipientName: { [Op.iLike]: term } },
+    ];
+  }
+
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt[Op.gte] = parseDay(from, "from");
+    if (to) where.createdAt[Op.lte] = parseDay(to, "to", true);
+  }
+
+  const safeLimit = parseLimit(limit);
+  const safeOffset = parseOffset(offset);
+
+  const { rows, count } = await Order.findAndCountAll({
+    where,
+    include: [
+      { model: OrderItem, as: "items" },
+      {
+        model: Usuarios,
+        as: "user",
+        attributes: ["id", "username", "email"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: safeLimit,
+    offset: safeOffset,
+    distinct: true,
+  });
+
+  return {
+    orders: rows,
+    total: count,
+    limit: safeLimit,
+    offset: safeOffset,
+  };
+};
+
+// GET /api/admin/orders/:id
+const getOrderAdmin = async (orderId) => {
+  const order = await Order.findByPk(orderId, {
+    include: ADMIN_ORDER_INCLUDE,
+    order: ADMIN_ORDER_SORT,
+  });
+
+  if (!order) {
+    throw new HttpError(404, "Pedido no encontrado");
+  }
+  return order;
+};
+
+// PATCH /api/admin/orders/:id/status
+// El estado logistico solo avanza por las transiciones permitidas. Cuando se
+// marca como pagado se registra tambien el cambio de estado de pago.
+const changeOrderStatus = async ({ orderId, status, note, adminId }) => {
+  if (!ORDER_STATUS_VALUES.includes(status)) {
+    throw new HttpError(400, "Estado de pedido inválido");
+  }
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    const order = await Order.findByPk(orderId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!order) {
+      throw new HttpError(404, "Pedido no encontrado");
+    }
+
+    const fromStatus = order.status;
+
+    if (fromStatus === status) {
+      throw new HttpError(409, `El pedido ya está en estado "${status}"`);
+    }
+
+    const allowed = ORDER_STATUS_TRANSITIONS[fromStatus] || [];
+    if (!allowed.includes(status)) {
+      throw new HttpError(
+        409,
+        `No se puede pasar de "${fromStatus}" a "${status}"`,
+      );
+    }
+
+    const cleanNote = note ? String(note).trim().slice(0, 1000) : null;
+
+    order.status = status;
+
+    if (status === ORDER_STATUS.CANCELADO) {
+      // Un pedido cancelado devuelve el producto al catalogo.
+      await releaseOrderStock(order, transaction);
+      order.cancelledAt = new Date();
+      order.stockReservedUntil = null;
+    }
+
+    if (status === ORDER_STATUS.PAGADO) {
+      // Pago confirmado a mano (transferencia/Nequi) antes de integrar Wompi.
+      if (order.paymentStatus === PAYMENT_STATUS.PENDIENTE) {
+        order.paymentStatus = PAYMENT_STATUS.APROBADO;
+        await OrderStatusHistory.create(
+          {
+            orderId: order.id,
+            kind: HISTORY_KIND.PAGO,
+            fromStatus: PAYMENT_STATUS.PENDIENTE,
+            toStatus: PAYMENT_STATUS.APROBADO,
+            changedByUserId: adminId,
+            note: "Pago confirmado manualmente por administrador",
+          },
+          { transaction },
+        );
+      }
+      order.stockReservedUntil = null;
+    }
+
+    if (status === ORDER_STATUS.ENVIADO) {
+      if (!order.shippedAt) order.shippedAt = new Date();
+      order.stockReservedUntil = null;
+    }
+
+    if (status === ORDER_STATUS.ENTREGADO) {
+      if (!order.deliveredAt) order.deliveredAt = new Date();
+      order.stockReservedUntil = null;
+    }
+
+    await order.save({ transaction });
+
+    await OrderStatusHistory.create(
+      {
+        orderId: order.id,
+        kind: HISTORY_KIND.LOGISTICA,
+        fromStatus,
+        toStatus: status,
+        changedByUserId: adminId,
+        note: cleanNote,
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+
+  return getOrderAdmin(orderId);
+};
+
+// PATCH /api/admin/orders/:id/tracking
+const updateTracking = async ({
+  orderId,
+  trackingCarrier,
+  trackingNumber,
+}) => {
+  const order = await Order.findByPk(orderId);
+
+  if (!order) {
+    throw new HttpError(404, "Pedido no encontrado");
+  }
+  if (order.status === ORDER_STATUS.CANCELADO) {
+    throw new HttpError(
+      409,
+      "No se puede editar el envío de un pedido cancelado",
+    );
+  }
+
+  const carrier =
+    trackingCarrier === undefined
+      ? order.trackingCarrier
+      : String(trackingCarrier || "").trim().slice(0, 100) || null;
+  const number =
+    trackingNumber === undefined
+      ? order.trackingNumber
+      : String(trackingNumber || "").trim().slice(0, 100) || null;
+
+  if (carrier === null && number === null) {
+    throw new HttpError(400, "Indica al menos la transportadora o la guía");
+  }
+
+  order.trackingCarrier = carrier;
+  order.trackingNumber = number;
+  await order.save();
+
+  return getOrderAdmin(orderId);
+};
+
+// GET /api/admin/orders/stats — resumen para el tablero
+const orderStats = async () => {
+  const [statusRows, paymentRows, ordersToday] = await Promise.all([
+    Order.findAll({
+      attributes: [
+        "status",
+        [fn("count", col("id")), "count"],
+        [fn("coalesce", fn("sum", col("total")), 0), "total"],
+      ],
+      group: ["status"],
+      raw: true,
+    }),
+    Order.findAll({
+      attributes: [
+        "paymentStatus",
+        [fn("count", col("id")), "count"],
+        [fn("coalesce", fn("sum", col("total")), 0), "total"],
+      ],
+      group: ["paymentStatus"],
+      raw: true,
+    }),
+    Order.count({ where: { createdAt: { [Op.gte]: startOfTodayBogota() } } }),
+  ]);
+
+  const byStatus = ORDER_STATUS_VALUES.reduce((acc, value) => {
+    acc[value] = { count: 0, total: 0 };
+    return acc;
+  }, {});
+
+  for (const row of statusRows) {
+    byStatus[row.status] = {
+      count: Number(row.count) || 0,
+      total: Number(row.total) || 0,
+    };
+  }
+
+  const byPaymentStatus = PAYMENT_STATUS_VALUES.reduce((acc, value) => {
+    acc[value] = { count: 0, total: 0 };
+    return acc;
+  }, {});
+
+  for (const row of paymentRows) {
+    byPaymentStatus[row.paymentStatus] = {
+      count: Number(row.count) || 0,
+      total: Number(row.total) || 0,
+    };
+  }
+
+  const totalOrders = Object.values(byStatus).reduce(
+    (sum, item) => sum + item.count,
+    0,
+  );
+
+  return {
+    totalOrders,
+    ordersToday,
+    byStatus,
+    byPaymentStatus,
+    approvedRevenue: byPaymentStatus[PAYMENT_STATUS.APROBADO]?.total || 0,
+  };
+};
+
+module.exports = {
+  listOrdersAdmin,
+  getOrderAdmin,
+  changeOrderStatus,
+  updateTracking,
+  orderStats,
+};

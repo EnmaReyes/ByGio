@@ -1,4 +1,5 @@
 const express = require("express");
+const { requireAdmin } = require("../Middleware/auth.js");
 const {
   addArticle,
   deleteArticle,
@@ -10,11 +11,14 @@ const {
 
 const router = express.Router();
 
+// Catalogo publico
 router.get("/", getArticle);
 router.get("/search", getArticleByTitle);
 router.get("/:id", getArticleByID);
-router.post("/add", addArticle);
-router.delete("/:id", deleteArticle);
-router.put("/:id", updateArticle);
+
+// Mutaciones: solo administradores
+router.post("/add", requireAdmin, addArticle);
+router.delete("/:id", requireAdmin, deleteArticle);
+router.put("/:id", requireAdmin, updateArticle);
 
 module.exports = router;

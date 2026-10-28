@@ -17,6 +17,11 @@ const FRONTEND_URL =
 
 const DB_DIALECT = process.env.DB_DIALECT || "postgres";
 
+const toNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const DATABASE_URL =
   process.env.DATABASE_URL ||
   (() => {
@@ -38,4 +43,13 @@ module.exports = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID || "",
   FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET || "",
+
+  // Ecommerce
+  // Precios por defecto de las variantes DTF (pesos COP)
+  DTF_PRICE_BASICO: toNumber(process.env.DTF_PRICE_BASICO, 22000),
+  DTF_PRICE_OVERSIZE: toNumber(process.env.DTF_PRICE_OVERSIZE, 32000),
+
+  // Punto de despacho para calcular la distancia de envio (Medellin)
+  WAREHOUSE_LAT: toNumber(process.env.WAREHOUSE_LAT, 6.2442),
+  WAREHOUSE_LNG: toNumber(process.env.WAREHOUSE_LNG, -75.5812),
 };
