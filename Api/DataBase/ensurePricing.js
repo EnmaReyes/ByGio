@@ -306,6 +306,79 @@ const ensurePricingSchema = async () => {
       );
     }
 
+    // Produccion tenia el modelo con uid pero la tabla dtfs sin la columna.
+    // Sequelize fallaba con "column Dtf.uid does not exist".
+    const hasArticleUid = await columnExists("articulos", "uid", transaction);
+    if (!hasArticleUid) {
+      await sequelize.query("ALTER TABLE articulos ADD COLUMN uid UUID", {
+        transaction,
+      });
+    }
+
+    const hasDtfUid = await columnExists("dtfs", "uid", transaction);
+    if (!hasDtfUid) {
+      await sequelize.query("ALTER TABLE dtfs ADD COLUMN uid UUID", {
+        transaction,
+      });
+    }
+
+    await sequelize.query(
+      `DO $migration$
+       DECLARE
+         article_uid_attnum smallint;
+         dtf_uid_attnum smallint;
+       BEGIN
+         SELECT attnum INTO article_uid_attnum
+           FROM pg_attribute
+          WHERE attrelid = 'articulos'::regclass
+            AND attname = 'uid'
+            AND NOT attisdropped;
+
+         IF article_uid_attnum IS NOT NULL AND NOT EXISTS (
+           SELECT 1
+             FROM pg_constraint
+            WHERE conrelid = 'articulos'::regclass
+              AND contype = 'f'
+              AND conkey = ARRAY[article_uid_attnum]
+         ) THEN
+           ALTER TABLE articulos
+             ADD CONSTRAINT articulos_uid_fkey
+             FOREIGN KEY (uid) REFERENCES usuarios (id)
+             ON UPDATE CASCADE ON DELETE SET NULL;
+         END IF;
+
+         SELECT attnum INTO dtf_uid_attnum
+           FROM pg_attribute
+          WHERE attrelid = 'dtfs'::regclass
+            AND attname = 'uid'
+            AND NOT attisdropped;
+
+         IF dtf_uid_attnum IS NOT NULL AND NOT EXISTS (
+           SELECT 1
+             FROM pg_constraint
+            WHERE conrelid = 'dtfs'::regclass
+              AND contype = 'f'
+              AND conkey = ARRAY[dtf_uid_attnum]
+         ) THEN
+           ALTER TABLE dtfs
+             ADD CONSTRAINT dtfs_uid_fkey
+             FOREIGN KEY (uid) REFERENCES usuarios (id)
+             ON UPDATE CASCADE ON DELETE SET NULL;
+         END IF;
+       END
+       $migration$;`,
+      { transaction },
+    );
+
+    await sequelize.query(
+      "CREATE INDEX IF NOT EXISTS articulos_uid_idx ON articulos (uid)",
+      { transaction },
+    );
+    await sequelize.query(
+      "CREATE INDEX IF NOT EXISTS dtfs_uid_idx ON dtfs (uid)",
+      { transaction },
+    );
+
     const hasCost = await columnExists("articulos", "cost", transaction);
     const hasDescuento = await columnExists(
       "articulos",

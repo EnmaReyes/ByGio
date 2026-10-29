@@ -23,7 +23,7 @@ const TEXTOS = {
     etiqueta: "Catálogo",
     titulo: "Todos los productos",
     descripcion:
-      "Franelas básicas y oversize de ByGio. Filtra por colección para encontrar tu próxima pieza favorita.",
+      "Camisetas básicas y oversize de ByGio. Filtra por colección para encontrar tu próxima pieza favorita.",
   },
   basicas: {
     etiqueta: "Colección 01",
@@ -41,7 +41,7 @@ const TEXTOS = {
     etiqueta: "Colección 03",
     titulo: "Diseños DTF",
     descripcion:
-      "Diseños listos para estampar sobre tu franela favorita. Elige una categoría para ver los disponibles.",
+      "Diseños listos para estampar sobre tu camiseta favorita. Elige una categoría para ver los disponibles.",
   },
 };
 
@@ -230,17 +230,12 @@ const Productos = () => {
       );
     }
 
-    return (
-      <RejillaProductos
-        key={coleccion}
-        articulos={articulosFiltrados}
-      />
-    );
+    return <RejillaProductos key={coleccion} articulos={articulosFiltrados} />;
   };
 
   return (
     <div className="catalogo">
-      {/* Cabecera de página estilo Sabina: titular grande y centrado. */}
+      {/* Cabecera de página titular grande y centrado. */}
       <header className="catalogo-hero">
         <div className="contenedor">
           <h1 className="catalogo-hero-titulo">Hecho para ti</h1>
@@ -251,7 +246,10 @@ const Productos = () => {
         </div>
       </header>
 
-      <section className="seccion catalogo-contenido" aria-labelledby={tituloId}>
+      <section
+        className="seccion catalogo-contenido"
+        aria-labelledby={tituloId}
+      >
         <div className="contenedor">
           <div className="catalogo-intro">
             <div>
@@ -311,8 +309,7 @@ const Productos = () => {
 
                 {Array.isArray(categories) &&
                   categories.map((categoria) => {
-                    const activa =
-                      String(categoria.id) === String(categoriaId);
+                    const activa = String(categoria.id) === String(categoriaId);
                     return (
                       <button
                         key={categoria.id}

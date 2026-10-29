@@ -24,12 +24,46 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Neon puede tardar unos segundos en despertar tras scale-to-zero. Un solo
+// intento de 10s puede fallar en el primer request; reintentamos con backoff.
+const connectWithRetry = async (attempts = 3) => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await sequelize.authenticate();
+      return;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === attempts) break;
+
+      // Limpia la conexión rota antes de volver a intentar.
+      try {
+        await sequelize.connectionManager.close();
+      } catch {
+        // Si no hay nada que cerrar, seguimos con el reintento.
+      }
+
+      const wait = 1000 * attempt;
+      console.warn(
+        `⚠️ Conexión a la base falló (intento ${attempt}/${attempts}). Reintentando en ${wait}ms...`,
+      );
+      await sleep(wait);
+    }
+  }
+
+  throw lastError;
+};
+
 // Inicializacion de la base de datos. Se espera antes de atender cualquier
 // request: en Vercel el modulo puede recibir trafico apenas arranca.
 const dbReady = (async () => {
   console.log("🔌 Intentando conectar a Neon...");
 
-  await sequelize.authenticate();
+  await connectWithRetry();
   console.log("✅ Conexión inicial exitosa");
 
   // Solo desarrollo: crea tablas que falten. No elimina columnas viejas.

@@ -77,8 +77,8 @@ const DtfCategories = () => {
 
   return (
     <section className="dtf-categories">
-      <div className="dtf-categories-header">
-        <h2 className="titulos">Diseños DTF</h2>
+      <div className="dtf-categories-header p-4">
+        <h1 className="titulos">Crea tu Diseño</h1>
 
         <p className="parrafos">
           Selecciona una categoría para ver nuestros diseños disponibles.
@@ -120,6 +120,14 @@ const DtfCategories = () => {
             </button>
           );
         })}
+      </div>
+
+      <div className="dtf-categories-header mt-4 p-4">
+        <h1 className="titulos">Escogue tu diseño</h1>
+
+        <p className="parrafos">
+          Selecciona un DTf para visualisarlo con tu camiseta favorita.
+        </p>
       </div>
 
       {/* RESULTADOS DTF */}
