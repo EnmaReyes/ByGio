@@ -357,7 +357,7 @@ const Editor = () => {
             </Form.Group>
             <p className="texto-seccion mb-3">
               El precio base se configura una sola vez en{" "}
-              <Link to="/admin/dtf" className="enlace-seccion">
+              <Link to="/admin/precios" className="enlace-seccion">
                 Precios globales
               </Link>
               . Aquí solo se

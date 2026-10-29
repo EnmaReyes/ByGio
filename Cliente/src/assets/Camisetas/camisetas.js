@@ -1,5 +1,4 @@
 import white from "./Blanco.png";
-import black from "./Negro.png";
 import red from "./Rojo.png";
 import vinotinto from "./Vinotinto.png";
 import navy from "./AzulNavy.png";
@@ -11,7 +10,6 @@ import babyPink from "./Rosa.png";
 
 export const shirts = [
   { id: 1, name: "Blanco", color: "white", image: white },
-  { id: 2, name: "Negro", color: "black", image: black },
   { id: 3, name: "Rojo", color: "red", image: red },
   { id: 4, name: "Vinotinto", color: "vinotinto", image: vinotinto },
   { id: 5, name: "Azul Navy", color: "navy", image: navy },

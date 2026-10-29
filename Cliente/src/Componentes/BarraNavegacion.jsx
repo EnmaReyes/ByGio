@@ -261,7 +261,7 @@ const BarraNavegacion = ({
                       </li>
                       <li>
                         <Link
-                          to="/admin/dtf"
+                          to="/admin/precios"
                           className="nav-enlace"
                           onClick={cerrar}
                         >
@@ -404,7 +404,7 @@ const BarraNavegacion = ({
                     </li>
                     <li>
                       <Link
-                        to="/admin/dtf"
+                        to="/admin/precios"
                         className="nav-enlace"
                         onClick={() => setMenuAbierto(false)}
                       >

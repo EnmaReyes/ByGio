@@ -221,6 +221,13 @@
   margin-bottom: 0.15rem;
 }
 
+/* Filtro por categoría DTF dentro de la administración. Reutiliza los
+   chips y la banda del catálogo; aquí solo se ajusta el ritmo vertical. */
+.admin-price-filtros {
+  margin-bottom: 1.1rem;
+  padding-bottom: 1rem;
+}
+
 .admin-price-actions {
   display: flex;
   flex-wrap: wrap;

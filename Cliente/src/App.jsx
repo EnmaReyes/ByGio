@@ -26,7 +26,7 @@ import MisPedidos from "./Paginas/MisPedidos";
 import PedidoDetalle from "./Paginas/PedidoDetalle";
 import AdminPedidos from "./Paginas/Admin/AdminPedidos";
 import AdminPedidoDetalle from "./Paginas/Admin/AdminPedidoDetalle";
-import AdminDtfPrecios from "./Paginas/Admin/AdminDtfPrecios";
+import AdminPrice from "./Paginas/Admin/AdminPrice";
 import { TemaProvider } from "./tema/TemaProvider";
 import { CarritoProvider, useCarrito } from "./carrito/CarritoProvider";
 import TransicionRuta from "./Componentes/TransicionRuta";
@@ -151,8 +151,8 @@ const router = createBrowserRouter(
           element: <AdminPedidoDetalle />,
         },
         {
-          path: "/admin/dtf",
-          element: <AdminDtfPrecios />,
+          path: "/admin/precios",
+          element: <AdminPrice />,
         },
         {
           path: "/:id",

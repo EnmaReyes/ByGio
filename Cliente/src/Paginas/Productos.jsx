@@ -3,14 +3,15 @@ import { useSearchParams } from "react-router-dom";
 import { useContextProvaider } from "../context/ContextProvaider.jsx";
 import RejillaProductos from "../Componentes/RejillaProductos";
 import RejillaEsqueleto from "../Componentes/RejillaEsqueleto";
+import useEnVista from "../hooks/useEnVista";
 import DtfCard from "./DTF/DtfCard";
-import "./DTF/DtfCategories.css";
 
 const COLECCIONES = [
   { id: "todas", etiqueta: "Todas" },
   { id: "basicas", etiqueta: "Básicas" },
   { id: "oversize", etiqueta: "Oversize" },
   { id: "dtf", etiqueta: "DTF" },
+  { id: "combos", etiqueta: "Combos" },
 ];
 
 const IDS_COLECCION = COLECCIONES.map((coleccion) => coleccion.id);
@@ -42,6 +43,12 @@ const TEXTOS = {
     titulo: "Diseños DTF",
     descripcion:
       "Diseños listos para estampar sobre tu camiseta favorita. Elige una categoría para ver los disponibles.",
+  },
+  combos: {
+    etiqueta: "Precio especial",
+    titulo: "Combos",
+    descripcion:
+      "Piezas que reúnen diseños DTF y prendas oversize con un precio de combo. Una sola compra, un look completo.",
   },
 };
 
@@ -91,6 +98,10 @@ const Productos = () => {
      pedido la lista general, la tratamos como carga en curso. */
   const [solicitudDtf, setSolicitudDtf] = useState(false);
 
+  /* Entrada al hacer scroll: la misma receta de Inicio (useEnVista +
+     .revelar/.revelar-linea, ver estilos/movimiento.css). */
+  const [refRevelar, enVista] = useEnVista();
+
   /*
    * Carga de DTF:
    * - Sin categoría seleccionada -> listado general (getDtf, cacheado).
@@ -136,12 +147,28 @@ const Productos = () => {
     };
   }, [coleccion, categoriaId, getDtfByCategory]);
 
+  /*
+   * Los combos son artículos con `combo === true`. Tienen su propia
+   * colección y no se mezclan con Básicas ni Oversize (el precio del
+   * combo no depende de la talla). "Todas" agrupa las prendas base,
+   * igual que el resto del catálogo.
+   */
   const articulosFiltrados = useMemo(() => {
+    if (coleccion === "combos") {
+      return articulos.filter((articulo) => articulo.combo === true);
+    }
     if (coleccion === "basicas") {
-      return articulos.filter((articulo) => !articulo.oversize);
+      return articulos.filter(
+        (articulo) => !articulo.combo && !articulo.oversize,
+      );
     }
     if (coleccion === "oversize") {
-      return articulos.filter((articulo) => articulo.oversize);
+      return articulos.filter(
+        (articulo) => !articulo.combo && articulo.oversize,
+      );
+    }
+    if (coleccion === "todas") {
+      return articulos.filter((articulo) => !articulo.combo);
     }
     return articulos;
   }, [articulos, coleccion]);
@@ -224,13 +251,21 @@ const Productos = () => {
           mensaje={
             coleccion === "todas"
               ? "Todavía no hay productos disponibles."
-              : "Todavía no hay productos en esta colección."
+              : coleccion === "combos"
+                ? "Todavía no hay combos disponibles."
+                : "Todavía no hay productos en esta colección."
           }
         />
       );
     }
 
-    return <RejillaProductos key={coleccion} articulos={articulosFiltrados} />;
+    return (
+      <RejillaProductos
+        key={coleccion}
+        articulos={articulosFiltrados}
+        mostrarDescuento={coleccion === "combos"}
+      />
+    );
   };
 
   return (
@@ -247,27 +282,48 @@ const Productos = () => {
       </header>
 
       <section
-        className="seccion catalogo-contenido"
+        ref={refRevelar}
+        className={`seccion catalogo-contenido revelar${
+          enVista ? " is-visible" : ""
+        }`}
         aria-labelledby={tituloId}
       >
         <div className="contenedor">
           <div className="catalogo-intro">
             <div>
-              <span className="etiqueta-seccion">{texto.etiqueta}</span>
-              <h2 id={tituloId} className="catalogo-titulo">
+              <span
+                className="etiqueta-seccion revelar-linea"
+                style={{ "--i": 0 }}
+              >
+                {texto.etiqueta}
+              </span>
+              <h2
+                id={tituloId}
+                className="catalogo-titulo revelar-linea"
+                style={{ "--i": 1 }}
+              >
                 {texto.titulo}
               </h2>
-              <p className="catalogo-descripcion">{texto.descripcion}</p>
+              <p
+                className="catalogo-descripcion revelar-linea"
+                style={{ "--i": 2 }}
+              >
+                {texto.descripcion}
+              </p>
             </div>
 
-            <p className="catalogo-conteo" aria-live="polite">
+            <p
+              className="catalogo-conteo revelar-linea"
+              style={{ "--i": 3 }}
+              aria-live="polite"
+            >
               {totalMostrado} {totalMostrado === 1 ? "resultado" : "resultados"}
             </p>
           </div>
 
           {/* Filtros en banda horizontal: el filete inferior los separa
               de la rejilla (nada de columna lateral). */}
-          <div className="catalogo-filtros">
+          <div className="catalogo-filtros revelar-linea" style={{ "--i": 4 }}>
             <div
               className="filtros-grupo"
               role="group"

@@ -7,6 +7,7 @@ import { API_URL } from "../../config";
 import { AuthContext } from "../../context/authContext";
 import { formatPrice } from "../../Componentes/cartUtils";
 import { getApiErrorMessage } from "../../Componentes/orderUtils";
+import useEnVista from "../../hooks/useEnVista";
 import "../pedidos.css";
 import "./admin.css";
 
@@ -38,7 +39,7 @@ const pricesToMap = (prices) =>
     return acc;
   }, {});
 
-const AdminDtfPrecios = () => {
+const AdminPrice = () => {
   const { currentUser } = useContext(AuthContext);
   const isAdmin = Boolean(currentUser?.admin);
 
@@ -51,6 +52,10 @@ const AdminDtfPrecios = () => {
   const [saving, setSaving] = useState(false);
   const [savingStockId, setSavingStockId] = useState(null);
   const [normalizing, setNormalizing] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const [refTarifa, tarifaEnVista] = useEnVista();
+  const [refDisenos, disenosEnVista] = useEnVista();
 
   const applyPricesResponse = useCallback((data) => {
     const map = pricesToMap(data?.prices);
@@ -224,6 +229,51 @@ const AdminDtfPrecios = () => {
     }
   };
 
+  /*
+   * Categorías DTF deducidas de los propios diseños: no hace falta una
+   * petición extra y el filtro solo ofrece categorías con contenido.
+   * `category` puede llegar como objeto ({ id, name }) o como texto.
+   */
+  const dtfCategoryOptions = useMemo(() => {
+    const mapa = new Map();
+
+    items.forEach((dtf) => {
+      const raw = dtf.category;
+      const id = typeof raw === "object" && raw !== null ? raw.id : raw;
+      const nombre =
+        typeof raw === "object" && raw !== null ? raw.name : raw;
+
+      if (id === undefined || id === null || id === "") return;
+
+      const clave = String(id);
+      if (!mapa.has(clave)) {
+        mapa.set(clave, { id: clave, nombre: nombre || "Sin categoría" });
+      }
+    });
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.nombre.localeCompare(b.nombre, "es"),
+    );
+  }, [items]);
+
+  useEffect(() => {
+    if (categoryFilter === "all") return;
+    const sigueExistiendo = dtfCategoryOptions.some(
+      (categoria) => categoria.id === categoryFilter,
+    );
+    if (!sigueExistiendo) setCategoryFilter("all");
+  }, [dtfCategoryOptions, categoryFilter]);
+
+  const itemsVisibles = useMemo(() => {
+    if (categoryFilter === "all") return items;
+
+    return items.filter((dtf) => {
+      const raw = dtf.category;
+      const id = typeof raw === "object" && raw !== null ? raw.id : raw;
+      return String(id) === categoryFilter;
+    });
+  }, [items, categoryFilter]);
+
   if (!isAdmin) {
     return (
       <>
@@ -281,8 +331,13 @@ const AdminDtfPrecios = () => {
           </div>
         ) : (
           <>
-            <section className="checkout-card admin-price-card">
-              <div className="admin-price-head">
+            <section
+              ref={refTarifa}
+              className={`checkout-card admin-price-card revelar${
+                tarifaEnVista ? " is-visible" : ""
+              }`}
+            >
+              <div className="admin-price-head revelar-linea" style={{ "--i": 0 }}>
                 <div>
                   <strong className="titulos">Tarifa global</strong>
                   <p className="parrafos admin-muted">
@@ -291,7 +346,7 @@ const AdminDtfPrecios = () => {
                 </div>
               </div>
 
-              <div className="admin-price-grid">
+              <div className="admin-price-grid revelar-linea" style={{ "--i": 1 }}>
                 {PRICE_FIELDS.map(({ productType, tipo, label }) => {
                   const key = priceKey(productType, tipo);
                   const value = prices[key]?.precio ?? "";
@@ -399,13 +454,21 @@ const AdminDtfPrecios = () => {
               )}
             </section>
 
-            <section className="admin-page">
-              <h2 className="titulo-seccion mb-3">
+            <section
+              ref={refDisenos}
+              className={`admin-page revelar${
+                disenosEnVista ? " is-visible" : ""
+              }`}
+            >
+              <h2
+                className="titulo-seccion mb-3 revelar-linea"
+                style={{ "--i": 0 }}
+              >
                 Disponibilidad de diseños
               </h2>
 
               {items.length === 0 ? (
-                <div className="estado">
+                <div className="estado revelar-linea" style={{ "--i": 1 }}>
                   <h2 className="estado-titulo">
                     Todavía no hay diseños DTF
                   </h2>
@@ -415,61 +478,116 @@ const AdminDtfPrecios = () => {
                   </p>
                 </div>
               ) : (
-                <div className="admin-price-grid">
-                  {items.map((dtf) => {
-                    const image = parseImage(dtf.img);
-                    const category =
-                      typeof dtf.category === "string"
-                        ? dtf.category
-                        : dtf.category?.name || "Sin categoría";
-                    const savingStock = savingStockId === dtf.id;
-
-                    return (
-                      <article
-                        key={dtf.id}
-                        className="checkout-card admin-price-card"
+                <div className="revelar-linea" style={{ "--i": 1 }}>
+                  {/* Filtro por categoría DTF: solo aparecen categorías con diseños. */}
+                  {dtfCategoryOptions.length > 0 && (
+                    <div className="catalogo-filtros admin-price-filtros">
+                      <div
+                        className="filtros-grupo"
+                        role="group"
+                        aria-label="Filtrar diseños por categoría DTF"
                       >
-                        <div className="admin-price-head">
-                          {image ? (
-                            <img
-                              src={image}
-                              alt=""
-                              className="admin-price-image"
-                            />
-                          ) : (
-                            <div className="admin-price-image admin-price-image-empty" />
-                          )}
-                          <div>
-                            <strong className="parrafos">{category}</strong>
-                            <span
-                              className={`order-badge ${
-                                dtf.stock === false ? "cancelled" : "paid"
-                              }`}
-                            >
-                              {dtf.stock === false
-                                ? "Agotado"
-                                : "Disponible"}
-                            </span>
-                          </div>
-                        </div>
+                        <span className="filtros-etiqueta">Categoría</span>
 
-                        <div className="admin-price-actions">
-                          <button
-                            type="button"
-                            className="btn-tema btn-tema--contorno"
-                            disabled={savingStock}
-                            onClick={() => toggleStock(dtf)}
+                        <button
+                          type="button"
+                          className={`filtro-chip ${
+                            categoryFilter === "all" ? "activo" : ""
+                          }`}
+                          aria-pressed={categoryFilter === "all"}
+                          onClick={() => setCategoryFilter("all")}
+                        >
+                          Todas
+                        </button>
+
+                        {dtfCategoryOptions.map((categoria) => {
+                          const activa = categoryFilter === categoria.id;
+                          return (
+                            <button
+                              key={categoria.id}
+                              type="button"
+                              className={`filtro-chip ${
+                                activa ? "activo" : ""
+                              }`}
+                              aria-pressed={activa}
+                              onClick={() => setCategoryFilter(categoria.id)}
+                            >
+                              {categoria.nombre}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {itemsVisibles.length === 0 ? (
+                    <div className="estado">
+                      <h2 className="estado-titulo">
+                        Sin diseños en esta categoría
+                      </h2>
+                      <p className="estado-texto">
+                        Elige otra categoría o vuelve a “Todas” para ver todos
+                        los diseños.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="admin-price-grid">
+                      {itemsVisibles.map((dtf) => {
+                        const image = parseImage(dtf.img);
+                        const category =
+                          typeof dtf.category === "string"
+                            ? dtf.category
+                            : dtf.category?.name || "Sin categoría";
+                        const savingStock = savingStockId === dtf.id;
+
+                        return (
+                          <article
+                            key={dtf.id}
+                            className="checkout-card admin-price-card"
                           >
-                            {savingStock
-                              ? "Guardando…"
-                              : dtf.stock === false
-                                ? "Marcar disponible"
-                                : "Marcar agotado"}
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
+                            <div className="admin-price-head">
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt=""
+                                  className="admin-price-image"
+                                />
+                              ) : (
+                                <div className="admin-price-image admin-price-image-empty" />
+                              )}
+                              <div>
+                                <strong className="parrafos">{category}</strong>
+                                <span
+                                  className={`order-badge ${
+                                    dtf.stock === false ? "cancelled" : "paid"
+                                  }`}
+                                >
+                                  {dtf.stock === false
+                                    ? "Agotado"
+                                    : "Disponible"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="admin-price-actions">
+                              <button
+                                type="button"
+                                className="btn-tema btn-tema--contorno"
+                                disabled={savingStock}
+                                onClick={() => toggleStock(dtf)}
+                              >
+                                {savingStock
+                                  ? "Guardando…"
+                                  : dtf.stock === false
+                                    ? "Marcar disponible"
+                                    : "Marcar agotado"}
+                              </button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </section>
@@ -480,4 +598,4 @@ const AdminDtfPrecios = () => {
   );
 };
 
-export default AdminDtfPrecios;
+export default AdminPrice;

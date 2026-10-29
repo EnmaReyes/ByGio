@@ -127,12 +127,6 @@ const DtfCard = ({ items = [] }) => {
             </button>
 
             <div className="dtf-product-info">
-              <p className="dtf-precio">
-                Desde{" "}
-                <strong>
-                  {formatPrice(getDtfUnitPrice({ ...item, dtfSize: "basic" }))}
-                </strong>
-              </p>
               <Button
                 type="button"
                 variant="outline-dark"
@@ -141,7 +135,7 @@ const DtfCard = ({ items = [] }) => {
               >
                 <span>Ver en franela</span>
               </Button>
-              <Button
+              {/* <Button
                 type="button"
                 variant="dark"
                 className="w-100 mt-2 d-inline-flex align-items-center justify-content-center gap-2"
@@ -160,8 +154,6 @@ const DtfCard = ({ items = [] }) => {
                   <FontAwesomeIcon icon={faCheck} data-icono="b" />
                 </span>
 
-                {/* "Carrito" y "Añadido" comparten celda: el botón no
-                    cambia de ancho mientras se intercambian. */}
                 <span
                   className="intercambio-texto"
                   data-estado={agregadoId === item.id ? "b" : "a"}
@@ -170,14 +162,12 @@ const DtfCard = ({ items = [] }) => {
                   <span data-texto="a">Carrito</span>
                   <span data-texto="b">Añadido</span>
                 </span>
-
-                {/* Nombre accesible del botón. */}
                 <span className="solo-lector">
                   {agregadoId === item.id
                     ? "Diseño añadido al carrito"
                     : "Añadir al carrito"}
                 </span>
-              </Button>
+              </Button> */}
             </div>
           </div>
         </article>
@@ -269,7 +259,10 @@ const DtfCard = ({ items = [] }) => {
                       <span>Básico</span>
                       <span className="dtf-size-precio">
                         {formatPrice(
-                          getDtfUnitPrice({ ...selectedItem, dtfSize: "basic" }),
+                          getDtfUnitPrice({
+                            ...selectedItem,
+                            dtfSize: "basic",
+                          }),
                         )}
                       </span>
                     </button>
