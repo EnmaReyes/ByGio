@@ -21,7 +21,7 @@ const colecciones = [
   },
   {
     id: "dtf",
-    titulo: "DTF",
+    titulo: "Crea",
     imagen: fondoMarca,
     alt: "Diseños DTF de ByGio",
   },
