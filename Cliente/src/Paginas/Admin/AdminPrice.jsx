@@ -54,8 +54,14 @@ const AdminPrice = () => {
   const [normalizing, setNormalizing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const [refTarifa, tarifaEnVista] = useEnVista();
-  const [refDisenos, disenosEnVista] = useEnVista();
+  /*
+   * El observer se engancha al contenedor exterior porque siempre está
+   * montado (también durante la carga). Si se enganchara a las secciones
+   * internas, al montar aún no existirían (loading/error) y el efecto,
+   * que corre una sola vez, nunca observaría nada: `.revelar-linea`
+   * quedaría con opacity 0 aunque los datos ya estuvieran cargados.
+   */
+  const [refContenido, contenidoEnVista] = useEnVista();
 
   const applyPricesResponse = useCallback((data) => {
     const map = pricesToMap(data?.prices);
@@ -77,9 +83,7 @@ const AdminPrice = () => {
       applyPricesResponse(pricesRes.data);
       setItems(Array.isArray(dtfRes.data) ? dtfRes.data : []);
     } catch (err) {
-      setError(
-        getApiErrorMessage(err, "No se pudieron cargar los precios."),
-      );
+      setError(getApiErrorMessage(err, "No se pudieron cargar los precios."));
     } finally {
       setLoading(false);
     }
@@ -240,8 +244,7 @@ const AdminPrice = () => {
     items.forEach((dtf) => {
       const raw = dtf.category;
       const id = typeof raw === "object" && raw !== null ? raw.id : raw;
-      const nombre =
-        typeof raw === "object" && raw !== null ? raw.name : raw;
+      const nombre = typeof raw === "object" && raw !== null ? raw.name : raw;
 
       if (id === undefined || id === null || id === "") return;
 
@@ -311,7 +314,12 @@ const AdminPrice = () => {
         </div>
       </header>
 
-      <div className="checkout-page admin-page">
+      <div
+        ref={refContenido}
+        className={`checkout-page admin-page revelar${
+          contenidoEnVista ? " is-visible" : ""
+        }`}
+      >
         {loading ? (
           <div className="checkout-loading">
             <span className="cargador" aria-hidden="true" />
@@ -331,13 +339,11 @@ const AdminPrice = () => {
           </div>
         ) : (
           <>
-            <section
-              ref={refTarifa}
-              className={`checkout-card admin-price-card revelar${
-                tarifaEnVista ? " is-visible" : ""
-              }`}
-            >
-              <div className="admin-price-head revelar-linea" style={{ "--i": 0 }}>
+            <section className="checkout-card admin-price-card">
+              <div
+                className="admin-price-head revelar-linea"
+                style={{ "--i": 0 }}
+              >
                 <div>
                   <strong className="titulos">Tarifa global</strong>
                   <p className="parrafos admin-muted">
@@ -346,7 +352,10 @@ const AdminPrice = () => {
                 </div>
               </div>
 
-              <div className="admin-price-grid revelar-linea" style={{ "--i": 1 }}>
+              <div
+                className="admin-price-grid revelar-linea"
+                style={{ "--i": 1 }}
+              >
                 {PRICE_FIELDS.map(({ productType, tipo, label }) => {
                   const key = priceKey(productType, tipo);
                   const value = prices[key]?.precio ?? "";
@@ -454,12 +463,7 @@ const AdminPrice = () => {
               )}
             </section>
 
-            <section
-              ref={refDisenos}
-              className={`admin-page revelar${
-                disenosEnVista ? " is-visible" : ""
-              }`}
-            >
+            <section className="admin-page">
               <h2
                 className="titulo-seccion mb-3 revelar-linea"
                 style={{ "--i": 0 }}
@@ -469,9 +473,7 @@ const AdminPrice = () => {
 
               {items.length === 0 ? (
                 <div className="estado revelar-linea" style={{ "--i": 1 }}>
-                  <h2 className="estado-titulo">
-                    Todavía no hay diseños DTF
-                  </h2>
+                  <h2 className="estado-titulo">Todavía no hay diseños DTF</h2>
                   <p className="estado-texto">
                     Crea un diseño desde “Crear DTF” para publicarlo en el
                     catálogo.
