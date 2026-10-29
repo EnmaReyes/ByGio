@@ -146,6 +146,9 @@ html[data-theme="light"] {
   --shadow-drawer: -18px 0 44px rgba(10, 10, 10, 0.16);
 
   --overlay: rgba(10, 10, 10, 0.5);
+  /* Texto y velo para titulos superpuestos sobre fotos (colecciones). */
+  --texto-foto: #ffffff;
+  --scrim-foto: rgba(10, 10, 10, 0.42);
   --header-bg: rgba(255, 255, 255, 0.82);
 
   /* ---- Puente con variables heredadas ---- */
@@ -208,6 +211,9 @@ html[data-theme="dark"] {
   --shadow-drawer: -18px 0 44px rgba(0, 0, 0, 0.55);
 
   --overlay: rgba(0, 0, 0, 0.68);
+  /* Texto y velo para titulos superpuestos sobre fotos (colecciones). */
+  --texto-foto: #ffffff;
+  --scrim-foto: rgba(0, 0, 0, 0.5);
   --header-bg: rgba(11, 11, 11, 0.82);
 
   /* ---- Puente con variables heredadas ---- */

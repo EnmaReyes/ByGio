@@ -704,9 +704,11 @@ html[data-theme="dark"] .marca-logo {
   align-items: stretch;
 }
 
+/* Dos filas iguales que llenan el alto de la columna: asi la ultima
+   tarjeta cierra a la misma altura que la tarjeta principal de la izquierda. */
 .colecciones-stack {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
   min-width: 0;
 }
@@ -734,16 +736,24 @@ html[data-theme="dark"] .marca-logo {
   background: var(--surface-2);
 }
 
-.coleccion-card--principal .coleccion-media {
+/* La media absorbe el alto sobrante de cada tarjeta para que las tres
+   columnas (principal + las dos del stack) terminen a la misma altura. */
+.coleccion-card .coleccion-media {
   flex: 1 1 auto;
   min-height: 0;
 }
 
+/* Base 16/9 del stack; el flex la estira hasta llenar su fila. Es el
+   stack el que fija la altura de la rejilla, no el ratio de la foto. */
 .coleccion-card:not(.coleccion-card--principal) .coleccion-media {
   aspect-ratio: 16 / 9;
 }
 
+/* La imagen se posiciona de forma absoluta para que su ratio natural
+   no infle la altura de la tarjeta principal. */
 .coleccion-imagen {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -759,62 +769,31 @@ html[data-theme="dark"] .marca-logo {
   transform: scale(1.05);
 }
 
-.coleccion-copy {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  padding: 24px;
-  color: var(--ink);
+/* Velo superior: asegura contraste del titulo sobre cualquier foto
+   sin recortar la imagen. La imagen se sigue viendo al hacer zoom. */
+.coleccion-media::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 55%;
+  background: linear-gradient(to bottom, var(--scrim-foto), transparent);
+  pointer-events: none;
 }
 
-.coleccion-etiqueta {
-  display: block;
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
+/* Titulo superpuesto arriba a la izquierda, como en "Our collections". */
 .coleccion-titulo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
   margin: 0;
-  color: var(--ink);
+  padding: 22px 24px;
+  color: var(--texto-foto);
   font-family: var(--font-body);
-  font-size: clamp(1.5rem, 2.2vw, 1.75rem);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
   font-weight: 500;
-  line-height: 1.2;
-}
-
-.coleccion-texto {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.coleccion-flecha {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
-  color: var(--ink);
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
-
-/* La flecha se separa con transform, no con `gap`: animar el gap obliga
-   al navegador a recalcular el layout en cada fotograma. */
-.coleccion-flecha svg {
-  transition: transform var(--mov-base) var(--mov-ease-hover);
-}
-
-.coleccion-card:hover .coleccion-flecha svg,
-.coleccion-card:focus-visible .coleccion-flecha svg {
-  transform: translateX(0.3rem);
+  line-height: 1.15;
+  text-wrap: balance;
 }
 
 /* =========================================================
@@ -2785,6 +2764,11 @@ html[data-theme="dark"] .swiper-slide {
   .colecciones-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .colecciones-stack {
+    grid-template-rows: auto;
+  }
+
   .coleccion-card--principal .coleccion-media {
     aspect-ratio: 4 / 3;
     flex: none;
@@ -2792,6 +2776,7 @@ html[data-theme="dark"] .swiper-slide {
 
   .coleccion-card:not(.coleccion-card--principal) .coleccion-media {
     aspect-ratio: 4 / 3;
+    flex: none;
   }
 }
 

@@ -9,25 +9,19 @@ import fondoMarca from "../assets/coleccion/DTF.jpeg";
 const colecciones = [
   {
     id: "basicas",
-    etiqueta: "Colección 01",
     titulo: "Básicas",
-    texto: "Franelas de corte clásico para el día a día.",
     imagen: basicaImagen,
     alt: "Franela básica de la colección ByGio",
   },
   {
     id: "oversize",
-    etiqueta: "Colección 02",
     titulo: "Oversize",
-    texto: "Silueta amplia, caída relajada y actitud urbana.",
     imagen: oversizeImagen,
     alt: "Franela oversize de la colección ByGio",
   },
   {
     id: "dtf",
-    etiqueta: "Colección 03",
     titulo: "DTF",
-    texto: "Diseños listos para estampar en tu prenda favorita.",
     imagen: fondoMarca,
     alt: "Diseños DTF de ByGio",
   },
@@ -48,16 +42,7 @@ const TarjetaColeccion = ({ coleccion, principal = false, indice = 0 }) => (
         alt={coleccion.alt}
         loading="lazy"
       />
-    </div>
-
-    <div className="coleccion-copy">
-      <span className="coleccion-etiqueta">{coleccion.etiqueta}</span>
       <h3 className="coleccion-titulo">{coleccion.titulo}</h3>
-      <p className="coleccion-texto">{coleccion.texto}</p>
-      <span className="coleccion-flecha">
-        Explorar
-        <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
-      </span>
     </div>
   </Link>
 );
