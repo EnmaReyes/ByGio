@@ -13,6 +13,7 @@ const { Order } = require("./Order.js");
 const { OrderItem } = require("./OrderItem.js");
 const { Payment } = require("./Payment.js");
 const { OrderStatusHistory } = require("./OrderStatusHistory.js");
+const { Notificacion } = require("./Notificacion.js");
 
 // ------------------------------- Pedidos -------------------------------
 Usuarios.hasMany(Order, {
@@ -67,10 +68,24 @@ OrderStatusHistory.belongsTo(Usuarios, {
 // (tarifa global) y product_prices (excepciones/combos). Los pedidos guardan
 // su propio priceSnapshot, por eso OrderItem no tiene asociacion de precio.
 
+// Notificaciones por usuario
+Usuarios.hasMany(Notificacion, {
+  foreignKey: "userId",
+  as: "notificaciones",
+  sourceKey: "id",
+});
+
+Notificacion.belongsTo(Usuarios, {
+  foreignKey: "userId",
+  as: "user",
+  targetKey: "id",
+});
+
 module.exports = {
   Usuarios,
   Order,
   OrderItem,
   Payment,
   OrderStatusHistory,
+  Notificacion,
 };

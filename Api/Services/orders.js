@@ -10,6 +10,7 @@ const {
 } = require("../DataBase/models/index.js");
 const {
   ORDER_STATUS,
+  ORDER_STATUS_VALUES,
   PAYMENT_STATUS,
   HISTORY_KIND,
   STOCK_RESERVATION_MINUTES,
@@ -159,12 +160,33 @@ const getOrderForUser = async ({ orderId, userId, admin = false, transaction }) 
   return order;
 };
 
-const listOrdersForUser = async ({ userId, admin = false, limit = 20, offset = 0 }) => {
+// Filtro opcional por uno o varios estados: "pagado,enviado".
+// Se descartan los valores desconocidos para no exponer errores de SQL.
+const parseStatusFilter = (status) => {
+  if (!status) return null;
+  const lista = String(status)
+    .split(",")
+    .map((valor) => valor.trim())
+    .filter((valor) => ORDER_STATUS_VALUES.includes(valor));
+  return lista.length ? lista : null;
+};
+
+const listOrdersForUser = async ({
+  userId,
+  admin = false,
+  limit = 20,
+  offset = 0,
+  status,
+}) => {
   const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
   const safeOffset = Math.max(Number(offset) || 0, 0);
+  const statusFilter = parseStatusFilter(status);
+
+  const where = admin ? {} : { userId };
+  if (statusFilter) where.status = { [Op.in]: statusFilter };
 
   const { rows, count } = await Order.findAndCountAll({
-    where: admin ? {} : { userId },
+    where,
     include: [{ model: OrderItem, as: "items" }],
     order: [["createdAt", "DESC"]],
     limit: safeLimit,
@@ -250,6 +272,26 @@ const createOrder = async ({ userId, items, shipping, notes }) => {
     });
 
     await transaction.commit();
+
+    // Notificacion para el cliente (no bloquea si falla).
+    try {
+      const { createNotification } = require("./notifications.js");
+      await createNotification({
+        userId,
+        tipo: "pedido",
+        titulo: `Pedido ${full.orderNumber} registrado`,
+        texto:
+          "Recibimos tu pedido. Te contactaremos para coordinar el pago y la entrega.",
+        to: `/dashboard/pedidos/${full.id}`,
+        clave: `pedido:${full.id}:creado`,
+      });
+    } catch (error) {
+      console.error(
+        "No se pudo crear la notificación del pedido:",
+        error.message,
+      );
+    }
+
     return full;
   } catch (error) {
     await transaction.rollback();
@@ -304,6 +346,25 @@ const cancelOrder = async ({ orderId, user }) => {
     });
 
     await transaction.commit();
+
+    try {
+      const { createNotification } = require("./notifications.js");
+      await createNotification({
+        userId: order.userId,
+        tipo: "pedido",
+        titulo: `Pedido ${full.orderNumber} cancelado`,
+        texto:
+          "Cancelaste tu pedido. Los productos volvieron a estar disponibles.",
+        to: `/dashboard/pedidos/${full.id}`,
+        clave: `pedido:${full.id}:cancelado`,
+      });
+    } catch (error) {
+      console.error(
+        "No se pudo crear la notificación del pedido:",
+        error.message,
+      );
+    }
+
     return full;
   } catch (error) {
     await transaction.rollback();

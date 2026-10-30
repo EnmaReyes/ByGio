@@ -27,6 +27,18 @@ import PedidoDetalle from "./Paginas/PedidoDetalle";
 import AdminPedidos from "./Paginas/Admin/AdminPedidos";
 import AdminPedidoDetalle from "./Paginas/Admin/AdminPedidoDetalle";
 import AdminPrice from "./Paginas/Admin/AdminPrice";
+import DashboardLayout, {
+  RutaAdmin,
+} from "./Paginas/Dashboard/DashboardLayout";
+import DashboardInicio from "./Paginas/Dashboard/DashboardInicio";
+import Perfil from "./Paginas/Dashboard/Perfil";
+import Soporte from "./Paginas/Dashboard/Soporte";
+import Notificaciones from "./Paginas/Dashboard/Notificaciones";
+import ResumenAdmin from "./Paginas/Dashboard/Admin/ResumenAdmin";
+import UsuariosAdmin from "./Paginas/Dashboard/Admin/Usuarios";
+import VentasAdmin from "./Paginas/Dashboard/Admin/Ventas";
+import BannersAdmin from "./Paginas/Dashboard/Admin/Banners";
+import SeccionProximamente from "./Paginas/Dashboard/SeccionProximamente";
 import { TemaProvider } from "./tema/TemaProvider";
 import { CarritoProvider, useCarrito } from "./carrito/CarritoProvider";
 import TransicionRuta from "./Componentes/TransicionRuta";
@@ -179,6 +191,110 @@ const router = createBrowserRouter(
           <InicioSecion />
         </>
       ),
+    },
+    {
+      // Panel centralizado (shell propio: barra lateral + cabecera).
+      // Las secciones de fase 3/4 muestran un estado "en preparación".
+      path: "/dashboard",
+      element: <DashboardLayout />,
+      children: [
+        {
+          index: true,
+          element: <DashboardInicio />,
+        },
+        {
+          path: "pedidos",
+          element: <MisPedidos />,
+        },
+        {
+          path: "pedidos/:id",
+          element: <PedidoDetalle />,
+        },
+        {
+          path: "perfil",
+          element: <Perfil />,
+        },
+        {
+          path: "notificaciones",
+          element: <Notificaciones />,
+        },
+        {
+          path: "soporte",
+          element: <Soporte />,
+        },
+        {
+          path: "admin",
+          element: (
+            <RutaAdmin>
+              <ResumenAdmin />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/pedidos",
+          element: (
+            <RutaAdmin>
+              <AdminPedidos />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/pedidos/:id",
+          element: (
+            <RutaAdmin>
+              <AdminPedidoDetalle />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/precios",
+          element: (
+            <RutaAdmin>
+              <AdminPrice />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/articulos",
+          element: (
+            <RutaAdmin>
+              <Editor />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/dtf",
+          element: (
+            <RutaAdmin>
+              <UploadDTF />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/usuarios",
+          element: (
+            <RutaAdmin>
+              <UsuariosAdmin />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/ventas",
+          element: (
+            <RutaAdmin>
+              <VentasAdmin />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/banners",
+          element: (
+            <RutaAdmin>
+              <BannersAdmin />
+            </RutaAdmin>
+          ),
+        },
+      ],
     },
   ],
   {

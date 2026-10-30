@@ -1,9 +1,12 @@
 const express = require("express");
-const { updateUser, userById } = require("../Controllers/user.js");
+const { userById, updateUser } = require("../Controllers/user.js");
+const { requireAuth } = require("../Middleware/auth.js");
 
 const router = express.Router();
 
-router.get("/edit", userById);
-router.put("/edit", updateUser);
+// Perfil del usuario autenticado. La sesion se valida con requireAuth
+// (req.user), igual que el resto de rutas protegidas.
+router.get("/edit", requireAuth, userById);
+router.put("/edit", requireAuth, updateUser);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const {
   changeOrderStatus,
   updateTracking,
   orderStats,
+  salesByPeriod,
 } = require("../Services/adminOrders.js");
 const { sendError } = require("../Utils/respond.js");
 
@@ -77,4 +78,15 @@ const tracking = async (req, res) => {
   }
 };
 
-module.exports = { list, stats, detail, changeStatus, tracking };
+// GET /api/admin/orders/ventas?periodo=dia|semana|mes|anio
+const sales = async (req, res) => {
+  try {
+    const { periodo } = req.query;
+    const result = await salesByPeriod({ periodo });
+    return res.status(200).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudieron cargar las ventas");
+  }
+};
+
+module.exports = { list, stats, detail, changeStatus, tracking, sales };

@@ -18,6 +18,7 @@ import {
   isDtfProduct,
 } from "../Componentes/cartUtils";
 import { getApiErrorMessage } from "../Componentes/orderUtils";
+import { NOTIFICACIONES_EVENT } from "../Componentes/notificaciones";
 import "./pedidos.css";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -482,6 +483,7 @@ const Checkout = () => {
       );
 
       setCreatedOrder(res.data);
+      window.dispatchEvent(new Event(NOTIFICACIONES_EVENT));
       setAllProducts([]);
       setTotal(0);
       setCountProducts(0);

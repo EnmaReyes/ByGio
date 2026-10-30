@@ -14,6 +14,16 @@ import "./pedidos.css";
 
 const LIMIT = 10;
 
+// Agrupación de estados para "diferenciar" los pedidos en la vista.
+// `status` es la lista que entiende el endpoint (coma-separada).
+const FILTROS = [
+  { id: "todos", label: "Todos", status: "" },
+  { id: "proceso", label: "En proceso", status: "pendiente_pago,pagado,en_preparacion" },
+  { id: "enviados", label: "Enviados", status: "enviado" },
+  { id: "completados", label: "Completados", status: "entregado" },
+  { id: "cancelados", label: "Cancelados", status: "cancelado" },
+];
+
 // Cabecera de pagina del sistema de diseno (misma pieza que /productos).
 const PageHero = ({ title, subtitle }) => (
   <header className="catalogo-hero">
@@ -101,40 +111,52 @@ const MisPedidos = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [filtro, setFiltro] = useState("todos");
 
-  const load = useCallback(async (offset = 0) => {
-    const isFirstPage = offset === 0;
+  const filtroActivo = FILTROS.find((opcion) => opcion.id === filtro) || FILTROS[0];
 
-    if (isFirstPage) {
-      setLoading(true);
-      setError("");
-    } else {
-      setLoadingMore(true);
-    }
+  const load = useCallback(
+    async (offset = 0) => {
+      const isFirstPage = offset === 0;
 
-    try {
-      const res = await axios.get(`${API_URL}/api/orders`, {
-        params: { limit: LIMIT, offset },
-        withCredentials: true,
-      });
+      if (isFirstPage) {
+        setLoading(true);
+        setError("");
+      } else {
+        setLoadingMore(true);
+      }
 
-      const data = res.data || {};
-      const nextOrders = Array.isArray(data.orders) ? data.orders : [];
+      try {
+        const res = await axios.get(`${API_URL}/api/orders`, {
+          params: {
+            limit: LIMIT,
+            offset,
+            ...(filtroActivo.status && { status: filtroActivo.status }),
+          },
+          withCredentials: true,
+        });
 
-      setOrders((prev) => (isFirstPage ? nextOrders : [...prev, ...nextOrders]));
-      setTotal(Number(data.total) || 0);
-    } catch (err) {
-      setError(
-        getApiErrorMessage(
-          err,
-          "No pudimos cargar tus pedidos. Intenta de nuevo.",
-        ),
-      );
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+        const data = res.data || {};
+        const nextOrders = Array.isArray(data.orders) ? data.orders : [];
+
+        setOrders((prev) =>
+          isFirstPage ? nextOrders : [...prev, ...nextOrders],
+        );
+        setTotal(Number(data.total) || 0);
+      } catch (err) {
+        setError(
+          getApiErrorMessage(
+            err,
+            "No pudimos cargar tus pedidos. Intenta de nuevo.",
+          ),
+        );
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [filtroActivo.status],
+  );
 
   useEffect(() => {
     if (!currentUser) return;
@@ -152,6 +174,31 @@ const MisPedidos = () => {
       />
 
       <div className="checkout-page">
+        {!loading && (
+          <div className="catalogo-filtros pedidos-filtros">
+            <div
+              className="filtros-grupo"
+              role="group"
+              aria-label="Filtrar pedidos por estado"
+            >
+              {FILTROS.map((opcion) => {
+                const activo = filtro === opcion.id;
+                return (
+                  <button
+                    key={opcion.id}
+                    type="button"
+                    className={`filtro-chip ${activo ? "activo" : ""}`}
+                    aria-pressed={activo}
+                    onClick={() => setFiltro(opcion.id)}
+                  >
+                    {opcion.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="checkout-loading">
             <span className="cargador" aria-hidden="true" />
@@ -171,14 +218,29 @@ const MisPedidos = () => {
           </div>
         ) : orders.length === 0 ? (
           <div className="estado">
-            <h2 className="estado-titulo">Aún no tienes pedidos</h2>
+            <h2 className="estado-titulo">
+              {filtro === "todos"
+                ? "Aún no tienes pedidos"
+                : "No hay pedidos con este estado"}
+            </h2>
             <p className="estado-texto">
-              Cuando confirmes tu primera compra aparecerá aquí con su estado y
-              seguimiento.
+              {filtro === "todos"
+                ? "Cuando confirmes tu primera compra aparecerá aquí con su estado y seguimiento."
+                : "Prueba con otro estado o vuelve a “Todos” para ver tu historial completo."}
             </p>
-            <Link to="/" className="checkout-primary-link">
-              Ver catálogo
-            </Link>
+            {filtro === "todos" ? (
+              <Link to="/" className="checkout-primary-link">
+                Ver catálogo
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="btn-tema btn-tema--contorno"
+                onClick={() => setFiltro("todos")}
+              >
+                Ver todos
+              </button>
+            )}
           </div>
         ) : (
           <>

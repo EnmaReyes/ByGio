@@ -16,6 +16,9 @@ import {
 import { notify } from "../Componentes/toastConfig/toastconfigs";
 import "./pedidos.css";
 
+// (La deteccion de cambios de estado se hace en el backend, que crea
+// la notificacion correspondiente al cambiar el estado del pedido.)
+
 // Cabecera de pagina del sistema de diseno (misma pieza que /productos).
 const PageHero = ({ title, subtitle }) => (
   <header className="catalogo-hero">

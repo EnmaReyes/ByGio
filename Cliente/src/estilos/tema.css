@@ -12,6 +12,10 @@
   /* Altura de la cabecera fija (compensa el contenido). */
   --header-h: 76px;
 
+  /* Panel (dashboard): ancho de la barra lateral y alto de su cabecera. */
+  --panel-ancho: 268px;
+  --panel-cabecera-h: 68px;
+
   /* Albert Sans es la tipografia del sistema (plantilla Sabina).
      Fraunces se reserva para el titular del hero. */
   --font-body:

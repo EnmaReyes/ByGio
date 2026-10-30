@@ -3,12 +3,14 @@ const express = require("express");
 const postRoutes = require("./Rutas/posts.js");
 const authRoutes = require("./Rutas/auth.js");
 const userRoutes = require("./Rutas/user.js");
+const notificationsRoutes = require("./Rutas/notifications.js");
 const bannerRoutes = require("./Rutas/banner.js");
 const dtfRoutes = require("./Rutas/dtf.js");
 const categoryRoutes = require("./Rutas/category.js");
 const ordersRoutes = require("./Rutas/orders.js");
 const shippingRoutes = require("./Rutas/shipping.js");
 const adminOrdersRoutes = require("./Rutas/adminOrders.js");
+const adminUsersRoutes = require("./Rutas/adminUsers.js");
 const pricesRoutes = require("./Rutas/prices.js");
 
 const { sequelize, databaseHost } = require("./DataBase/db.js");
@@ -176,12 +178,14 @@ app.use(async (req, res, next) => {
 app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/notifications", notificationsRoutes);
 app.use("/api/banner", bannerRoutes);
 app.use("/api/dtf", dtfRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/admin/orders", adminOrdersRoutes);
+app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/prices", pricesRoutes);
 
 // Servidor local.

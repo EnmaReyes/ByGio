@@ -19,6 +19,7 @@ const { Order } = require("./Order.js");
 const { OrderItem } = require("./OrderItem.js");
 const { Payment } = require("./Payment.js");
 const { OrderStatusHistory } = require("./OrderStatusHistory.js");
+const { Notificacion } = require("./Notificacion.js");
 const enums = require("./enums.js");
 
 // Define las asociaciones nuevas (Requiere los modelos de arriba ya definidos)
@@ -30,6 +31,7 @@ module.exports = {
   Banner,
   Category,
   Dtf,
+  Notificacion,
   PriceVariant,
   ProductPrice,
   ShippingRate,

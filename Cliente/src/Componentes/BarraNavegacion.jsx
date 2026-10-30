@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faChevronDown,
+  faGaugeHigh,
   faRightFromBracket,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -230,53 +231,14 @@ const BarraNavegacion = ({
                       {nombreUsuario}
                     </span>
                   </li>
-                  {currentUser.admin && (
-                    <>
-                      <li>
-                        <Link
-                          to="/editor"
-                          className="nav-enlace"
-                          onClick={cerrar}
-                        >
-                          Crear artículo
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/dtf/upload"
-                          className="nav-enlace"
-                          onClick={cerrar}
-                        >
-                          Crear diseño DTF
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/admin/pedidos"
-                          className="nav-enlace"
-                          onClick={cerrar}
-                        >
-                          Pedidos
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/admin/precios"
-                          className="nav-enlace"
-                          onClick={cerrar}
-                        >
-                          Precios
-                        </Link>
-                      </li>
-                    </>
-                  )}
                   <li>
                     <Link
-                      to="/mis-pedidos"
+                      to="/dashboard"
                       className="nav-enlace"
                       onClick={cerrar}
                     >
-                      Mis pedidos
+                      <FontAwesomeIcon icon={faGaugeHigh} aria-hidden="true" />
+                      Mi panel
                     </Link>
                   </li>
                   <li>
@@ -373,53 +335,14 @@ const BarraNavegacion = ({
                     {nombreUsuario}
                   </span>
                 </li>
-                {currentUser.admin && (
-                  <>
-                    <li>
-                      <Link
-                        to="/editor"
-                        className="nav-enlace"
-                        onClick={() => setMenuAbierto(false)}
-                      >
-                        Crear artículo
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/dtf/upload"
-                        className="nav-enlace"
-                        onClick={() => setMenuAbierto(false)}
-                      >
-                        Crear diseño DTF
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/admin/pedidos"
-                        className="nav-enlace"
-                        onClick={() => setMenuAbierto(false)}
-                      >
-                        Pedidos
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/admin/precios"
-                        className="nav-enlace"
-                        onClick={() => setMenuAbierto(false)}
-                      >
-                        Precios
-                      </Link>
-                    </li>
-                  </>
-                )}
                 <li>
                   <Link
-                    to="/mis-pedidos"
+                    to="/dashboard"
                     className="nav-enlace"
                     onClick={() => setMenuAbierto(false)}
                   >
-                    Mis pedidos
+                    <FontAwesomeIcon icon={faGaugeHigh} aria-hidden="true" />
+                    Mi panel
                   </Link>
                 </li>
                 <li>

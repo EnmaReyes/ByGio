@@ -25,11 +25,12 @@ const create = async (req, res) => {
 // GET /api/orders — pedidos del usuario autenticado
 const list = async (req, res) => {
   try {
-    const { limit, offset } = req.query;
+    const { limit, offset, status } = req.query;
     const result = await listOrdersForUser({
       userId: req.user.id,
       limit,
       offset,
+      status,
     });
     return res.status(200).json(result);
   } catch (error) {

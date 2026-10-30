@@ -372,6 +372,12 @@
   gap: 1rem;
 }
 
+/* Filtro por estado dentro de "Mis pedidos". Reutiliza los chips del
+   catálogo; aquí solo se ajusta el ritmo vertical. */
+.pedidos-filtros {
+  margin-bottom: 1.4rem;
+}
+
 .order-card {
   padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);

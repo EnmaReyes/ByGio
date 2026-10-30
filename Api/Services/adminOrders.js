@@ -18,6 +18,15 @@ const {
 const { releaseOrderStock } = require("./orders.js");
 const HttpError = require("../Utils/HttpError.js");
 
+const STATUS_LABELS = {
+  pendiente_pago: "Pendiente de pago",
+  pagado: "Pagado",
+  en_preparacion: "En preparación",
+  enviado: "Enviado",
+  entregado: "Entregado",
+  cancelado: "Cancelado",
+};
+
 // Consultas y acciones del panel de administracion.
 // Toda la informacion sensible del comprador se expone aqui, por eso las
 // rutas que usan este servicio estan detras de requireAdmin.
@@ -254,6 +263,21 @@ const changeOrderStatus = async ({ orderId, status, note, adminId }) => {
     throw error;
   }
 
+  // Notificacion al cliente sobre el cambio de estado.
+  try {
+    const { createNotification } = require("./notifications.js");
+    await createNotification({
+      userId: order.userId,
+      tipo: "pedido",
+      titulo: `Pedido ${order.orderNumber}: ${STATUS_LABELS[status] || status}`,
+      texto: "El estado de tu pedido cambió. Toca para ver el detalle.",
+      to: `/dashboard/pedidos/${order.id}`,
+      clave: `pedido:${order.id}:${status}`,
+    });
+  } catch (error) {
+    console.error("No se pudo crear la notificación:", error.message);
+  }
+
   return getOrderAdmin(orderId);
 };
 
@@ -357,10 +381,129 @@ const orderStats = async () => {
   };
 };
 
+// GET /api/admin/orders/ventas?periodo=dia|semana|mes|anio
+// Contabilidad de ventas: solo pedidos con pago aprobado y no cancelados.
+const salesByPeriod = async ({ periodo } = {}) => {
+  const periodosValidos = ["dia", "semana", "mes", "anio"];
+  const p = periodosValidos.includes(periodo) ? periodo : "mes";
+  const bucket = { dia: "day", semana: "week", mes: "month", anio: "year" }[p];
+  const n = { dia: 30, semana: 12, mes: 12, anio: 5 }[p];
+
+  const BOGOTA = 5 * 60 * 60 * 1000;
+  const toBogota = (d) => new Date(d.getTime() - BOGOTA);
+  const fromBogota = (d) => new Date(d.getTime() + BOGOTA);
+
+  const truncBogota = (d) => {
+    const b = toBogota(d);
+    if (bucket === "day") b.setUTCHours(0, 0, 0, 0);
+    else if (bucket === "week") {
+      const day = b.getUTCDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      b.setUTCDate(b.getUTCDate() + diff);
+      b.setUTCHours(0, 0, 0, 0);
+    } else if (bucket === "month") {
+      b.setUTCDate(1);
+      b.setUTCHours(0, 0, 0, 0);
+    } else {
+      b.setUTCMonth(0, 1);
+      b.setUTCHours(0, 0, 0, 0);
+    }
+    return fromBogota(b);
+  };
+
+  const now = new Date();
+  const currentStart = truncBogota(now);
+  const buckets = [];
+  const seen = new Set();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(currentStart);
+    if (bucket === "day") d.setUTCDate(d.getUTCDate() - i);
+    else if (bucket === "week") d.setUTCDate(d.getUTCDate() - i * 7);
+    else if (bucket === "month") d.setUTCMonth(d.getUTCMonth() - i);
+    else d.setUTCFullYear(d.getUTCFullYear() - i);
+    const b = truncBogota(d);
+    const key = b.toISOString();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    buckets.push(b);
+  }
+  const desde = buckets[0];
+
+  const { QueryTypes } = require("sequelize");
+  const [rows] = await sequelize.query(
+    `SELECT (date_trunc(:bucket, "createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Bogota')) AS bucket,
+            COUNT(*)::int AS count,
+            COALESCE(SUM(total), 0)::bigint AS total
+     FROM orders
+     WHERE "paymentStatus" = 'aprobado'
+       AND status <> 'cancelado'
+       AND "createdAt" >= :desde
+     GROUP BY bucket
+     ORDER BY bucket ASC`,
+    { replacements: { bucket, desde }, type: QueryTypes.SELECT },
+  );
+
+  const map = new Map();
+  for (const row of rows || []) {
+    const bogDate = new Date(row.bucket);
+    const realDate = fromBogota(bogDate);
+    map.set(realDate.toISOString(), {
+      count: Number(row.count) || 0,
+      total: Number(row.total) || 0,
+    });
+  }
+
+  const serie = buckets.map((b) => {
+    const v = map.get(b.toISOString()) || { count: 0, total: 0 };
+    return {
+      label: formatBucketLabel(b, bucket),
+      total: v.total,
+      count: v.count,
+      fecha: b.toISOString(),
+    };
+  });
+
+  const actual = serie[serie.length - 1] || { label: "", total: 0, count: 0 };
+  const anterior =
+    serie.length >= 2
+      ? serie[serie.length - 2]
+      : { label: "", total: 0, count: 0 };
+
+  const totalPeriodo = serie.reduce((s, x) => s + x.total, 0);
+  const countPeriodo = serie.reduce((s, x) => s + x.count, 0);
+
+  return {
+    periodo: p,
+    actual,
+    anterior,
+    serie,
+    total: totalPeriodo,
+    count: countPeriodo,
+  };
+};
+
+function formatBucketLabel(d, bucket) {
+  const bog = new Date(d.getTime() - 5 * 60 * 60 * 1000);
+  if (bucket === "day" || bucket === "week") {
+    return new Intl.DateTimeFormat("es-CO", {
+      day: "2-digit",
+      month: "short",
+    }).format(bog);
+  }
+  if (bucket === "month") {
+    return new Intl.DateTimeFormat("es-CO", {
+      month: "short",
+      year: "numeric",
+    }).format(bog);
+  }
+  return new Intl.DateTimeFormat("es-CO", { year: "numeric" }).format(bog);
+}
+
 module.exports = {
   listOrdersAdmin,
   getOrderAdmin,
   changeOrderStatus,
   updateTracking,
   orderStats,
+  salesByPeriod,
 };
