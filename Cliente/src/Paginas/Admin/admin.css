@@ -241,6 +241,47 @@
 }
 
 /* =========================================
+   CANAL DE VENTA
+   ========================================= */
+
+.canal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg-soft);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.canal-badge.canal-presencial {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+
+.canal-badge.canal-whatsapp {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.canal-badge.canal-otro {
+  border-color: var(--line-strong);
+  color: var(--muted);
+}
+
+.order-detail-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* =========================================
    RESPONSIVE
    ========================================= */
 

@@ -19,6 +19,29 @@ export const PAYMENT_STATUS_LABELS = {
   en_revision: "Pago en revisión",
 };
 
+// Canal por el que entro la venta (espejo de Api/DataBase/models/enums.js).
+export const SALE_CHANNEL_LABELS = {
+  web: "Tienda web",
+  presencial: "Presencial",
+  whatsapp: "WhatsApp",
+  otro: "Otro canal",
+};
+
+// Método de pago de las ventas registradas a mano.
+export const PAYMENT_METHOD_LABELS = {
+  efectivo: "Efectivo",
+  nequi: "Nequi",
+  transferencia: "Transferencia",
+  tarjeta: "Tarjeta",
+  otro: "Otro",
+};
+
+export const getChannelLabel = (channel) =>
+  SALE_CHANNEL_LABELS[channel] || channel || "Sin canal";
+
+export const getPaymentMethodLabel = (method) =>
+  PAYMENT_METHOD_LABELS[method] || method || "Sin método";
+
 export const ORDER_STATUS_FLOW = [
   "pendiente_pago",
   "pagado",

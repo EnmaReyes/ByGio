@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Form } from "react-bootstrap";
 import axios from "axios";
 import { API_URL } from "../../config";
@@ -8,9 +8,13 @@ import { formatPrice } from "../../Componentes/cartUtils";
 import {
   formatDateTime,
   getApiErrorMessage,
+  getChannelLabel,
   getOrderStatusMeta,
+  getPaymentMethodLabel,
   ORDER_STATUS_META,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
+  SALE_CHANNEL_LABELS,
 } from "../../Componentes/orderUtils";
 import "../pedidos.css";
 import "./admin.css";
@@ -19,10 +23,14 @@ const LIMIT = 20;
 
 const STATUS_OPTIONS = Object.keys(ORDER_STATUS_META);
 const PAYMENT_OPTIONS = Object.keys(PAYMENT_STATUS_LABELS);
+const CHANNEL_OPTIONS = Object.keys(SALE_CHANNEL_LABELS);
+const PAYMENT_METHOD_OPTIONS = Object.keys(PAYMENT_METHOD_LABELS);
 
 const EMPTY_FILTERS = {
   status: "",
   paymentStatus: "",
+  channel: "",
+  paymentMethod: "",
   q: "",
   from: "",
   to: "",
@@ -82,18 +90,18 @@ const StatsCards = ({ stats }) => {
   );
 };
 
-const OrderRow = ({ order }) => {
+const OrderRow = ({ order, basePath }) => {
   const status = getOrderStatusMeta(order.status);
   const items = order.items || [];
   const count = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const customer = order.user
     ? order.user.username || order.user.email
-    : order.email;
+    : order.email || order.phone || "Venta externa";
 
   return (
     <tr>
       <td>
-        <Link to={`/admin/pedidos/${order.id}`} className="admin-link titulos">
+        <Link to={`${basePath}/${order.id}`} className="admin-link titulos">
           {order.orderNumber}
         </Link>
         <small className="parrafos admin-muted">
@@ -106,17 +114,27 @@ const OrderRow = ({ order }) => {
         <small className="parrafos admin-muted">{customer}</small>
       </td>
       <td>
+        <span className={`canal-badge canal-${order.channel || "otro"}`}>
+          {getChannelLabel(order.channel)}
+        </span>
+      </td>
+      <td>
         <span className={`order-badge ${status.tone}`}>{status.label}</span>
       </td>
       <td className="parrafos">
         {PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}
+        {order.paymentMethod && (
+          <small className="parrafos admin-muted">
+            {getPaymentMethodLabel(order.paymentMethod)}
+          </small>
+        )}
       </td>
       <td className="parrafos admin-nowrap">
         <strong>{formatPrice(order.total)}</strong>
       </td>
       <td>
         <Link
-          to={`/admin/pedidos/${order.id}`}
+          to={`${basePath}/${order.id}`}
           className="admin-table-link titulos"
         >
           Abrir
@@ -129,6 +147,13 @@ const OrderRow = ({ order }) => {
 const AdminPedidos = () => {
   const { currentUser } = useContext(AuthContext);
   const isAdmin = Boolean(currentUser?.admin);
+
+  // La misma pagina se usa dentro del panel (/dashboard/...) y en la ruta
+  // historica (/admin/...). Los enlaces de detalle respetan el contexto.
+  const { pathname } = useLocation();
+  const detailBase = pathname.startsWith("/dashboard")
+    ? "/dashboard/admin/pedidos"
+    : "/admin/pedidos";
 
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -164,6 +189,10 @@ const AdminPedidos = () => {
             ...(filters.paymentStatus && {
               paymentStatus: filters.paymentStatus,
             }),
+            ...(filters.channel && { channel: filters.channel }),
+            ...(filters.paymentMethod && {
+              paymentMethod: filters.paymentMethod,
+            }),
             ...(searchTerm && { q: searchTerm }),
             ...(filters.from && { from: filters.from }),
             ...(filters.to && { to: filters.to }),
@@ -186,7 +215,7 @@ const AdminPedidos = () => {
         setLoadingMore(false);
       }
     },
-    [filters.status, filters.paymentStatus, filters.from, filters.to, searchTerm],
+    [filters.status, filters.paymentStatus, filters.channel, filters.paymentMethod, filters.from, filters.to, searchTerm],
   );
 
   useEffect(() => {
@@ -273,6 +302,36 @@ const AdminPedidos = () => {
               </Form.Select>
             </Form.Group>
 
+            <Form.Group controlId="adminChannel">
+              <Form.Label className="parrafos">Canal</Form.Label>
+              <Form.Select
+                value={filters.channel}
+                onChange={updateFilter("channel")}
+              >
+                <option value="">Todos</option>
+                {CHANNEL_OPTIONS.map((channel) => (
+                  <option key={channel} value={channel}>
+                    {SALE_CHANNEL_LABELS[channel]}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group controlId="adminPaymentMethod">
+              <Form.Label className="parrafos">Método de pago</Form.Label>
+              <Form.Select
+                value={filters.paymentMethod}
+                onChange={updateFilter("paymentMethod")}
+              >
+                <option value="">Todos</option>
+                {PAYMENT_METHOD_OPTIONS.map((method) => (
+                  <option key={method} value={method}>
+                    {PAYMENT_METHOD_LABELS[method]}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
             <Form.Group controlId="adminFrom">
               <Form.Label className="parrafos">Desde</Form.Label>
               <Form.Control
@@ -306,6 +365,12 @@ const AdminPedidos = () => {
             >
               Limpiar
             </button>
+            <Link
+              to="/dashboard/admin/registrar-venta"
+              className="btn-tema btn-tema--primario"
+            >
+              Registrar venta
+            </Link>
             <span className="parrafos admin-muted">
               {total} {total === 1 ? "pedido" : "pedidos"}
             </span>
@@ -349,6 +414,7 @@ const AdminPedidos = () => {
                     <th className="parrafos">Pedido</th>
                     <th className="parrafos">Fecha</th>
                     <th className="parrafos">Cliente</th>
+                    <th className="parrafos">Canal</th>
                     <th className="parrafos">Estado</th>
                     <th className="parrafos">Pago</th>
                     <th className="parrafos">Total</th>
@@ -357,7 +423,11 @@ const AdminPedidos = () => {
                 </thead>
                 <tbody>
                   {orders.map((order) => (
-                    <OrderRow key={order.id} order={order} />
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      basePath={detailBase}
+                    />
                   ))}
                 </tbody>
               </table>

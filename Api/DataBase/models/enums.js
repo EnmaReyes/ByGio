@@ -49,6 +49,29 @@ const PRODUCT_TYPE = {
 
 const PRODUCT_TYPE_VALUES = Object.values(PRODUCT_TYPE);
 
+// Canal por el que entro la venta. 'web' lo asigna el checkout; los demas
+// los registra un administrador para ventas externas (presencial/WhatsApp).
+const SALE_CHANNEL = {
+  WEB: "web",
+  PRESENCIAL: "presencial",
+  WHATSAPP: "whatsapp",
+  OTRO: "otro",
+};
+
+const SALE_CHANNEL_VALUES = Object.values(SALE_CHANNEL);
+
+// Metodo de pago. Solo aplica a ventas registradas a mano: el pago con
+// Wompi vive en la tabla payments (provider = 'wompi').
+const PAYMENT_METHOD = {
+  EFECTIVO: "efectivo",
+  NEQUI: "nequi",
+  TRANSFERENCIA: "transferencia",
+  TARJETA: "tarjeta",
+  OTRO: "otro",
+};
+
+const PAYMENT_METHOD_VALUES = Object.values(PAYMENT_METHOD);
+
 const CURRENCY = "COP";
 
 // Dias habiles de entrega prometidos al cliente.
@@ -67,6 +90,10 @@ module.exports = {
   HISTORY_KIND_VALUES,
   PRODUCT_TYPE,
   PRODUCT_TYPE_VALUES,
+  SALE_CHANNEL,
+  SALE_CHANNEL_VALUES,
+  PAYMENT_METHOD,
+  PAYMENT_METHOD_VALUES,
   CURRENCY,
   DELIVERY_BUSINESS_DAYS,
   STOCK_RESERVATION_MINUTES,

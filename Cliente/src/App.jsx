@@ -38,6 +38,7 @@ import ResumenAdmin from "./Paginas/Dashboard/Admin/ResumenAdmin";
 import UsuariosAdmin from "./Paginas/Dashboard/Admin/Usuarios";
 import VentasAdmin from "./Paginas/Dashboard/Admin/Ventas";
 import BannersAdmin from "./Paginas/Dashboard/Admin/Banners";
+import PedidoManual from "./Paginas/Dashboard/Admin/PedidoManual";
 import SeccionProximamente from "./Paginas/Dashboard/SeccionProximamente";
 import { TemaProvider } from "./tema/TemaProvider";
 import { CarritoProvider, useCarrito } from "./carrito/CarritoProvider";
@@ -235,6 +236,14 @@ const router = createBrowserRouter(
           element: (
             <RutaAdmin>
               <AdminPedidos />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/registrar-venta",
+          element: (
+            <RutaAdmin>
+              <PedidoManual />
             </RutaAdmin>
           ),
         },

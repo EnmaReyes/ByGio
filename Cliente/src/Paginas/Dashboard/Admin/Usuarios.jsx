@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Form } from "react-bootstrap";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../../../config";
 import { getApiErrorMessage } from "../../../Componentes/orderUtils";
@@ -17,6 +18,9 @@ const Usuarios = () => {
   const [seleccionados, setSeleccionados] = useState(new Set());
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [gmailAutorizado, setGmailAutorizado] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [resultadoEnvio, setResultadoEnvio] = useState(null);
   const [refContenido, enVista] = useEnVista();
 
   // Debounce del buscador.
@@ -78,6 +82,55 @@ const Usuarios = () => {
     .map((u) => u.email)
     .filter(Boolean)
     .join(", ");
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("authorized") === "1") {
+      // eslint-disable-next-line no-alert
+      alert("Gmail autorizado correctamente. Ya puedes enviar campañas.");
+    }
+  }, [location.search]);
+
+  const verificarGmail = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/admin/campaigns/status`, {
+        withCredentials: true,
+      });
+      setGmailAutorizado(Boolean(res.data?.authorized));
+    } catch {
+      setGmailAutorizado(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    verificarGmail();
+  }, [verificarGmail]);
+
+  const enviarCampana = async () => {
+    if (!asunto.trim() || !mensaje.trim() || seleccionados.size === 0) return;
+    setEnviando(true);
+    setResultadoEnvio(null);
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/admin/campaigns/send`,
+        {
+          subject: asunto.trim(),
+          body: mensaje.trim(),
+          recipientIds: [...seleccionados],
+        },
+        { withCredentials: true },
+      );
+      setResultadoEnvio(res.data);
+    } catch (err) {
+      setResultadoEnvio({
+        error: getApiErrorMessage(err, "No se pudo enviar la campaña."),
+      });
+    } finally {
+      setEnviando(false);
+    }
+  };
 
   return (
     <section
@@ -256,6 +309,27 @@ const Usuarios = () => {
                 </Form.Group>
 
                 <div className="admin-campana-acciones">
+                  {gmailAutorizado === false && (
+                    <button
+                      type="button"
+                      className="btn-tema btn-tema--primario btn-tema--pequeno"
+                      onClick={() => {
+                        window.location.href = `${API_URL}/api/admin/campaigns/oauth/start`;
+                      }}
+                    >
+                      Autorizar con Gmail
+                    </button>
+                  )}
+                  {gmailAutorizado === true && (
+                    <button
+                      type="button"
+                      className="btn-tema btn-tema--primario btn-tema--pequeno"
+                      onClick={enviarCampana}
+                      disabled={enviando || seleccionados.size === 0}
+                    >
+                      {enviando ? "Enviando..." : "Enviar campaña"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn-tema btn-tema--contorno btn-tema--pequeno"
@@ -282,6 +356,14 @@ const Usuarios = () => {
                     Cerrar
                   </button>
                 </div>
+
+                {resultadoEnvio && (
+                  <p className="parrafos admin-muted">
+                    {resultadoEnvio.error
+                      ? resultadoEnvio.error
+                      : `Enviados: ${resultadoEnvio.sent ?? 0} de ${resultadoEnvio.total ?? 0}`}
+                  </p>
+                )}
               </section>
             )}
           </>

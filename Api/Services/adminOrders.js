@@ -14,6 +14,8 @@ const {
   PAYMENT_STATUS,
   PAYMENT_STATUS_VALUES,
   HISTORY_KIND,
+  SALE_CHANNEL_VALUES,
+  PAYMENT_METHOD_VALUES,
 } = require("../DataBase/models/enums.js");
 const { releaseOrderStock } = require("./orders.js");
 const HttpError = require("../Utils/HttpError.js");
@@ -90,6 +92,8 @@ const parseOffset = (offset) => Math.max(Number(offset) || 0, 0);
 const listOrdersAdmin = async ({
   status,
   paymentStatus,
+  channel,
+  paymentMethod,
   q,
   from,
   to,
@@ -110,6 +114,20 @@ const listOrdersAdmin = async ({
       throw new HttpError(400, "Estado de pago inválido");
     }
     where.paymentStatus = paymentStatus;
+  }
+
+  if (channel) {
+    if (!SALE_CHANNEL_VALUES.includes(channel)) {
+      throw new HttpError(400, "Canal de venta inválido");
+    }
+    where.channel = channel;
+  }
+
+  if (paymentMethod) {
+    if (!PAYMENT_METHOD_VALUES.includes(paymentMethod)) {
+      throw new HttpError(400, "Método de pago inválido");
+    }
+    where.paymentMethod = paymentMethod;
   }
 
   const search = String(q || "").trim();
@@ -430,7 +448,7 @@ const salesByPeriod = async ({ periodo } = {}) => {
   const desde = buckets[0];
 
   const { QueryTypes } = require("sequelize");
-  const [rows] = await sequelize.query(
+  const queryResult = await sequelize.query(
     `SELECT (date_trunc(:bucket, "createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Bogota')) AS bucket,
             COUNT(*)::int AS count,
             COALESCE(SUM(total), 0)::bigint AS total
@@ -442,6 +460,12 @@ const salesByPeriod = async ({ periodo } = {}) => {
      ORDER BY bucket ASC`,
     { replacements: { bucket, desde }, type: QueryTypes.SELECT },
   );
+
+  // QueryTypes.SELECT devuelve las filas directamente; algunas versiones
+  // envuelven el resultado en [rows, metadata]. Se acepta cualquiera.
+  const rows = Array.isArray(queryResult?.[0])
+    ? queryResult[0]
+    : queryResult || [];
 
   const map = new Map();
   for (const row of rows || []) {

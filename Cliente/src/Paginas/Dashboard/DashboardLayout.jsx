@@ -2,6 +2,8 @@ import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAnglesLeft,
+  faAnglesRight,
   faArrowUpRightFromSquare,
   faBars,
   faChevronDown,
@@ -133,6 +135,34 @@ const DashboardLayout = () => {
   const { pathname } = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
+  /*
+   * Modo compacto del panel (solo iconos). Se guarda en localStorage
+   * para conservar la preferencia entre visitas. En móvil la barra
+   * sigue comportándose como cajón: el modo compacto es de escritorio.
+   */
+  const [colapsado, setColapsado] = useState(() => {
+    try {
+      return localStorage.getItem("panel_sidebar_colapsada") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const alternarColapsado = () => {
+    setColapsado((previa) => {
+      const siguiente = !previa;
+      try {
+        localStorage.setItem(
+          "panel_sidebar_colapsada",
+          String(siguiente),
+        );
+      } catch {
+        // Sin almacenamiento disponible: la preferencia dura la sesión.
+      }
+      return siguiente;
+    });
+  };
+
   const esAdmin = Boolean(currentUser?.admin);
   const bloques = useMemo(() => bloquesDeNav(esAdmin), [esAdmin]);
   const items = useMemo(() => itemsDeNav(esAdmin), [esAdmin]);
@@ -224,11 +254,12 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="panel">
+    <div className="panel" data-colapsado={colapsado ? "true" : "false"}>
       <BannerCookies />
 
-      {/* Barra lateral (drawer en móvil) */}
+      {/* Barra lateral (drawer en móvil, compacta en escritorio) */}
       <aside
+        id="panel-barra-principal"
         className="panel-barra"
         data-abierto={menuAbierto ? "true" : "false"}
         aria-label="Navegación del panel"
@@ -237,6 +268,30 @@ const DashboardLayout = () => {
           <Link to="/" className="panel-marca" aria-label="ByGio, ir al inicio">
             <img src={logonegro} alt="ByGio" className="panel-logo" />
           </Link>
+
+          <button
+            type="button"
+            className="panel-colapsar"
+            onClick={alternarColapsado}
+            aria-label={
+              colapsado
+                ? "Expandir menú lateral"
+                : "Contraer menú lateral"
+            }
+            aria-expanded={!colapsado}
+            aria-controls="panel-barra-principal"
+            title={
+              colapsado
+                ? "Expandir menú lateral"
+                : "Contraer menú lateral"
+            }
+          >
+            <FontAwesomeIcon
+              icon={colapsado ? faAnglesRight : faAnglesLeft}
+              aria-hidden="true"
+            />
+          </button>
+
           <button
             type="button"
             className="panel-cerrar"
@@ -257,12 +312,13 @@ const DashboardLayout = () => {
                     <NavLink
                       to={item.to}
                       end={item.end}
+                      title={colapsado ? item.label : undefined}
                       className={({ isActive }) =>
                         `panel-enlace${isActive ? " activo" : ""}`
                       }
                     >
                       <FontAwesomeIcon icon={item.icon} aria-hidden="true" />
-                      {item.label}
+                      <span className="panel-enlace-texto">{item.label}</span>
                       {item.to === "/dashboard/notificaciones" &&
                         noLeidas > 0 && (
                           <span
@@ -281,8 +337,12 @@ const DashboardLayout = () => {
         </nav>
 
         <div className="panel-barra-pie">
-          <Link to="/" className="panel-ver-tienda">
-            Ver la tienda
+          <Link
+            to="/"
+            className="panel-ver-tienda"
+            title={colapsado ? "Ver la tienda" : undefined}
+          >
+            <span className="panel-ver-tienda-texto">Ver la tienda</span>
             <FontAwesomeIcon
               icon={faArrowUpRightFromSquare}
               aria-hidden="true"

@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { Form } from "react-bootstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -10,7 +10,9 @@ import {
   formatDate,
   formatDateTime,
   getApiErrorMessage,
+  getChannelLabel,
   getOrderStatusMeta,
+  getPaymentMethodLabel,
   ORDER_STATUS_META,
   ORDER_STATUS_TRANSITIONS,
   PAYMENT_STATUS_LABELS,
@@ -36,6 +38,11 @@ const AdminPedidoDetalle = () => {
   const { id } = useParams();
   const { currentUser } = useContext(AuthContext);
   const isAdmin = Boolean(currentUser?.admin);
+
+  const { pathname } = useLocation();
+  const listBase = pathname.startsWith("/dashboard")
+    ? "/dashboard/admin/pedidos"
+    : "/admin/pedidos";
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -200,7 +207,7 @@ const AdminPedidoDetalle = () => {
               >
                 Reintentar
               </button>
-              <Link to="/admin/pedidos" className="checkout-secondary-link">
+              <Link to={listBase} className="checkout-secondary-link">
                 Volver a pedidos
               </Link>
             </div>
@@ -225,16 +232,22 @@ const AdminPedidoDetalle = () => {
           <p className="catalogo-hero-texto">
             Creado el {formatDateTime(order.createdAt)} ·{" "}
             {PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}
+            {order.channel ? ` · ${getChannelLabel(order.channel)}` : ""}
           </p>
         </div>
       </header>
 
       <div className="checkout-page admin-page">
         <div className="order-detail-head">
-          <Link to="/admin/pedidos" className="checkout-back-link parrafos">
+          <Link to={listBase} className="checkout-back-link parrafos">
             ← Pedidos
           </Link>
-          <span className={`order-badge ${status.tone}`}>{status.label}</span>
+          <div className="order-detail-badges">
+            <span className={`canal-badge canal-${order.channel || "otro"}`}>
+              {getChannelLabel(order.channel)}
+            </span>
+            <span className={`order-badge ${status.tone}`}>{status.label}</span>
+          </div>
         </div>
 
       <div className="order-detail-grid">
@@ -275,6 +288,12 @@ const AdminPedidoDetalle = () => {
                 <span>Envío</span>
                 <strong>{formatPrice(order.shippingCost)}</strong>
               </div>
+              {Number(order.discountTotal) > 0 && (
+                <div className="checkout-total-row parrafos">
+                  <span>Descuento</span>
+                  <strong>- {formatPrice(order.discountTotal)}</strong>
+                </div>
+              )}
               <div className="checkout-total-row grand titulos">
                 <span>Total</span>
                 <strong>{formatPrice(order.total)}</strong>
@@ -430,7 +449,12 @@ const AdminPedidoDetalle = () => {
             </p>
             {order.notes && (
               <p className="parrafos order-data">
-                <strong>Notas del cliente:</strong> {order.notes}
+                <strong>
+                  {order.channel === "web"
+                    ? "Notas del cliente:"
+                    : "Observaciones internas:"}
+                </strong>{" "}
+                {order.notes}
               </p>
             )}
 
@@ -484,11 +508,23 @@ const AdminPedidoDetalle = () => {
           </section>
 
           <section className="checkout-card">
-            <h2 className="checkout-section-title titulos">Cuenta</h2>
-            <p className="parrafos order-data">
-              {order.user?.username || "Sin usuario"} ·{" "}
-              {order.user?.email || "Sin correo"}
-            </p>
+            <h2 className="checkout-section-title titulos">
+              {order.user ? "Cuenta" : "Venta externa"}
+            </h2>
+            {order.user ? (
+              <p className="parrafos order-data">
+                {order.user.username || "Sin usuario"} ·{" "}
+                {order.user.email || "Sin correo"}
+              </p>
+            ) : (
+              <p className="parrafos order-data">
+                Registrada manualmente por un administrador.
+                <br />
+                Canal: {getChannelLabel(order.channel)}
+                <br />
+                Pago: {getPaymentMethodLabel(order.paymentMethod)}
+              </p>
+            )}
             {order.stockReservedUntil && (
               <p className="checkout-help parrafos">
                 Reserva de stock activa hasta{" "}

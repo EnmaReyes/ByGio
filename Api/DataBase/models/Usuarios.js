@@ -53,6 +53,12 @@ const Usuarios = sequelize.define(
     lastName: {
       type: DataTypes.STRING,
     },
+    // Token de refresh de Gmail (cifrado) para enviar campañas por correo.
+    // Null hasta que el admin autorice la aplicación.
+    gmailRefreshToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     timestamps: false,

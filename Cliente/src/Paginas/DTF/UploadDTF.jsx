@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImage, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faImage,
+  faPlus,
+  faSpinner,
+  faTrash,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Spinner from "react-bootstrap/Spinner";
 import { useContextProvaider } from "../../context/ContextProvaider";
 import Categories from "../../Componentes/Categories/Categories";
 import AddCategory from "../../Componentes/Categories/AddCategory.jsx";
+import useEnVista from "../../hooks/useEnVista";
 
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_PRESET_DTF;
 const CLOUDINARY_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
@@ -93,6 +98,8 @@ const UploadDTF = () => {
    */
 
   const blobUrlRef = useRef(null);
+
+  const [refContenido, contenidoEnVista] = useEnVista();
 
   /*
    * ==========================================
@@ -304,6 +311,9 @@ const UploadDTF = () => {
 
     setImg(previewUrl);
     setImgFile(file);
+
+    // Permite volver a elegir el mismo archivo después de un error.
+    event.target.value = "";
   };
 
   /*
@@ -488,13 +498,38 @@ const UploadDTF = () => {
    */
 
   return (
-    <Container className="mb-4 dtf-editor editor-pagina">
-      <header className="editor-cabecera">
-        <span className="etiqueta-seccion">Panel ByGio</span>
-        <h1 className="titulo-seccion">Nuevo diseño DTF</h1>
-        <p className="texto-seccion">
-          Sube el diseño, asígnalo a una categoría y publícalo en el catálogo.
-        </p>
+    <section
+      ref={refContenido}
+      className={`editor-admin revelar${
+        contenidoEnVista ? " is-visible" : ""
+      }`}
+      aria-labelledby="dtf-editor-titulo"
+    >
+      <header
+        className="editor-admin-cabecera revelar-linea"
+        style={{ "--i": 0 }}
+      >
+        <div className="editor-admin-intro">
+          <span className="etiqueta-seccion">Panel ByGio</span>
+          <h1 className="editor-admin-titulo" id="dtf-editor-titulo">
+            {editingDtf ? "Editar diseño DTF" : "Nuevo diseño DTF"}
+          </h1>
+          <p className="editor-admin-texto">
+            Sube el diseño, asígnalo a una categoría y publícalo en el
+            catálogo.
+          </p>
+        </div>
+
+        <div className="editor-admin-meta">
+          <span
+            className="editor-admin-contador"
+            data-completo={Boolean(selectedCategory)}
+            aria-live="polite"
+          >
+            <FontAwesomeIcon icon={faImage} aria-hidden="true" />
+            {selectedCategory ? selectedCategory.name : "Sin categoría"}
+          </span>
+        </div>
       </header>
 
       {openAddCategoryModal && (
@@ -504,136 +539,182 @@ const UploadDTF = () => {
         />
       )}
 
-      <Row>
+      <div className="editor-admin-cuerpo">
         {/* ==================================
             IMAGEN
         ================================== */}
-
-        <Col xs={12} md={6} className="d-flex justify-content-center p-2">
-          <div className="dtf-image-preview">
+        <div
+          className="editor-admin-media revelar-linea"
+          style={{ "--i": 1 }}
+        >
+          <div
+            className="editor-admin-lienzo editor-admin-lienzo--dtf"
+            data-vacia={!img}
+          >
             {img ? (
               <>
-                <img src={img} alt="Vista previa del DTF" />
+                <img
+                  key={img}
+                  className="editor-admin-imagen editor-admin-imagen--contener"
+                  src={img}
+                  alt="Vista previa del DTF"
+                />
 
                 <button
                   type="button"
-                  className="dtf-remove-image"
+                  className="editor-admin-lienzo-eliminar"
                   onClick={handleRemoveImage}
+                  disabled={loading}
                   aria-label="Eliminar imagen"
                 >
-                  <FontAwesomeIcon icon={faTrash} />
+                  <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
                 </button>
               </>
             ) : (
-              <div className="dtf-empty-image parrafos">
-                <FontAwesomeIcon icon={faImage} className="fs-1" />
-
-                <span>Sube la imagen del DTF</span>
+              <div className="editor-admin-vacio">
+                <span
+                  className="editor-admin-vacio-icono"
+                  aria-hidden="true"
+                >
+                  <FontAwesomeIcon icon={faImage} />
+                </span>
+                <p className="editor-admin-vacio-titulo">
+                  Sube la imagen del DTF
+                </p>
+                <p className="editor-admin-vacio-texto">
+                  Solo PNG con fondo transparente
+                </p>
               </div>
             )}
 
-            <label className="dtf-upload-button" htmlFor="dtf-image">
-              <FontAwesomeIcon icon={faPlus} />
-
+            <label className="editor-admin-lienzo-subir">
+              <input
+                id="dtf-image"
+                type="file"
+                accept=".png,image/png"
+                onChange={handleImageChange}
+                disabled={loading}
+              />
+              <FontAwesomeIcon icon={faUpload} aria-hidden="true" />
               <span>{img ? "Cambiar imagen" : "Seleccionar imagen"}</span>
             </label>
-
-            <input
-              id="dtf-image"
-              type="file"
-              accept=".png,image/png"
-              onChange={handleImageChange}
-              hidden
-            />
           </div>
-        </Col>
+
+          <p className="editor-admin-pie-texto">
+            El archivo se guarda en la carpeta de la categoría (
+            {selectedCategory ? `DTF/${selectedCategory.name}` : "DTF/…"}).
+          </p>
+        </div>
 
         {/* ==================================
             FORMULARIO
         ================================== */}
+        <form
+          className="editor-admin-form-panel revelar-linea"
+          style={{ "--i": 2 }}
+          onSubmit={handleSubmit}
+          noValidate
+        >
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Categoría</h2>
+              <p className="editor-admin-ayuda">
+                Cada diseño se organiza en una carpeta con el nombre de su
+                categoría.
+              </p>
+            </div>
 
-        <Col xs={12} md={6} className="p-md-5">
-          <Form onSubmit={handleSubmit}>
-            {/* ==============================
-                CATEGORÍA
-            ============================== */}
+            <div className="editor-admin-campo">
+              <label
+                className="editor-admin-campo-etiqueta"
+                htmlFor="dtf-categoria"
+              >
+                Categoría del diseño
+              </label>
 
-            <Form.Group className="mb-4" controlId="dtfCategory">
-              <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-                <Form.Label className="titulos mb-0">Categoría</Form.Label>
+              <div className="editor-admin-select-fila">
+                <Categories
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                />
 
-                <Button
+                <button
                   type="button"
-                  variant="outline-dark"
-                  size="sm"
-                  className="dtf-add-category-btn"
+                  className="btn-tema btn-tema--contorno btn-tema--pequeno"
                   onClick={() => setOpenAddCategoryModal(true)}
+                  disabled={loading}
                   aria-label="Agregar nueva categoría"
                 >
-                  <FontAwesomeIcon icon={faPlus} className="me-1" />
-                  Categoría
-                </Button>
+                  <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+                  Nueva
+                </button>
               </div>
 
-              <Categories
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-              />
-
               {!category && (
-                <Form.Text className="text-muted">
+                <span className="editor-admin-ayuda">
                   Selecciona la categoría del diseño.
-                </Form.Text>
+                </span>
               )}
-            </Form.Group>
+            </div>
+          </div>
 
-            {/* ==============================
-                STOCK
-            ============================== */}
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Catálogo</h2>
+              <p className="editor-admin-ayuda">
+                Controla cómo se muestra el diseño en la tienda.
+              </p>
+            </div>
 
-            <Form.Group className="mb-4" controlId="dtfStock">
-              <Form.Label className="titulos">Stock</Form.Label>
+            <div className="editor-admin-opciones editor-admin-opciones--sola">
+              <label className="editor-admin-opcion" data-activa={stock}>
+                <span className="editor-admin-opcion-texto">
+                  <strong>Stock</strong>
+                  <small>
+                    {stock ? "Disponible para comprar" : "Agotado"}
+                  </small>
+                </span>
+                <input
+                  className="editor-admin-interruptor"
+                  type="checkbox"
+                  checked={stock}
+                  onChange={(event) => setStock(event.target.checked)}
+                  disabled={loading}
+                />
+              </label>
+            </div>
+          </div>
 
-              <Form.Check
-                type="switch"
-                checked={stock}
-                onChange={(event) => setStock(event.target.checked)}
-                label={stock ? "Disponible" : "Agotado"}
-              />
-            </Form.Group>
-
-            {/* ==============================
-                GUARDAR
-            ============================== */}
-
-            <Button
-              className="w-100 titulos mt-2"
-              variant="dark"
+          <div className="editor-admin-acciones">
+            <button
               type="submit"
+              className="btn-tema btn-tema--primario"
               disabled={loading}
               aria-busy={loading}
             >
               {loading ? (
                 <>
-                  <Spinner
-                    className="me-2"
-                    as="span"
-                    animation="border"
-                    size="sm"
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="fa-spin"
                     aria-hidden="true"
                   />
-                  Guardando...
+                  Guardando…
                 </>
               ) : editingDtf ? (
                 "Actualizar DTF"
               ) : (
                 "Crear DTF"
               )}
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+            </button>
+
+            <p className="editor-admin-nota">
+              Los cambios se publican al guardar.
+            </p>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 

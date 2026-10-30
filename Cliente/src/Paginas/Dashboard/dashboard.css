@@ -24,7 +24,9 @@
   width: var(--panel-ancho);
   border-right: 1px solid var(--line);
   background: var(--bg-soft);
-  transition: transform var(--panel-abrir) var(--mov-ease-hover);
+  transition:
+    width var(--panel-abrir) var(--mov-ease-suave),
+    transform var(--panel-abrir) var(--mov-ease-hover);
 }
 
 .panel-barra-cabecera {
@@ -34,13 +36,20 @@
   height: var(--panel-cabecera-h);
   padding-inline: 1.1rem;
   border-bottom: 1px solid var(--line);
+  transition: padding var(--panel-abrir) var(--mov-ease-suave);
 }
 
 .panel-marca {
   display: inline-flex;
   align-items: center;
+  max-width: 100px;
+  overflow: hidden;
   cursor: pointer;
   color: var(--ink);
+  transition:
+    max-width var(--panel-abrir) var(--mov-ease-suave),
+    opacity var(--panel-abrir) var(--mov-ease-suave),
+    transform var(--panel-abrir) var(--mov-ease-suave);
 }
 
 .panel-logo {
@@ -72,10 +81,64 @@ html[data-theme="dark"] .panel-logo {
   opacity: 0.65;
 }
 
+/* Botón para contraer/expandir la barra (solo escritorio). */
+.panel-colapsar {
+  display: none;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background-color var(--mov-base) var(--mov-ease-suave),
+    border-color var(--mov-base) var(--mov-ease-suave),
+    color var(--mov-base) var(--mov-ease-suave),
+    transform var(--mov-rapido) var(--mov-ease-hover);
+}
+
+.panel-colapsar:hover {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.panel-colapsar:active {
+  transform: scale(0.94);
+}
+
 .panel-nav {
   flex: 1;
   overflow-y: auto;
   padding: 1rem 0.7rem 1.5rem;
+  /* Scrollbar propio, minimalista y con los tokens del tema. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-gutter: stable;
+}
+
+.panel-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-nav::-webkit-scrollbar-thumb {
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+  background-clip: padding-box;
+}
+
+.panel-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-soft);
+  background-clip: padding-box;
 }
 
 .panel-grupo + .panel-grupo {
@@ -84,11 +147,17 @@ html[data-theme="dark"] .panel-logo {
 
 .panel-grupo-etiqueta {
   margin: 0 0 0.45rem 0.65rem;
+  max-height: 1.5rem;
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  transition:
+    max-height var(--panel-abrir) var(--mov-ease-suave),
+    margin var(--panel-abrir) var(--mov-ease-suave),
+    opacity var(--mov-base) var(--mov-ease-suave);
 }
 
 .panel-lista {
@@ -115,13 +184,26 @@ html[data-theme="dark"] .panel-logo {
   transition:
     background-color var(--transicion),
     color var(--transicion),
-    transform var(--mov-base) var(--mov-ease-hover);
+    transform var(--mov-base) var(--mov-ease-hover),
+    padding var(--panel-abrir) var(--mov-ease-suave),
+    gap var(--panel-abrir) var(--mov-ease-suave);
 }
 
 .panel-enlace svg {
   width: 1.05em;
+  flex: 0 0 auto;
   color: var(--muted);
   transition: color var(--transicion);
+}
+
+/* El texto se recoge en modo compacto sin saltos de layout. */
+.panel-enlace-texto {
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--panel-abrir) var(--mov-ease-suave),
+    opacity var(--mov-base) var(--mov-ease-suave);
 }
 
 .panel-enlace:hover {
@@ -164,12 +246,27 @@ html[data-theme="dark"] .panel-logo {
   cursor: pointer;
   transition:
     background-color var(--transicion),
-    color var(--transicion);
+    color var(--transicion),
+    padding var(--panel-abrir) var(--mov-ease-suave),
+    gap var(--panel-abrir) var(--mov-ease-suave);
 }
 
 .panel-ver-tienda:hover {
   background: var(--surface);
   color: var(--ink);
+}
+
+.panel-ver-tienda-texto {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--panel-abrir) var(--mov-ease-suave),
+    opacity var(--mov-base) var(--mov-ease-suave);
+}
+
+.panel-ver-tienda svg {
+  flex: 0 0 auto;
 }
 
 .panel-overlay {
@@ -186,6 +283,7 @@ html[data-theme="dark"] .panel-logo {
   flex-direction: column;
   min-width: 0;
   margin-left: var(--panel-ancho);
+  transition: margin-left var(--panel-abrir) var(--mov-ease-suave);
 }
 
 .panel-cabecera {
@@ -525,6 +623,82 @@ html[data-theme="dark"] .panel-logo {
   justify-content: center;
   gap: 0.75rem;
   margin-top: 0.4rem;
+}
+
+/* =========================================================
+   MODO COMPACTO DE LA BARRA (escritorio)
+   Solo iconos; el contenido se ensancha al mismo ritmo.
+   En móvil la barra sigue siendo un cajón y este modo no aplica.
+   ========================================================= */
+
+@media (min-width: 992px) {
+  .panel-colapsar {
+    display: grid;
+  }
+
+  .panel[data-colapsado="true"] .panel-barra {
+    width: var(--panel-ancho-colapsado);
+  }
+
+  .panel[data-colapsado="true"] .panel-principal {
+    margin-left: var(--panel-ancho-colapsado);
+  }
+
+  /* Compensa el ancho del botón para que su icono quede centrado. */
+  .panel[data-colapsado="true"] .panel-barra-cabecera {
+    padding-right: 1.26rem;
+  }
+
+  .panel[data-colapsado="true"] .panel-marca {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-6px);
+    pointer-events: none;
+  }
+
+  .panel[data-colapsado="true"] .panel-grupo-etiqueta {
+    max-height: 0;
+    margin: 0;
+    opacity: 0;
+  }
+
+  .panel[data-colapsado="true"] .panel-enlace {
+    gap: 0;
+    padding: 0.62rem 0.7rem 0.62rem 1.2rem;
+  }
+
+  .panel[data-colapsado="true"] .panel-enlace-texto {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  /* El desplazamiento del hover descentraría el icono. */
+  .panel[data-colapsado="true"] .panel-enlace:hover {
+    transform: none;
+  }
+
+  .panel[data-colapsado="true"] .panel-enlace.activo {
+    box-shadow: none;
+  }
+
+  .panel[data-colapsado="true"] .panel-enlace-contador {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    margin: 0;
+    padding: 0 0.3rem;
+    font-size: 0.6rem;
+  }
+
+  .panel[data-colapsado="true"] .panel-ver-tienda {
+    gap: 0;
+    padding: 0.6rem 1.18rem 0.6rem 0.7rem;
+  }
+
+  .panel[data-colapsado="true"] .panel-ver-tienda-texto {
+    max-width: 0;
+    opacity: 0;
+  }
 }
 
 /* =========================================================

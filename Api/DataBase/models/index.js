@@ -9,6 +9,7 @@
 const { sequelize } = require("../db.js");
 const { Articulos } = require("./Articulos.js");
 const { Banner } = require("./Banner.js");
+const { Campaign } = require("./Campaign.js");
 const { Category } = require("./Category.js");
 const { Dtf } = require("./Dtf.js");
 const { PriceVariant } = require("./PriceVariant.js");
@@ -29,6 +30,7 @@ module.exports = {
   sequelize,
   Articulos,
   Banner,
+  Campaign,
   Category,
   Dtf,
   Notificacion,

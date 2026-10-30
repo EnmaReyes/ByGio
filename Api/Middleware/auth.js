@@ -1,11 +1,9 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config.js");
+const { Usuarios } = require("../DataBase/models/Usuarios.js");
 
 // Middleware de autenticacion basado en la cookie httpOnly existente
 // (access_token). No cambia el formato del token: { id, admin }.
-//
-// Nota: el flag admin viaja en el JWT emitido al iniciar sesion. La mejora
-// de administracion (rol persistido y revalidado) queda para la fase final.
 
 const getToken = (req) => req.cookies?.access_token;
 
@@ -28,17 +26,30 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Verifica la sesion y el rol de administrador en una sola pieza: puede usarse
-// solo (rutas de catalogo) o despues de requireAuth (panel admin).
+// Verifica la sesion y el rol de administrador. Revalida el rol contra la
+// base de datos para no confiar en un flag admin stale del JWT.
 const requireAdmin = (req, res, next) => {
-  const checkRole = () => {
+  const checkRole = async () => {
     if (!req.user) {
       return res.status(401).json("No estás autenticado");
     }
-    if (!req.user.admin) {
-      return res.status(403).json("No tienes permisos de administrador");
+
+    try {
+      const user = await Usuarios.findByPk(req.user.id, {
+        attributes: ["admin"],
+      });
+      if (!user) {
+        return res.status(401).json("No estás autenticado");
+      }
+      if (!user.admin) {
+        return res.status(403).json("No tienes permisos de administrador");
+      }
+      req.user.admin = true;
+      return next();
+    } catch (error) {
+      console.error("Error al validar el rol de administrador:", error.message);
+      return res.status(500).json("Error interno del servidor");
     }
-    return next();
   };
 
   if (req.user) return checkRole();

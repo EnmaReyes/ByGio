@@ -6,15 +6,28 @@ const {
   orderStats,
   salesByPeriod,
 } = require("../Services/adminOrders.js");
+const { createManualOrder } = require("../Services/orders.js");
 const { sendError } = require("../Utils/respond.js");
 
-// GET /api/admin/orders?status&paymentStatus&q&from&to&limit&offset
+// GET /api/admin/orders?status&paymentStatus&channel&paymentMethod&q&from&to&limit&offset
 const list = async (req, res) => {
   try {
-    const { status, paymentStatus, q, from, to, limit, offset } = req.query;
+    const {
+      status,
+      paymentStatus,
+      channel,
+      paymentMethod,
+      q,
+      from,
+      to,
+      limit,
+      offset,
+    } = req.query;
     const result = await listOrdersAdmin({
       status,
       paymentStatus,
+      channel,
+      paymentMethod,
       q,
       from,
       to,
@@ -24,6 +37,40 @@ const list = async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     return sendError(res, error, "No se pudieron cargar los pedidos");
+  }
+};
+
+// POST /api/admin/orders/manual — registrar una venta externa a mano.
+// Body: { items, shipping, notes?, channel?, paymentMethod?, paymentStatus?,
+//         deliveryType?, discount? }
+const createManual = async (req, res) => {
+  try {
+    const {
+      items,
+      shipping,
+      notes,
+      channel,
+      paymentMethod,
+      paymentStatus,
+      deliveryType,
+      discount,
+    } = req.body || {};
+
+    const order = await createManualOrder({
+      adminId: req.user.id,
+      items,
+      shipping,
+      notes,
+      channel,
+      paymentMethod,
+      paymentStatus,
+      deliveryType,
+      manualDiscount: discount,
+    });
+
+    return res.status(201).json(order);
+  } catch (error) {
+    return sendError(res, error, "No se pudo registrar la venta");
   }
 };
 
@@ -89,4 +136,4 @@ const sales = async (req, res) => {
   }
 };
 
-module.exports = { list, stats, detail, changeStatus, tracking, sales };
+module.exports = { list, stats, detail, changeStatus, tracking, sales, createManual };

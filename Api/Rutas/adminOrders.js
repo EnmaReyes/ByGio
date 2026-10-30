@@ -7,6 +7,7 @@ const {
   changeStatus,
   tracking,
   sales,
+  createManual,
 } = require("../Controllers/adminOrders.js");
 
 const router = express.Router();
@@ -17,6 +18,10 @@ router.use(requireAuth, requireAdmin);
 // /stats va antes de /:id para que no lo capture el parametro.
 router.get("/stats", stats);
 router.get("/ventas", sales);
+
+// Registro manual de ventas externas.
+router.post("/manual", createManual);
+
 router.get("/", list);
 router.get("/:id", detail);
 router.patch("/:id/status", changeStatus);

@@ -1,16 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { API_URL } from "../config";
-import { Col, Container, Row, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faImage, faPlus } from "@fortawesome/free-solid-svg-icons";
-import Spinner from "react-bootstrap/Spinner";
+import {
+  faImage,
+  faPenToSquare,
+  faPlus,
+  faSpinner,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { API_URL } from "../config";
+import useEnVista from "../hooks/useEnVista";
 
 const BASE_URL = API_URL;
 const preset_name = import.meta.env.VITE_CLOUDINARY_PRESET;
 const cloud_name = import.meta.env.VITE_CLOUDINARY_NAME;
+
+const MAX_IMAGENES = 4;
 
 // Mismo helper que en el Context, para no romper si el JSON viene malformado
 const parseJsonValue = (value) => {
@@ -56,8 +63,14 @@ const Editor = () => {
     state?.precioAnteriorCombo ?? "",
   );
 
+  const esEdicion = Boolean(state);
+  const totalImagenes = imgUrls.filter((url) => Boolean(url)).length;
+  const imagenVista = imgUrls[selectedImageIndex] || "";
+
   // Rastrea las blob URLs activas para poder revocarlas y evitar memory leaks
   const blobUrlsRef = useRef(new Set());
+
+  const [refContenido, contenidoEnVista] = useEnVista();
 
   useEffect(() => {
     return () => {
@@ -98,6 +111,8 @@ const Editor = () => {
 
   const handleImageChange = (e, index) => {
     const file = e.target.files[0];
+    // Permite volver a elegir el mismo archivo después de un error.
+    e.target.value = "";
     if (!file) return;
 
     // Si esa posición ya tenía una blob URL propia, la liberamos antes de reemplazarla
@@ -242,275 +257,456 @@ const Editor = () => {
   };
 
   return (
-    <Container className="mb-4 editor-pagina">
-      <header className="editor-cabecera">
-        <span className="etiqueta-seccion">Panel ByGio</span>
-        <h1 className="titulo-seccion">Nuevo producto</h1>
-        <p className="texto-seccion">
-          Completa la información y publica la prenda en el catálogo.
-        </p>
+    <section
+      ref={refContenido}
+      className={`editor-admin revelar${
+        contenidoEnVista ? " is-visible" : ""
+      }`}
+      aria-labelledby="editor-admin-titulo"
+    >
+      <header
+        className="editor-admin-cabecera revelar-linea"
+        style={{ "--i": 0 }}
+      >
+        <div className="editor-admin-intro">
+          <span className="etiqueta-seccion">Panel ByGio</span>
+          <h1 className="editor-admin-titulo" id="editor-admin-titulo">
+            {esEdicion ? "Editar producto" : "Nuevo producto"}
+          </h1>
+          <p className="editor-admin-texto">
+            Completa la información y publica la prenda en el catálogo.
+          </p>
+        </div>
+
+        <div className="editor-admin-meta">
+          <span
+            className="editor-admin-contador"
+            data-completo={totalImagenes >= MAX_IMAGENES}
+            aria-live="polite"
+          >
+            <FontAwesomeIcon icon={faImage} aria-hidden="true" />
+            {totalImagenes} de {MAX_IMAGENES} imágenes
+          </span>
+        </div>
       </header>
 
-      <Row>
-        <Col
-          xs={12}
-          md={6}
-          className="d-flex flex-row align-items-center gap-5 p-2"
+      <div className="editor-admin-cuerpo">
+        {/* Galería: vista previa + miniaturas */}
+        <div
+          className="editor-admin-media revelar-linea"
+          style={{ "--i": 1 }}
         >
-          {/* Imagen principal */}
-          <div className="main-image mb-3">
-            {imgUrls[selectedImageIndex] ? (
+          <div className="editor-admin-lienzo" data-vacia={!imagenVista}>
+            {imagenVista ? (
               <img
-                src={imgUrls[selectedImageIndex]}
-                alt="Imagen seleccionada"
-                style={{ width: "100%", maxWidth: "400px" }}
+                key={imagenVista}
+                className="editor-admin-imagen"
+                src={imagenVista}
+                alt={`Vista previa de la imagen ${selectedImageIndex + 1}`}
               />
             ) : (
-              <div
-                style={{ width: "100%", height: "auto", fontSize: "20px" }}
-                className="d-flex flex-column align-items-center gap-2 p-md-5 parrafos"
-              >
-                <FontAwesomeIcon icon={faImage} className="fs-1" />
-                <p>Sube tus imágenes</p>
+              <div className="editor-admin-vacio">
+                <span
+                  className="editor-admin-vacio-icono"
+                  aria-hidden="true"
+                >
+                  <FontAwesomeIcon icon={faImage} />
+                </span>
+                <p className="editor-admin-vacio-titulo">
+                  Sube tus imágenes
+                </p>
+                <p className="editor-admin-vacio-texto">
+                  JPG, PNG o WebP · hasta {MAX_IMAGENES} imágenes
+                </p>
               </div>
+            )}
+
+            {imagenVista && (
+              <label className="editor-admin-lienzo-subir">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleImageChange(e, selectedImageIndex)
+                  }
+                  disabled={loading}
+                />
+                <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />
+                <span>Cambiar</span>
+              </label>
             )}
           </div>
 
-          {/* Subir imágenes (4 en total) */}
-          <div className="thumbnail-images d-flex flex-column">
-            {[0, 1, 2, 3].map((index) => (
-              <div
-                key={index}
-                className="d-flex align-items-center justifyContent-center"
-              >
-                <label className="mb-2" style={{ cursor: "pointer" }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => handleImageChange(e, index)}
-                  />
-                  {imgUrls[index] ? (
-                    <img
-                      className="add-img"
-                      src={imgUrls[index]}
-                      alt={`Imagen ${index + 1}`}
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div className="add-hover">
-                      <FontAwesomeIcon icon={faPlus} />
-                    </div>
-                  )}
-                </label>
+          <ul
+            className="editor-admin-miniaturas"
+            aria-label="Imágenes del producto"
+          >
+            {Array.from({ length: MAX_IMAGENES }).map((_, index) => {
+              const url = imgUrls[index];
+              const activa = Boolean(url) && index === selectedImageIndex;
 
-                {imgUrls[index] && (
+              return (
+                <li key={index}>
                   <div
-                    className=" d-flex text-center align-items-center justify-content-center deleteimg"
-                    onClick={() => deleteImgArticule(index)}
+                    className="editor-admin-miniatura"
+                    data-activa={activa}
+                    data-vacia={!url}
                   >
-                    x
-                  </div>
-                )}
-                {imgUrls[index] && (
-                  <span
-                    className="fs-5"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedImageIndex(index);
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faEye} />
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </Col>
+                    {url ? (
+                      <button
+                        type="button"
+                        className="editor-admin-miniatura-seleccionar"
+                        onClick={() => setSelectedImageIndex(index)}
+                        aria-pressed={activa}
+                        aria-label={`Ver imagen ${index + 1} en grande`}
+                      >
+                        <img
+                          src={url}
+                          alt={`Imagen ${index + 1}`}
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : (
+                      <label className="editor-admin-miniatura-agregar">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageChange(e, index)}
+                          disabled={loading}
+                          aria-label={`Subir imagen ${index + 1}`}
+                        />
+                        <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+                        <span>Imagen {index + 1}</span>
+                      </label>
+                    )}
 
-        {/* Información del producto */}
-        <Col xs={12} md={6} className="p-md-5">
-          <Form className=" align-items-center justify-content-center">
-            <Form.Group className="mb-3" controlId="formTitle">
-              <Form.Label className="titulos">Titulo</Form.Label>
-              <Form.Control
+                    {url && (
+                      <div className="editor-admin-miniatura-acciones">
+                        <label
+                          className="editor-admin-miniatura-reemplazar"
+                          title="Cambiar imagen"
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageChange(e, index)}
+                            disabled={loading}
+                            aria-label={`Cambiar imagen ${index + 1}`}
+                          />
+                          <FontAwesomeIcon
+                            icon={faPenToSquare}
+                            aria-hidden="true"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className="editor-admin-miniatura-eliminar"
+                          onClick={() => deleteImgArticule(index)}
+                          disabled={loading}
+                          aria-label={`Eliminar imagen ${index + 1}`}
+                        >
+                          <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
+
+                    {activa && (
+                      <span className="editor-admin-miniatura-etiqueta">
+                        En vista
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="editor-admin-pie-texto">
+            La primera imagen abre la ficha del producto. Usa las demás para
+            mostrar detalles y variantes.
+          </p>
+        </div>
+
+        {/* Formulario */}
+        <form
+          className="editor-admin-form-panel revelar-linea"
+          style={{ "--i": 2 }}
+          onSubmit={handleClick}
+          noValidate
+        >
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Información</h2>
+              <p className="editor-admin-ayuda">
+                El nombre y la descripción aparecen en el catálogo y en la
+                ficha del producto.
+              </p>
+            </div>
+
+            <div className="editor-admin-campo">
+              <label
+                className="editor-admin-campo-etiqueta"
+                htmlFor="editor-admin-titulo-campo"
+              >
+                Título
+              </label>
+              <input
+                id="editor-admin-titulo-campo"
+                className="form-control"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Título del producto"
+                autoComplete="off"
+                disabled={loading}
               />
-            </Form.Group>
+            </div>
 
-            <Form.Group className="mb-3" controlId="formDescription">
-              <Form.Label className="titulos">Descripción</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
+            <div className="editor-admin-campo">
+              <label
+                className="editor-admin-campo-etiqueta"
+                htmlFor="editor-admin-descripcion"
+              >
+                Descripción
+              </label>
+              <textarea
+                id="editor-admin-descripcion"
+                className="form-control"
+                rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripción del producto"
+                placeholder="Describe el material, el corte y los detalles de la prenda"
+                disabled={loading}
               />
-            </Form.Group>
-            <p className="texto-seccion mb-3">
-              El precio base se configura una sola vez en{" "}
-              <Link to="/admin/precios" className="enlace-seccion">
-                Precios globales
-              </Link>
-              . Aquí solo se
-              define el precio propio si el artículo es combo.
-            </p>
+              <span className="editor-admin-contador-caracteres">
+                {description.length} caracteres
+              </span>
+            </div>
+          </div>
 
-            <Form.Group className="d-flex align-items-center mb-3 gap-3">
-              <Form.Label className="titulos">Combo</Form.Label>
-              <Form.Switch
-                className="fs-5"
-                checked={combo}
-                onChange={() => setCombo(!combo)}
-              />
-            </Form.Group>
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Precio</h2>
+              <p className="editor-admin-ayuda">
+                El precio base se configura una sola vez en{" "}
+                <Link to="/admin/precios" className="enlace-seccion">
+                  Precios globales
+                </Link>
+                . Aquí solo se define el precio propio si el artículo es combo.
+              </p>
+            </div>
+
+            <div className="editor-admin-opciones">
+              <label
+                className="editor-admin-opcion"
+                data-activa={combo}
+              >
+                <span className="editor-admin-opcion-texto">
+                  <strong>Combo</strong>
+                  <small>Precio propio por varias prendas</small>
+                </span>
+                <input
+                  className="editor-admin-interruptor"
+                  type="checkbox"
+                  checked={combo}
+                  onChange={() => setCombo(!combo)}
+                  disabled={loading}
+                />
+              </label>
+
+              <label
+                className="editor-admin-opcion"
+                data-activa={overSize}
+              >
+                <span className="editor-admin-opcion-texto">
+                  <strong>Oversize</strong>
+                  <small>Corte amplio</small>
+                </span>
+                <input
+                  className="editor-admin-interruptor"
+                  type="checkbox"
+                  checked={overSize}
+                  onChange={() => setOverSize(!overSize)}
+                  disabled={loading}
+                />
+              </label>
+            </div>
 
             {combo && (
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="formPrecioCombo">
-                    <Form.Label className="titulos">
+              <div className="editor-admin-condicional">
+                <div className="editor-admin-fila">
+                  <div className="editor-admin-campo">
+                    <label
+                      className="editor-admin-campo-etiqueta"
+                      htmlFor="editor-admin-precio-combo"
+                    >
                       Precio del combo
-                    </Form.Label>
-                    <Form.Control
+                    </label>
+                    <input
+                      id="editor-admin-precio-combo"
+                      className="form-control"
                       type="number"
                       min="0"
+                      inputMode="numeric"
                       value={precioCombo}
                       onChange={(e) => setPrecioCombo(e.target.value)}
                       placeholder="Precio del combo"
+                      disabled={loading}
                     />
-                  </Form.Group>
-                </Col>
+                  </div>
 
-                <Col md={6}>
-                  <Form.Group
-                    className="mb-3"
-                    controlId="formPrecioAnteriorCombo"
-                  >
-                    <Form.Label className="titulos">
-                      Precio anterior del combo
-                    </Form.Label>
-                    <Form.Control
+                  <div className="editor-admin-campo">
+                    <label
+                      className="editor-admin-campo-etiqueta"
+                      htmlFor="editor-admin-precio-anterior"
+                    >
+                      Precio anterior
+                    </label>
+                    <input
+                      id="editor-admin-precio-anterior"
+                      className="form-control"
                       type="number"
                       min="0"
+                      inputMode="numeric"
                       value={precioAnteriorCombo}
                       onChange={(e) =>
                         setPrecioAnteriorCombo(e.target.value)
                       }
                       placeholder="Opcional"
+                      disabled={loading}
                     />
-                  </Form.Group>
-                </Col>
-              </Row>
-            )}
-
-            <Form.Group
-              className="d-flex align-items-center justifyContent-center mb-3 gap-3"
-              controlId="formStock"
-            >
-              <Form.Label className="d-flex align-items-center titulos">
-                Stock
-              </Form.Label>
-              <Form.Switch
-                className="fs-5"
-                checked={stock}
-                onChange={() => setStock(!stock)}
-              />
-              <Form.Label className="d-flex align-items-center titulos">
-                Destacadas
-              </Form.Label>
-              <Form.Switch
-                className="fs-5"
-                checked={destacadas}
-                onChange={() => setDestacadas(!destacadas)}
-              />
-            </Form.Group>
-
-            <Form.Group className="d-flex align-items-center mb-3 gap-3">
-              <Form.Label className="titulos">Oversize</Form.Label>
-              <Form.Switch
-                className="fs-5"
-                checked={overSize}
-                onChange={() => setOverSize(!overSize)}
-              />
-            </Form.Group>
-            <Form.Label className="mb-3 d-flex justify-content-center align-items-center titulos">
-              Tallas
-            </Form.Label>
-            <div className="mb-3 d-flex flex-column justify-content-center align-items-center">
-              <Form.Group className="d-flex flex-row align-items-center justify-content-center gap-2">
-                {sizes.map((size, index) => (
-                  <div key={index} className="d-flex align-items-center gap-2">
-                    <Form.Control
-                      className="text-center parrafos"
-                      style={{ width: "50px" }}
-                      type="text"
-                      value={size}
-                      onChange={(e) => {
-                        const newSizes = [...sizes];
-                        newSizes[index] = e.target.value.toUpperCase();
-                        setSizes(newSizes);
-                      }}
-                      placeholder={size}
-                    />
-                    <div
-                      className=" d-flex text-center align-items-center justify-content-center deletesizes"
-                      onClick={() => deleteSizeField(index)}
-                    >
-                      x
-                    </div>
+                    <span className="editor-admin-contador-caracteres">
+                      Opcional · se muestra tachado
+                    </span>
                   </div>
-                ))}
-              </Form.Group>
+                </div>
+              </div>
+            )}
+          </div>
 
-              <Button
-                className="mt-3 parrafos"
-                variant="dark"
-                size="sm"
-                onClick={addSizeField}
-              >
-                + Talla
-              </Button>
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Catálogo</h2>
+              <p className="editor-admin-ayuda">
+                Controla cómo se muestra la prenda en la tienda.
+              </p>
             </div>
 
-            <Button
-              className="w-100 mt-3 titulos"
-              variant="dark"
+            <div className="editor-admin-opciones">
+              <label
+                className="editor-admin-opcion"
+                data-activa={stock}
+              >
+                <span className="editor-admin-opcion-texto">
+                  <strong>Stock</strong>
+                  <small>Disponible para comprar</small>
+                </span>
+                <input
+                  className="editor-admin-interruptor"
+                  type="checkbox"
+                  checked={stock}
+                  onChange={() => setStock(!stock)}
+                  disabled={loading}
+                />
+              </label>
+
+              <label
+                className="editor-admin-opcion"
+                data-activa={destacadas}
+              >
+                <span className="editor-admin-opcion-texto">
+                  <strong>Destacadas</strong>
+                  <small>Aparece en la portada</small>
+                </span>
+                <input
+                  className="editor-admin-interruptor"
+                  type="checkbox"
+                  checked={destacadas}
+                  onChange={() => setDestacadas(!destacadas)}
+                  disabled={loading}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="editor-admin-grupo">
+            <div className="editor-admin-grupo-cabecera">
+              <h2 className="editor-admin-grupo-titulo">Tallas</h2>
+              <p className="editor-admin-ayuda">
+                Escribe cada talla y añade todas las que necesites.
+              </p>
+            </div>
+
+            <div className="editor-admin-tallas">
+              {sizes.map((size, index) => (
+                <div className="editor-admin-talla" key={index}>
+                  <input
+                    type="text"
+                    value={size}
+                    onChange={(e) => {
+                      const newSizes = [...sizes];
+                      newSizes[index] = e.target.value.toUpperCase();
+                      setSizes(newSizes);
+                    }}
+                    placeholder={`Talla ${index + 1}`}
+                    aria-label={`Talla ${index + 1}`}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="editor-admin-talla-eliminar"
+                    onClick={() => deleteSizeField(index)}
+                    disabled={loading}
+                    aria-label={`Eliminar talla ${index + 1}`}
+                  >
+                    <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                className="btn-tema btn-tema--contorno btn-tema--pequeno editor-admin-anadir-talla"
+                onClick={addSizeField}
+                disabled={loading}
+              >
+                <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+                Talla
+              </button>
+            </div>
+          </div>
+
+          <div className="editor-admin-acciones">
+            <button
+              type="submit"
+              className="btn-tema btn-tema--primario"
               disabled={loading}
               aria-busy={loading}
-              size="lg"
-              onClick={handleClick}
             >
               {loading ? (
                 <>
-                  <Spinner
-                    className="mx-2 "
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="fa-spin"
                     aria-hidden="true"
                   />
-                  Guardando...
+                  Guardando…
                 </>
-              ) : state ? (
-                "Actualizar Articulo"
+              ) : esEdicion ? (
+                "Actualizar artículo"
               ) : (
-                "Crear Articulo"
+                "Crear artículo"
               )}
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+            </button>
+
+            <p className="editor-admin-nota">
+              Los cambios se publican al guardar.
+            </p>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 
