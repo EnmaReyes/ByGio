@@ -170,7 +170,7 @@ const MisPedidos = () => {
     <>
       <PageHero
         title="Mis pedidos"
-        subtitle="Estos son los pedidos registrados con tu cuenta. La entrega puede tardar hasta 10 días hábiles."
+        subtitle="Estos son los pedidos registrados con tu cuenta. La entrega tarda hasta 3 días hábiles en Antioquia y hasta 10 en el resto del país."
       />
 
       <div className="checkout-page">

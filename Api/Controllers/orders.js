@@ -4,6 +4,10 @@ const {
   getOrderForUser,
   listOrdersForUser,
 } = require("../Services/orders.js");
+const {
+  createCheckoutForOrder,
+  verifyOrderPayment,
+} = require("../Services/wompi.js");
 const { sendError } = require("../Utils/respond.js");
 
 // POST /api/orders — requiere sesion
@@ -65,4 +69,35 @@ const cancel = async (req, res) => {
   }
 };
 
-module.exports = { create, list, detail, cancel };
+// POST /api/orders/:id/payment — URL de pago de Wompi para este pedido.
+const createPayment = async (req, res) => {
+  try {
+    const result = await createCheckoutForOrder({
+      orderId: req.params.id,
+      userId: req.user.id,
+    });
+    return res.status(201).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudo iniciar el pago");
+  }
+};
+
+// POST /api/orders/:id/payment/verify — consulta el estado real en Wompi.
+// Body: { transactionId } (o ?transactionId=...)
+const verifyPayment = async (req, res) => {
+  try {
+    const transactionId =
+      req.body?.transactionId || req.query?.transactionId;
+
+    const result = await verifyOrderPayment({
+      orderId: req.params.id,
+      userId: req.user.id,
+      transactionId,
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudo verificar el pago");
+  }
+};
+
+module.exports = { create, list, detail, cancel, createPayment, verifyPayment };

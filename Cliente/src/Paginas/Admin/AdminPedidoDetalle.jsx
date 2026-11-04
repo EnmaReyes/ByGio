@@ -15,11 +15,14 @@ import {
   getPaymentMethodLabel,
   ORDER_STATUS_META,
   ORDER_STATUS_TRANSITIONS,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
 } from "../../Componentes/orderUtils";
 import { notify } from "../../Componentes/toastConfig/toastconfigs";
 import "../pedidos.css";
 import "./admin.css";
+
+const PAY_METHODS = ["transferencia", "nequi", "efectivo", "tarjeta", "otro"];
 
 const itemVariant = (item) => {
   if (item.productType === "dtf") {
@@ -53,6 +56,9 @@ const AdminPedidoDetalle = () => {
   const [carrier, setCarrier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [savingTracking, setSavingTracking] = useState(false);
+  const [payMethod, setPayMethod] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
+  const [savingPayment, setSavingPayment] = useState(false);
 
   const applyOrder = useCallback((data) => {
     setOrder(data);
@@ -224,6 +230,60 @@ const AdminPedidoDetalle = () => {
   const payments = order.payments || [];
   const isCancelled = order.status === "cancelado";
 
+  // Pago aprobado vigente (el indice unico garantiza que hay como maximo uno).
+  const approvedPayment = payments.find(
+    (payment) => payment.status === "aprobado",
+  );
+  const canConfirmPayment = !isCancelled && !approvedPayment;
+  const canRefundPayment =
+    Boolean(approvedPayment) && order.paymentStatus !== "reembolsado";
+
+  const sendPaymentChange = async ({ url, method, body, success }) => {
+    setSavingPayment(true);
+
+    try {
+      const res = await axios[method](url, body, { withCredentials: true });
+      applyOrder(res.data);
+      setPaymentNote("");
+      toast.success(success);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "No se pudo actualizar el pago"));
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const confirmPayment = () =>
+    sendPaymentChange({
+      url: `${API_URL}/api/admin/orders/${id}/payments`,
+      method: "post",
+      body: {
+        status: "aprobado",
+        paymentMethodType:
+          payMethod || order.paymentMethod || "transferencia",
+        ...(paymentNote.trim() && { note: paymentNote.trim() }),
+      },
+      success: "Pago confirmado",
+    });
+
+  const refundPayment = () => {
+    if (!approvedPayment) return;
+
+    notify(
+      () =>
+        sendPaymentChange({
+          url: `${API_URL}/api/admin/orders/${id}/payments/${approvedPayment.id}`,
+          method: "patch",
+          body: {
+            status: "reembolsado",
+            ...(paymentNote.trim() && { note: paymentNote.trim() }),
+          },
+          success: "Reembolso registrado",
+        }),
+      "¿Registrar el reembolso de este pago? El pedido quedará como reembolsado.",
+    );
+  };
+
   return (
     <>
       <header className="catalogo-hero">
@@ -355,6 +415,24 @@ const AdminPedidoDetalle = () => {
                       <small className="parrafos">
                         {formatDateTime(payment.processedAt || payment.createdAt)}
                       </small>
+                      {payment.statusMessage && (
+                        <small className="parrafos">
+                          {payment.statusMessage}
+                        </small>
+                      )}
+                      {payment.failureCode && (
+                        <small className="parrafos">
+                          Código de fallo: {payment.failureCode}
+                        </small>
+                      )}
+                      {payment.wompiStatus && (
+                        <small className="parrafos">
+                          Wompi: {payment.wompiStatus}
+                          {payment.providerTransactionId
+                            ? ` · ${payment.providerTransactionId}`
+                            : ""}
+                        </small>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -428,6 +506,111 @@ const AdminPedidoDetalle = () => {
                   {savingStatus ? "Guardando…" : "Actualizar estado"}
                 </button>
               </Form>
+            )}
+          </section>
+
+          <section className="checkout-card">
+            <h2 className="checkout-section-title titulos">Pago</h2>
+
+            <p className="parrafos order-data">
+              Estado:{" "}
+              <strong>
+                {PAYMENT_STATUS_LABELS[order.paymentStatus] ||
+                  order.paymentStatus}
+              </strong>
+              {order.paymentApprovedAt && (
+                <>
+                  <br />
+                  Aprobado el {formatDateTime(order.paymentApprovedAt)}
+                </>
+              )}
+            </p>
+
+            {approvedPayment?.paymentMethodType && (
+              <p className="checkout-help parrafos">
+                Método:{" "}
+                {getPaymentMethodLabel(approvedPayment.paymentMethodType)}
+              </p>
+            )}
+
+            {isCancelled ? (
+              <p className="checkout-help parrafos">
+                Pedido cancelado: no se registran pagos nuevos.
+              </p>
+            ) : (
+              <>
+                {!approvedPayment && (
+                  <p className="checkout-help parrafos">
+                    Confirma aquí una transferencia o Nequi recibidos. Los pagos
+                    con Wompi se aprueban solos con el webhook.
+                  </p>
+                )}
+
+                {(canConfirmPayment || canRefundPayment) && (
+                  <>
+                    {canConfirmPayment && (
+                      <Form.Group controlId="payMethod" className="mb-2">
+                        <Form.Label className="parrafos">
+                          Método de pago
+                        </Form.Label>
+                        <Form.Select
+                          value={
+                            payMethod || order.paymentMethod || "transferencia"
+                          }
+                          onChange={(event) =>
+                            setPayMethod(event.target.value)
+                          }
+                        >
+                          {PAY_METHODS.map((method) => (
+                            <option key={method} value={method}>
+                              {PAYMENT_METHOD_LABELS[method] || method}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    )}
+
+                    <Form.Group controlId="paymentNote" className="mb-2">
+                      <Form.Label className="parrafos">
+                        Nota interna (opcional)
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        maxLength={500}
+                        value={paymentNote}
+                        onChange={(event) =>
+                          setPaymentNote(event.target.value)
+                        }
+                      />
+                    </Form.Group>
+
+                    {canConfirmPayment && (
+                      <button
+                        type="button"
+                        className="btn-tema btn-tema--primario w-100"
+                        disabled={savingPayment}
+                        onClick={confirmPayment}
+                      >
+                        {savingPayment ? "Guardando..." : "Confirmar pago"}
+                      </button>
+                    )}
+
+                    {canRefundPayment && (
+                      <button
+                        type="button"
+                        className="btn-tema btn-tema--contorno w-100"
+                        disabled={savingPayment}
+                        onClick={refundPayment}
+                      >
+                        {savingPayment
+                          ? "Guardando..."
+                          : "Registrar reembolso"}
+                      </button>
+                    )}
+                  </>
+                )}
+              </>
             )}
           </section>
 

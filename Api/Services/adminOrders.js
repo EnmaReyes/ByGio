@@ -17,8 +17,10 @@ const {
   SALE_CHANNEL_VALUES,
   PAYMENT_METHOD_VALUES,
 } = require("../DataBase/models/enums.js");
-const { releaseOrderStock } = require("./orders.js");
+const { releaseOrderStock, restoreOrderStock } = require("./orders.js");
+const { registerPayment } = require("./payments.js");
 const HttpError = require("../Utils/HttpError.js");
+const { assertUuid } = require("../Utils/ids.js");
 
 const STATUS_LABELS = {
   pendiente_pago: "Pendiente de pago",
@@ -176,6 +178,8 @@ const listOrdersAdmin = async ({
 
 // GET /api/admin/orders/:id
 const getOrderAdmin = async (orderId) => {
+  assertUuid(orderId, "pedido");
+
   const order = await Order.findByPk(orderId, {
     include: ADMIN_ORDER_INCLUDE,
     order: ADMIN_ORDER_SORT,
@@ -191,14 +195,18 @@ const getOrderAdmin = async (orderId) => {
 // El estado logistico solo avanza por las transiciones permitidas. Cuando se
 // marca como pagado se registra tambien el cambio de estado de pago.
 const changeOrderStatus = async ({ orderId, status, note, adminId }) => {
+  assertUuid(orderId, "pedido");
+
   if (!ORDER_STATUS_VALUES.includes(status)) {
     throw new HttpError(400, "Estado de pedido inválido");
   }
 
   const transaction = await sequelize.transaction();
+  // Se declara fuera del try para poder usarlo al notificar, despues del commit.
+  let order = null;
 
   try {
-    const order = await Order.findByPk(orderId, {
+    order = await Order.findByPk(orderId, {
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
@@ -233,21 +241,9 @@ const changeOrderStatus = async ({ orderId, status, note, adminId }) => {
     }
 
     if (status === ORDER_STATUS.PAGADO) {
-      // Pago confirmado a mano (transferencia/Nequi) antes de integrar Wompi.
-      if (order.paymentStatus === PAYMENT_STATUS.PENDIENTE) {
-        order.paymentStatus = PAYMENT_STATUS.APROBADO;
-        await OrderStatusHistory.create(
-          {
-            orderId: order.id,
-            kind: HISTORY_KIND.PAGO,
-            fromStatus: PAYMENT_STATUS.PENDIENTE,
-            toStatus: PAYMENT_STATUS.APROBADO,
-            changedByUserId: adminId,
-            note: "Pago confirmado manualmente por administrador",
-          },
-          { transaction },
-        );
-      }
+      // El pago se registra en la tabla payments (fuente unica de verdad), no
+      // solo en orders.paymentStatus. Ver el bloque posterior al save().
+      if (!order.paymentApprovedAt) order.paymentApprovedAt = new Date();
       order.stockReservedUntil = null;
     }
 
@@ -262,6 +258,28 @@ const changeOrderStatus = async ({ orderId, status, note, adminId }) => {
     }
 
     await order.save({ transaction });
+
+    if (status === ORDER_STATUS.PAGADO) {
+      // Regla de negocio: una compra aprobada devuelve el producto al catalogo
+      // (stock = true) mientras el stock sea booleano.
+      await restoreOrderStock(order, transaction);
+
+      const approved = await Payment.findOne({
+        where: { orderId: order.id, status: PAYMENT_STATUS.APROBADO },
+        transaction,
+      });
+
+      if (!approved) {
+        await registerPayment({
+          orderId: order.id,
+          status: PAYMENT_STATUS.APROBADO,
+          paymentMethodType: order.paymentMethod,
+          actorUserId: adminId,
+          note: "Pago confirmado manualmente por administrador",
+          transaction,
+        });
+      }
+    }
 
     await OrderStatusHistory.create(
       {
@@ -305,6 +323,8 @@ const updateTracking = async ({
   trackingCarrier,
   trackingNumber,
 }) => {
+  assertUuid(orderId, "pedido");
+
   const order = await Order.findByPk(orderId);
 
   if (!order) {

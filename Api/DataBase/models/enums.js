@@ -31,6 +31,10 @@ const PAYMENT_STATUS = {
   ANULADO: "anulado",
   REEMBOLSADO: "reembolsado",
   EN_REVISION: "en_revision",
+  // Wompi reporta ERROR cuando la transaccion no pudo procesarse. La columna
+  // ya lo acepta (migracion 005); sin esta constante la validacion isIn del
+  // modelo rechazaria ese estado.
+  ERROR: "error",
 };
 
 const PAYMENT_STATUS_VALUES = Object.values(PAYMENT_STATUS);
@@ -74,10 +78,24 @@ const PAYMENT_METHOD_VALUES = Object.values(PAYMENT_METHOD);
 
 const CURRENCY = "COP";
 
-// Dias habiles de entrega prometidos al cliente.
-const DELIVERY_BUSINESS_DAYS = 10;
+// Dias habiles de entrega prometidos al cliente. Se guardan como snapshot en
+// el pedido (orders.estimatedDeliveryDays) al crearlo, para que un cambio de
+// reglas no altere pedidos ya hechos.
+//   - Medellin y el resto de Antioquia: 3 dias habiles
+//   - Cualquier otro departamento: 10 dias habiles
+const DELIVERY_DAYS = {
+  ANTIOQUIA: 3,
+  NACIONAL: 10,
+};
 
 // Minutos que se reserva el stock de un pedido sin pagar.
+//
+// HOY NO SE USA: con stock booleano el bloqueo de 30 minutos solo esconde el
+// producto de un carrito abandonado (y permite bloquear el catalogo entero
+// creando pedidos). La reserva se activa con STOCK_RESERVATION_ENABLED y se
+// implementara de verdad cuando el stock sea por cantidad
+// (tabla inventory_reservations). La estructura se conserva para no reescribir
+// el flujo despues.
 const STOCK_RESERVATION_MINUTES = 30;
 
 module.exports = {
@@ -95,6 +113,6 @@ module.exports = {
   PAYMENT_METHOD,
   PAYMENT_METHOD_VALUES,
   CURRENCY,
-  DELIVERY_BUSINESS_DAYS,
+  DELIVERY_DAYS,
   STOCK_RESERVATION_MINUTES,
 };

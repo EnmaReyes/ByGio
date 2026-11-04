@@ -89,12 +89,13 @@ const PageHero = ({ title, subtitle }) => (
   </header>
 );
 
-// Cuenta regresiva simple para la reserva de stock (30 min desde la creacion).
+// Nota informativa del checkout. El bloqueo de stock de 30 minutos esta
+// desactivado (STOCK_RESERVATION_ENABLED=false), asi que el texto no debe
+// prometer una reserva que no existe.
 const ReservationHint = () => (
   <p className="checkout-help parrafos">
-    Al confirmar, reservamos tus productos por 30 minutos mientras completas el
-    pago. Pasado ese tiempo el pedido se cancela automáticamente y los
-    productos vuelven a estar disponibles.
+    Al confirmar guardamos tu pedido y queda pendiente de pago. El valor final se
+    calcula con los precios y la disponibilidad del momento de la compra.
   </p>
 );
 
@@ -143,56 +144,98 @@ const CheckoutGate = () => {
   );
 };
 
-const CheckoutSuccess = ({ order }) => (
-  <>
-    <PageHero
-      title="¡Pedido registrado!"
-      subtitle="Te contactaremos para coordinar el pago y la entrega."
-    />
-    <div className="checkout-page">
-      <div className="checkout-success">
-        <span className="checkout-success-icon" aria-hidden="true">
-          ✓
-        </span>
-        <p className="parrafos">
-          Guardamos tu pedido <strong>{order.orderNumber}</strong> por{" "}
-          <strong>{formatPrice(order.total)}</strong>.
-        </p>
+const CheckoutSuccess = ({ order }) => {
+  const [paying, setPaying] = useState(false);
 
-        <div className="checkout-success-summary">
-          <div>
-            <span className="parrafos">Estado</span>
-            <strong className="titulos">Pendiente de pago</strong>
-          </div>
-          <div>
-            <span className="parrafos">Entrega estimada</span>
-            <strong className="titulos">Hasta 10 días hábiles</strong>
-          </div>
-          <div>
-            <span className="parrafos">Envío</span>
-            <strong className="titulos">
-              {formatPrice(order.shippingCost)}
-            </strong>
-          </div>
-        </div>
+  const payOnline = async () => {
+    setPaying(true);
 
-        <ReservationHint />
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/orders/${order.id}/payment`,
+        null,
+        { withCredentials: true },
+      );
+      window.location.href = res.data.url;
+    } catch (err) {
+      if (err.response?.status === 503) {
+        toast.info(
+          "El pago en línea todavía no está disponible. Te contactaremos para coordinar el pago.",
+        );
+      } else {
+        toast.error(
+          getApiErrorMessage(err, "No pudimos iniciar el pago en línea"),
+        );
+      }
+    } finally {
+      setPaying(false);
+    }
+  };
 
-        <div className="checkout-gate-actions">
-          <Link
-            to={`/mis-pedidos/${order.id}`}
-            className="checkout-primary-link"
+  return (
+    <>
+      <PageHero
+        title="¡Pedido registrado!"
+        subtitle="Puedes pagar en línea ahora mismo o coordinar el pago con nosotros por WhatsApp."
+      />
+      <div className="checkout-page">
+        <div className="checkout-success">
+          <span className="checkout-success-icon" aria-hidden="true">
+            ✓
+          </span>
+          <p className="parrafos">
+            Guardamos tu pedido <strong>{order.orderNumber}</strong> por{" "}
+            <strong>{formatPrice(order.total)}</strong>.
+          </p>
+
+          <div className="checkout-success-summary">
+            <div>
+              <span className="parrafos">Estado</span>
+              <strong className="titulos">Pendiente de pago</strong>
+            </div>
+            <div>
+              <span className="parrafos">Entrega estimada</span>
+              <strong className="titulos">
+                {order.estimatedDeliveryDays
+                  ? `Hasta ${order.estimatedDeliveryDays} días hábiles`
+                  : "Recoges en tienda"}
+              </strong>
+            </div>
+            <div>
+              <span className="parrafos">Envío</span>
+              <strong className="titulos">
+                {formatPrice(order.shippingCost)}
+              </strong>
+            </div>
+          </div>
+
+          <ReservationHint />
+
+          <button
+            type="button"
+            className="btn-tema btn-tema--primario checkout-pay-button"
+            disabled={paying}
+            onClick={payOnline}
           >
-            Ver mi pedido
-          </Link>
-          <Link to="/" className="checkout-secondary-link">
-            Seguir comprando
-          </Link>
+            {paying ? "Abriendo Wompi…" : "Pagar en línea"}
+          </button>
+
+          <div className="checkout-gate-actions">
+            <Link
+              to={`/mis-pedidos/${order.id}`}
+              className="checkout-primary-link"
+            >
+              Ver mi pedido
+            </Link>
+            <Link to="/" className="checkout-secondary-link">
+              Seguir comprando
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -464,6 +507,20 @@ const Checkout = () => {
 
     if (!quote) {
       toast.error("Calcula el envío antes de confirmar el pedido");
+      return;
+    }
+
+    // El DTF se vende montado en una franela. Un carrito viejo (guardado en
+    // localStorage) puede traer el diseño sin franela: se avisa aqui en vez de
+    // dejar que el servidor rechace el pedido con un error tecnico.
+    const dtfSinFranela = allProducts.some(
+      (product) =>
+        isDtfProduct(product) && (!product.shirtName || !product.shirtColor),
+    );
+    if (dtfSinFranela) {
+      toast.error(
+        "Un diseño DTF de tu carrito no tiene franela seleccionada. Quítalo y agrégalo de nuevo eligiendo el color.",
+      );
       return;
     }
 

@@ -20,8 +20,10 @@ const {
   STOCK_RESERVATION_MINUTES,
 } = require("../DataBase/models/enums.js");
 const { buildOrderLines } = require("./pricing.js");
-const { quoteShipping } = require("./shipping.js");
+const { quoteShipping, deliveryDaysForZone } = require("./shipping.js");
 const HttpError = require("../Utils/HttpError.js");
+const { assertUuid } = require("../Utils/ids.js");
+const { STOCK_RESERVATION_ENABLED } = require("../config.js");
 
 const REQUIRED_SHIPPING_FIELDS = [
   "recipientName",
@@ -116,8 +118,34 @@ const generateOrderNumber = async (transaction) => {
 const productModel = (productType) =>
   productType === "articulo" ? Articulos : Dtf;
 
-// Libera el stock reservado por un pedido.
+// Libera el stock reservado por un pedido (solo si la reserva esta activa).
+//
+// Con stock booleano la reserva esta desactivada: el pedido nunca bloqueo el
+// producto, asi que no hay nada que devolver. Escribir stock = true aqui
+// "reviviria" productos que un administrador marco como agotados.
 const releaseOrderStock = async (order, transaction) => {
+  if (!STOCK_RESERVATION_ENABLED) return;
+
+  const items = await OrderItem.findAll({
+    where: { orderId: order.id },
+    transaction,
+  });
+
+  for (const item of items) {
+    const Model = productModel(item.productType);
+    await Model.update(
+      { stock: true },
+      { where: { id: item.productId }, transaction },
+    );
+  }
+};
+
+// Devuelve el producto al catalogo cuando la compra queda pagada.
+//
+// Regla de negocio: mientras el stock sea booleano, una compra aprobada deja
+// el producto disponible otra vez (stock = true) en lugar de sacarlo del
+// catalogo. No confundir con releaseOrderStock, que deshace una RESERVA.
+const restoreOrderStock = async (order, transaction) => {
   const items = await OrderItem.findAll({
     where: { orderId: order.id },
     transaction,
@@ -134,19 +162,77 @@ const releaseOrderStock = async (order, transaction) => {
 
 // Reserva el stock de cada producto del pedido. Los productos ya estan
 // bloqueados y validados (stock = true) dentro de la misma transaccion.
+//
+// El UPDATE es condicional (stock = true): si otro pedido se le adelanto, la
+// fila ya no cumple la condicion, `affected` es 0 y el pedido falla en lugar
+// de vender dos veces el mismo producto (control de sobreventa).
 const reserveOrderStock = async (lines, transaction) => {
   for (const line of lines) {
     const Model = productModel(line.productType);
-    await Model.update(
+    const [affected] = await Model.update(
       { stock: false },
-      { where: { id: line.productId }, transaction },
+      { where: { id: line.productId, stock: true }, transaction },
     );
+
+    if (affected === 0) {
+      throw new HttpError(
+        409,
+        `"${line.title}" se agotó mientras completabas la compra`,
+      );
+    }
   }
+};
+
+// Detecta productos del pedido que ya no estan disponibles cuando entra el
+// pago. Con stock booleano un pago aprobado devuelve el producto al catalogo
+// (restoreOrderStock); si el administrador lo habia marcado agotado, esa
+// marca se perderia en silencio. Esto lo convierte en una alerta visible.
+//
+// Con la reserva activa no hay nada que detectar: el propio pedido dejo el
+// stock en false al reservarlo.
+const detectStockConflicts = async (order, transaction) => {
+  if (STOCK_RESERVATION_ENABLED) return [];
+
+  const items = await OrderItem.findAll({
+    where: { orderId: order.id },
+    transaction,
+  });
+
+  const conflicts = [];
+
+  for (const item of items) {
+    const Model = productModel(item.productType);
+    const producto = await Model.findByPk(item.productId, {
+      transaction,
+      attributes: ["id", "stock"],
+    });
+
+    if (!producto) {
+      conflicts.push({
+        productType: item.productType,
+        productId: item.productId,
+        title: item.title,
+        motivo: "eliminado",
+      });
+    } else if (!producto.stock) {
+      conflicts.push({
+        productType: item.productType,
+        productId: item.productId,
+        title: item.title,
+        motivo: "agotado",
+      });
+    }
+  }
+
+  return conflicts;
 };
 
 // Libera las reservas vencidas (lazy: se ejecuta al crear un pedido).
 // No hay cron en Vercel, por eso la expiracion se resuelve bajo demanda.
+// Con la reserva desactivada no hay nada que liberar.
 const releaseExpiredReservations = async (transaction) => {
+  if (!STOCK_RESERVATION_ENABLED) return 0;
+
   const expired = await Order.findAll({
     where: {
       status: ORDER_STATUS.PENDIENTE_PAGO,
@@ -187,6 +273,8 @@ const ORDER_INCLUDE = [
 ];
 
 const getOrderForUser = async ({ orderId, userId, admin = false, transaction }) => {
+  assertUuid(orderId, "pedido");
+
   const order = await Order.findOne({
     where: admin ? { id: orderId } : { id: orderId, userId },
     include: ORDER_INCLUDE,
@@ -201,7 +289,15 @@ const getOrderForUser = async ({ orderId, userId, admin = false, transaction }) 
   if (!order) {
     throw new HttpError(404, "Pedido no encontrado");
   }
-  return order;
+
+  // El comprador no necesita (ni debe ver) el payload crudo del proveedor de
+  // pagos: puede contener datos tecnicos del medio de pago. El administrador
+  // si lo ve en el panel.
+  const json = order.toJSON();
+  if (!admin) {
+    json.payments = (json.payments || []).map(({ rawPayload, ...safe }) => safe);
+  }
+  return json;
 };
 
 // Filtro opcional por uno o varios estados: "pagado,enviado".
@@ -269,7 +365,11 @@ const createOrderCore = async ({
       : validateShipping(shipping);
 
     const { lines, subtotal, discountTotal: computedDiscount } =
-      await buildOrderLines(items, transaction);
+      await buildOrderLines(items, transaction, {
+        // La franela solo se exige en el checkout web. Las ventas manuales del
+        // administrador siguen aceptando el diseno como se registro antes.
+        requireDtfShirt: !manual,
+      });
 
     let shippingCost = 0;
     let shippingZone = null;
@@ -286,6 +386,12 @@ const createOrderCore = async ({
       shippingZone = quote.zone;
     }
 
+    // Snapshot del plazo prometido. En recogida (pickup) no hay envio, por
+    // eso queda null.
+    const estimatedDeliveryDays = isPickup
+      ? null
+      : deliveryDaysForZone(shippingZone);
+
     // subtotal ya incluye los descuentos: unitPrice es el precio final.
     const discount = parseDiscount(manualDiscount, subtotal);
     const discountTotal = computedDiscount + discount;
@@ -295,7 +401,11 @@ const createOrderCore = async ({
       throw new HttpError(400, "El total del pedido es inválido");
     }
 
-    await reserveOrderStock(lines, transaction);
+    // La reserva de stock solo se aplica si esta habilitada. Con stock
+    // booleano queda apagada (ver STOCK_RESERVATION_ENABLED).
+    if (STOCK_RESERVATION_ENABLED) {
+      await reserveOrderStock(lines, transaction);
+    }
 
     const order = await Order.create(
       {
@@ -313,7 +423,11 @@ const createOrderCore = async ({
         ...shippingData,
         notes: notes ? trim(notes).slice(0, 1000) : shippingData.notes,
         shippingZone,
+        estimatedDeliveryDays,
+        paymentApprovedAt:
+          initialPaymentStatus === PAYMENT_STATUS.APROBADO ? new Date() : null,
         stockReservedUntil:
+          STOCK_RESERVATION_ENABLED &&
           initialStatus === ORDER_STATUS.PENDIENTE_PAGO
             ? new Date(Date.now() + STOCK_RESERVATION_MINUTES * 60 * 1000)
             : null,
@@ -335,25 +449,28 @@ const createOrderCore = async ({
         changedByUserId: actorUserId,
         note: manual
           ? `Venta registrada manualmente (canal: ${channel}).`
-          : `Pedido creado. Stock reservado por ${STOCK_RESERVATION_MINUTES} minutos.`,
+          : STOCK_RESERVATION_ENABLED
+            ? `Pedido creado. Stock reservado por ${STOCK_RESERVATION_MINUTES} minutos.`
+            : "Pedido creado.",
       },
       { transaction },
     );
 
     if (manual && initialPaymentStatus === PAYMENT_STATUS.APROBADO) {
-      await OrderStatusHistory.create(
-        {
-          orderId: order.id,
-          kind: HISTORY_KIND.PAGO,
-          fromStatus: null,
-          toStatus: PAYMENT_STATUS.APROBADO,
-          changedByUserId: actorUserId,
-          note: paymentMethod
-            ? `Pago registrado manualmente (método: ${paymentMethod}).`
-            : "Pago registrado manualmente.",
-        },
-        { transaction },
-      );
+      // La venta manual nace pagada: se registra el pago en la tabla payments
+      // (fuente unica de verdad, igual que Wompi mas adelante). registerPayment
+      // escribe tambien el historial de pago y devuelve el stock al catalogo.
+      const { registerPayment } = require("./payments.js");
+      await registerPayment({
+        orderId: order.id,
+        status: PAYMENT_STATUS.APROBADO,
+        paymentMethodType: paymentMethod,
+        actorUserId,
+        note: paymentMethod
+          ? `Pago registrado manualmente (método: ${paymentMethod}).`
+          : "Pago registrado manualmente.",
+        transaction,
+      });
     }
 
     const full = await getOrderForUser({
@@ -479,6 +596,8 @@ const createManualOrder = async ({
 
 // Cancela un pedido pendiente de pago y libera su stock.
 const cancelOrder = async ({ orderId, user }) => {
+  assertUuid(orderId, "pedido");
+
   const transaction = await sequelize.transaction();
 
   try {
@@ -519,7 +638,9 @@ const cancelOrder = async ({ orderId, user }) => {
     const full = await getOrderForUser({
       orderId: order.id,
       userId: order.userId,
-      admin: true,
+      // Si quien cancela es un administrador ve el payload del proveedor;
+      // si es el comprador, no.
+      admin: Boolean(user.admin),
       transaction,
     });
 
@@ -532,7 +653,7 @@ const cancelOrder = async ({ orderId, user }) => {
         tipo: "pedido",
         titulo: `Pedido ${full.orderNumber} cancelado`,
         texto:
-          "Cancelaste tu pedido. Los productos volvieron a estar disponibles.",
+          "Tu pedido fue cancelado. Si quieres, puedes volver a comprar cuando quieras.",
         to: `/dashboard/pedidos/${full.id}`,
         clave: `pedido:${full.id}:cancelado`,
       });
@@ -558,6 +679,8 @@ module.exports = {
   listOrdersForUser,
   releaseExpiredReservations,
   releaseOrderStock,
+  restoreOrderStock,
+  detectStockConflicts,
   validateShipping,
   validateManualShipping,
 };

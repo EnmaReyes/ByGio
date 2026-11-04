@@ -17,6 +17,7 @@ export const PAYMENT_STATUS_LABELS = {
   anulado: "Pago anulado",
   reembolsado: "Pago reembolsado",
   en_revision: "Pago en revisión",
+  error: "Pago con error",
 };
 
 // Canal por el que entro la venta (espejo de Api/DataBase/models/enums.js).

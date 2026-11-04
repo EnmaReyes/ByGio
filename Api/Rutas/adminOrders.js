@@ -8,6 +8,9 @@ const {
   tracking,
   sales,
   createManual,
+  payments,
+  registerPaymentHandler,
+  changePayment,
 } = require("../Controllers/adminOrders.js");
 
 const router = express.Router();
@@ -26,5 +29,10 @@ router.get("/", list);
 router.get("/:id", detail);
 router.patch("/:id/status", changeStatus);
 router.patch("/:id/tracking", tracking);
+
+// Pagos del pedido (confirmar, rechazar, reembolsar).
+router.get("/:id/payments", payments);
+router.post("/:id/payments", registerPaymentHandler);
+router.patch("/:id/payments/:paymentId", changePayment);
 
 module.exports = router;

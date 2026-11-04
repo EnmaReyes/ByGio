@@ -13,6 +13,7 @@ const shippingRoutes = require("./Rutas/shipping.js");
 const adminOrdersRoutes = require("./Rutas/adminOrders.js");
 const adminUsersRoutes = require("./Rutas/adminUsers.js");
 const pricesRoutes = require("./Rutas/prices.js");
+const paymentsRoutes = require("./Rutas/payments.js");
 
 const { sequelize, databaseHost } = require("./DataBase/db.js");
 const { ensurePricingSchema } = require("./DataBase/ensurePricing.js");
@@ -22,7 +23,10 @@ require("./DataBase/models/index.js");
 
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { FRONTEND_URL } = require("./config.js");
+const helmet = require("helmet");
+const { FRONTEND_URL, TRUST_PROXY } = require("./config.js");
+const { globalLimiter } = require("./Middlewares/rateLimits.js");
+const { notFound, errorHandler } = require("./Middlewares/errors.js");
 
 const port = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
@@ -116,6 +120,22 @@ const getDbReady = () => {
 };
 
 // Middlewares
+//
+// Detras del proxy de Vercel la conexion llega desde el proxy: sin trust proxy
+// el rate limit veria una sola IP para todos y req.ip seria inutil.
+app.set("trust proxy", TRUST_PROXY);
+app.disable("x-powered-by");
+
+// Cabeceras de seguridad. La API no sirve HTML, por eso se desactiva la CSP
+// (solo protege documentos) y se permite que el frontend cargue recursos.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    referrerPolicy: { policy: "no-referrer" },
+  }),
+);
+
 app.use(express.json());
 
 app.use(
@@ -127,6 +147,9 @@ app.use(
 );
 
 app.use(cookieParser());
+
+// Techo general de peticiones por IP (ver Middlewares/rateLimits.js).
+app.use(globalLimiter);
 
 // Ruta principal. No toca la base: sirve para comprobar que la funcion
 // arranco (si esto responde y /api/* da 503, el problema es la base).
@@ -189,6 +212,12 @@ app.use("/api/shipping", shippingRoutes);
 app.use("/api/admin/orders", adminOrdersRoutes);
 app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/prices", pricesRoutes);
+app.use("/api/payments", paymentsRoutes);
+
+// Red de seguridad: ruta inexistente y errores no controlados. Va al final,
+// despues de todas las rutas (ver Middlewares/errors.js).
+app.use(notFound);
+app.use(errorHandler);
 
 // Servidor local.
 // En Vercel, la aplicacion se exporta sin app.listen().

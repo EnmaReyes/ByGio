@@ -5,7 +5,13 @@ const {
   list,
   detail,
   cancel,
+  createPayment,
+  verifyPayment,
 } = require("../Controllers/orders.js");
+const {
+  orderLimiter,
+  paymentLimiter,
+} = require("../Middlewares/rateLimits.js");
 
 const router = express.Router();
 
@@ -13,9 +19,13 @@ const router = express.Router();
 // Los invitados pueden ver el catalogo y el carrito, pero no comprar.
 router.use(requireAuth);
 
-router.post("/", create);
+router.post("/", orderLimiter, create);
 router.get("/", list);
 router.get("/:id", detail);
 router.post("/:id/cancel", cancel);
+
+// Pago en linea (Wompi Web Checkout). Solo el dueño del pedido.
+router.post("/:id/payment", paymentLimiter, createPayment);
+router.post("/:id/payment/verify", paymentLimiter, verifyPayment);
 
 module.exports = router;

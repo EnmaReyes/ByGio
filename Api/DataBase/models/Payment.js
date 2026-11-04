@@ -81,6 +81,18 @@ const Payment = sequelize.define(
       allowNull: true,
     },
 
+    // Mensaje legible que devuelve Wompi (status_message) y codigo de fallo
+    // del medio de pago (p. ej. "INSUFFICIENT_FUNDS"). Sirven para el panel
+    // de administracion y para explicar un rechazo al comprador.
+    statusMessage: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    failureCode: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
     // Payload original del webhook / consulta de transaccion
     rawPayload: {
       type: DataTypes.JSONB,
