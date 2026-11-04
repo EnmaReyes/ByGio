@@ -163,6 +163,21 @@ const Order = sequelize.define(
       allowNull: true,
     },
 
+    // Snapshot del plazo prometido al comprador (dias habiles), calculado al
+    // crear el pedido segun la zona: Antioquia = 3, resto del pais = 10.
+    // Es un snapshot: cambiar la regla despues no altera pedidos ya hechos.
+    estimatedDeliveryDays: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { min: 0 },
+    },
+
+    // Momento en que el pago del pedido quedo aprobado (Wompi o manual).
+    paymentApprovedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     // Logistica / seguimiento
     trackingCarrier: {
       type: DataTypes.STRING(100),

@@ -21,12 +21,12 @@ const PREGUNTAS = [
   {
     pregunta: "¿Cómo confirmo el pago de mi pedido?",
     respuesta:
-      "Al crear el pedido te contactamos por WhatsApp para coordinar el pago (transferencia o Nequi) y la entrega. Mientras no se confirme el pago, los productos quedan reservados por 30 minutos.",
+      "Al crear el pedido te contactamos por WhatsApp para coordinar el pago (transferencia o Nequi) y la entrega. El pedido se prepara cuando el pago queda confirmado.",
   },
   {
     pregunta: "¿Cuánto tarda la entrega?",
     respuesta:
-      "El envío puede tardar hasta 10 días hábiles después de confirmar el pago. Cuando tu pedido se despache verás la transportadora y el número de guía en el detalle del pedido.",
+      "El envío tarda hasta 3 días hábiles en Antioquia y hasta 10 días hábiles en el resto del país, contados desde que se confirma el pago. Cuando tu pedido se despache verás la transportadora y el número de guía en el detalle del pedido.",
   },
   {
     pregunta: "¿Puedo cancelar un pedido?",

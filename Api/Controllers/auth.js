@@ -76,9 +76,17 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
+    const username = String(req.body?.username || "").trim();
+    const password = String(req.body?.password || "");
+
+    // Sin esto, Sequelize recibe un WHERE con undefined y termina en un 500.
+    if (!username || !password) {
+      return res.status(400).json("Escribe tu usuario y contraseña");
+    }
+
     const existingUser = await Usuarios.findOne({
       where: {
-        username: req.body.username,
+        username,
       },
     });
 
@@ -93,7 +101,7 @@ const login = async (req, res) => {
     }
 
     const isPasswordCorrect = await bcrypt.compare(
-      req.body.password,
+      password,
       existingUser.password
     );
 

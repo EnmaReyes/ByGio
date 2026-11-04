@@ -1,5 +1,5 @@
-import { useCallback, useContext, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { API_URL } from "../config";
@@ -72,11 +72,14 @@ const StatusSteps = ({ status }) => {
 
 const PedidoDetalle = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { currentUser } = useContext(AuthContext);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const verifiedRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,6 +104,38 @@ const PedidoDetalle = () => {
     window.scrollTo(0, 0);
     load();
   }, [currentUser, load]);
+
+  // Vuelta desde Wompi: ?pago=wompi&id=<transacción>. Se consulta el estado
+  // real en el servidor (nunca se confía en los parámetros de la URL) y se
+  // recarga el pedido. El webhook sigue siendo la fuente de verdad; esto solo
+  // evita que el comprador vea "pendiente" cuando el cobro ya se hizo.
+  useEffect(() => {
+    if (!currentUser || verifiedRef.current) return;
+    if (searchParams.get("pago") !== "wompi") return;
+
+    verifiedRef.current = true;
+    const transactionId = searchParams.get("id") || undefined;
+
+    if (!transactionId) {
+      load();
+      return;
+    }
+
+    (async () => {
+      try {
+        await axios.post(
+          `${API_URL}/api/orders/${id}/payment/verify`,
+          { transactionId },
+          { withCredentials: true },
+        );
+        toast.success("Actualizamos el estado de tu pago");
+      } catch {
+        toast.info("Todavía estamos confirmando tu pago. Actualiza en unos segundos.");
+      } finally {
+        await load();
+      }
+    })();
+  }, [currentUser, id, load, searchParams]);
 
   if (!currentUser) {
     return (
@@ -180,8 +215,37 @@ const PedidoDetalle = () => {
 
   const status = getOrderStatusMeta(order.status);
   const canCancel = order.status === "pendiente_pago";
+  const canPay =
+    order.status === "pendiente_pago" &&
+    ["pendiente", "rechazado", "error"].includes(order.paymentStatus);
   const items = order.items || [];
   const history = order.history || [];
+
+  const payOnline = async () => {
+    setPaying(true);
+
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/orders/${id}/payment`,
+        null,
+        { withCredentials: true },
+      );
+      // Wompi Web Checkout: se sale del sitio y se vuelve a este pedido.
+      window.location.href = res.data.url;
+    } catch (err) {
+      if (err.response?.status === 503) {
+        toast.info(
+          "El pago en línea todavía no está disponible. Escríbenos por WhatsApp para coordinar el pago.",
+        );
+      } else {
+        toast.error(
+          getApiErrorMessage(err, "No pudimos iniciar el pago en línea"),
+        );
+      }
+    } finally {
+      setPaying(false);
+    }
+  };
 
   return (
     <>
@@ -255,16 +319,24 @@ const PedidoDetalle = () => {
             </div>
           </div>
 
+          {canPay && (
+            <button
+              type="button"
+              className="btn-tema btn-tema--primario order-pay-button"
+              disabled={paying}
+              onClick={payOnline}
+            >
+              {paying ? "Abriendo Wompi…" : "Pagar en línea"}
+            </button>
+          )}
+
           {canCancel && (
             <button
               type="button"
               className="btn-tema btn-tema--contorno order-cancel-button"
               disabled={cancelling}
               onClick={() =>
-                notify(
-                  cancelOrder,
-                  "¿Deseas cancelar este pedido? Los productos volverán a estar disponibles.",
-                )
+                notify(cancelOrder, "¿Deseas cancelar este pedido?")
               }
             >
               {cancelling ? "Cancelando…" : "Cancelar pedido"}
@@ -294,8 +366,9 @@ const PedidoDetalle = () => {
               </p>
             )}
             <p className="checkout-help parrafos">
-              Entrega estimada: hasta 10 días hábiles después de confirmar el
-              pago.
+              {order.estimatedDeliveryDays
+                ? `Entrega estimada: hasta ${order.estimatedDeliveryDays} días hábiles después de confirmar el pago.`
+                : "Entrega estimada: te confirmamos el plazo al validar el pago."}
             </p>
           </section>
 

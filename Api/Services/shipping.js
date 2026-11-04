@@ -1,8 +1,17 @@
 const { ShippingRate } = require("../DataBase/models/index.js");
+const { DELIVERY_DAYS } = require("../DataBase/models/enums.js");
 const { WAREHOUSE_LAT, WAREHOUSE_LNG } = require("../config.js");
 const HttpError = require("../Utils/HttpError.js");
 
 const ZONES = ["medellin", "antioquia", "nacional"];
+
+// Plazo prometido al comprador (dias habiles) segun la zona de envio.
+// Antioquia (Medellin incluido) = 3 dias; resto del pais = 10.
+// Se guarda como snapshot en el pedido al crearlo.
+const deliveryDaysForZone = (zone) =>
+  zone === "medellin" || zone === "antioquia"
+    ? DELIVERY_DAYS.ANTIOQUIA
+    : DELIVERY_DAYS.NACIONAL;
 
 // Normaliza texto para comparar sin tildes ni mayusculas: "Medellín" -> "medellin"
 const normalize = (value) =>
@@ -129,6 +138,7 @@ module.exports = {
   normalize,
   resolveZone,
   haversineKm,
+  deliveryDaysForZone,
   quoteShipping,
   listShippingRates,
 };

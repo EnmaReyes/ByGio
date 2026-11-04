@@ -7,6 +7,11 @@ const {
   salesByPeriod,
 } = require("../Services/adminOrders.js");
 const { createManualOrder } = require("../Services/orders.js");
+const {
+  listOrderPayments,
+  registerPayment,
+  changePaymentStatus,
+} = require("../Services/payments.js");
 const { sendError } = require("../Utils/respond.js");
 
 // GET /api/admin/orders?status&paymentStatus&channel&paymentMethod&q&from&to&limit&offset
@@ -136,4 +141,75 @@ const sales = async (req, res) => {
   }
 };
 
-module.exports = { list, stats, detail, changeStatus, tracking, sales, createManual };
+// GET /api/admin/orders/:id/payments — intentos de pago del pedido.
+const payments = async (req, res) => {
+  try {
+    const result = await listOrderPayments(req.params.id);
+    return res.status(200).json(result);
+  } catch (error) {
+    return sendError(res, error, "No se pudieron cargar los pagos");
+  }
+};
+
+// POST /api/admin/orders/:id/payments
+// Body: { status?, paymentMethodType?, statusMessage?, failureCode?, note? }
+// Registra o actualiza el pago manual del pedido (transferencia/Nequi/efectivo).
+const registerPaymentHandler = async (req, res) => {
+  try {
+    const { status, paymentMethodType, statusMessage, failureCode, note } =
+      req.body || {};
+
+    const { order } = await registerPayment({
+      orderId: req.params.id,
+      status: status || "aprobado",
+      paymentMethodType,
+      statusMessage,
+      failureCode,
+      actorUserId: req.user.id,
+      note,
+    });
+
+    // Se devuelve el pedido completo para que el panel se actualice de una.
+    return res.status(201).json(await getOrderAdmin(order.id));
+  } catch (error) {
+    return sendError(res, error, "No se pudo registrar el pago");
+  }
+};
+
+// PATCH /api/admin/orders/:id/payments/:paymentId
+// Body: { status, statusMessage?, failureCode?, note? }
+// Cambia el estado de un pago ya registrado (reembolso, anulacion).
+const changePayment = async (req, res) => {
+  try {
+    const { status, paymentMethodType, statusMessage, failureCode, note } =
+      req.body || {};
+
+    const { order } = await changePaymentStatus({
+      orderId: req.params.id,
+      paymentId: req.params.paymentId,
+      status,
+      paymentMethodType,
+      statusMessage,
+      failureCode,
+      actorUserId: req.user.id,
+      note,
+    });
+
+    return res.status(200).json(await getOrderAdmin(order.id));
+  } catch (error) {
+    return sendError(res, error, "No se pudo actualizar el pago");
+  }
+};
+
+module.exports = {
+  list,
+  stats,
+  detail,
+  changeStatus,
+  tracking,
+  sales,
+  createManual,
+  payments,
+  registerPaymentHandler,
+  changePayment,
+};

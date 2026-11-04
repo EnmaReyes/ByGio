@@ -151,7 +151,10 @@ const resolveArticle = async (item, transaction) => {
 };
 
 // --------------------------------- DTF ----------------------------------
-const resolveDtf = async (item, transaction) => {
+// El DTF se vende SIEMPRE montado en una camiseta (regla de negocio): el
+// diseno suelto, sin franela, todavia no se comercializa. La franela se
+// guarda como snapshot en la linea del pedido.
+const resolveDtf = async (item, transaction, { requireShirt = false } = {}) => {
   const quantity = parseQuantity(item.quantity);
 
   // El lock se toma solo sobre "dtfs": Postgres no permite FOR UPDATE con
@@ -171,6 +174,20 @@ const resolveDtf = async (item, transaction) => {
   const tipo = DTF_TIPO_MAP[String(item.dtfSize || "").trim().toLowerCase()];
   if (!tipo) {
     throw new HttpError(400, "Selecciona el tamaño del DTF");
+  }
+
+  const shirtColor = item.shirtColor
+    ? String(item.shirtColor).trim().slice(0, 50)
+    : "";
+  const shirtName = item.shirtName
+    ? String(item.shirtName).trim().slice(0, 100)
+    : "";
+
+  if (requireShirt && (!shirtColor || !shirtName)) {
+    throw new HttpError(
+      400,
+      "Selecciona la franela del diseño DTF (no vendemos el diseño suelto)",
+    );
   }
 
   const category = await Category.findByPk(dtf.categoryId, { transaction });
@@ -203,8 +220,8 @@ const resolveDtf = async (item, transaction) => {
       imageUrl: dtf.img || null,
       size: null,
       oversize: tipo === "oversize",
-      shirtColor: item.shirtColor ? String(item.shirtColor).slice(0, 50) : null,
-      shirtName: item.shirtName ? String(item.shirtName).slice(0, 100) : null,
+      shirtColor: shirtColor || null,
+      shirtName: shirtName || null,
       dtfSize: tipo,
       unitPrice,
       quantity,
@@ -220,7 +237,11 @@ const resolveDtf = async (item, transaction) => {
 };
 
 // ------------------------------ Carrito ---------------------------------
-const buildOrderLines = async (items, transaction) => {
+const buildOrderLines = async (
+  items,
+  transaction,
+  { requireDtfShirt = false } = {},
+) => {
   if (!Array.isArray(items) || items.length === 0) {
     throw new HttpError(400, "El carrito está vacío");
   }
@@ -248,7 +269,9 @@ const buildOrderLines = async (items, transaction) => {
     if (productType === "articulo" || productType === "article") {
       resolved = await resolveArticle({ ...item, productId }, transaction);
     } else if (productType === "dtf") {
-      resolved = await resolveDtf({ ...item, productId }, transaction);
+      resolved = await resolveDtf({ ...item, productId }, transaction, {
+        requireShirt: requireDtfShirt,
+      });
     } else {
       throw new HttpError(400, "Tipo de producto inválido");
     }
