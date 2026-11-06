@@ -3,7 +3,6 @@ const {
   Order,
   Payment,
   OrderStatusHistory,
-  Usuarios,
 } = require("../DataBase/models/index.js");
 const {
   PAYMENT_STATUS,
@@ -11,7 +10,7 @@ const {
   ORDER_STATUS,
 } = require("../DataBase/models/enums.js");
 const { restoreOrderStock, detectStockConflicts } = require("./orders.js");
-const { createNotification } = require("./notifications.js");
+const { notifyAdmins } = require("./notifications.js");
 const HttpError = require("../Utils/HttpError.js");
 const { assertUuid } = require("../Utils/ids.js");
 
@@ -148,23 +147,13 @@ const notifyStockConflicts = async (order, conflicts) => {
       )
       .join(", ");
 
-    const admins = await Usuarios.findAll({
-      where: { admin: true },
-      attributes: ["id"],
+    await notifyAdmins({
+      tipo: "pedido",
+      titulo: `Posible sobreventa en ${order.orderNumber}`,
+      texto: `Se aprobó el pago de ${order.orderNumber}, pero ${detalle}. Revisa el inventario antes de despachar.`,
+      to: `/admin/pedidos/${order.id}`,
+      claveForAdmin: (adminId) => `stock-conflicto:${order.id}:${adminId}`,
     });
-
-    await Promise.all(
-      admins.map((admin) =>
-        createNotification({
-          userId: admin.id,
-          tipo: "pedido",
-          titulo: `Posible sobreventa en ${order.orderNumber}`,
-          texto: `Se aprobó el pago de ${order.orderNumber}, pero ${detalle}. Revisa el inventario antes de despachar.`,
-          to: `/admin/pedidos/${order.id}`,
-          clave: `stock-conflicto:${order.id}:${admin.id}`,
-        }),
-      ),
-    );
   } catch (error) {
     console.error(
       "No se pudo avisar la posible sobreventa:",

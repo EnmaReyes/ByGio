@@ -505,6 +505,19 @@ const createOrderCore = async ({
           error.message,
         );
       }
+
+      // Aviso al administrador por cada compra web. En bloque separado: si
+      // la notificación al cliente falla, el admin igual se entera (y al
+      // revés), y ninguna de las dos rompe la compra.
+      try {
+        const { notifyAdminsOfNewOrder } = require("./notifications.js");
+        await notifyAdminsOfNewOrder(full);
+      } catch (error) {
+        console.error(
+          "No se pudo avisar la compra al administrador:",
+          error.message,
+        );
+      }
     }
 
     return full;

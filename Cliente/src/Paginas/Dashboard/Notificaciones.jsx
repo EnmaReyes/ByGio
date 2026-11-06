@@ -7,8 +7,17 @@ import {
   faCheckDouble,
   faTrash,
   faUser,
+  faVolumeHigh,
+  faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import useNotificaciones from "../../hooks/useNotificaciones";
+import {
+  getVolumen,
+  isSonidoActivado,
+  reproducirSonidoNotificacion,
+  setSonidoActivado,
+  setVolumen,
+} from "../../Componentes/sonidoNotificacion";
 import {
   limpiarNotificaciones,
   marcarLeida,
@@ -26,6 +35,8 @@ const Notificaciones = () => {
   const navigate = useNavigate();
   const { items, noLeidas } = useNotificaciones();
   const [filtro, setFiltro] = useState("todas");
+  const [sonido, setSonido] = useState(() => isSonidoActivado());
+  const [volumen, setVolumenEstado] = useState(() => getVolumen());
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,6 +53,19 @@ const Notificaciones = () => {
   const abrir = async (notificacion) => {
     if (!notificacion.leida) await marcarLeida(notificacion.id);
     if (notificacion.to) navigate(notificacion.to);
+  };
+
+  const alCambiarSonido = () => {
+    const siguiente = !sonido;
+    setSonido(siguiente);
+    setSonidoActivado(siguiente);
+    if (siguiente) reproducirSonidoNotificacion();
+  };
+
+  const alCambiarVolumen = (evento) => {
+    const valor = Number(evento.target.value);
+    setVolumenEstado(valor);
+    setVolumen(valor);
   };
 
   return (
@@ -98,6 +122,35 @@ const Notificaciones = () => {
             </button>
           </div>
         )}
+
+        <div className="notif-sonido">
+          <button
+            type="button"
+            className={`filtro-chip ${sonido ? "activo" : ""}`}
+            aria-pressed={sonido}
+            onClick={alCambiarSonido}
+          >
+            <FontAwesomeIcon
+              icon={sonido ? faVolumeHigh : faVolumeXmark}
+              aria-hidden="true"
+            />
+            {sonido ? "Sonido activado" : "Sonido desactivado"}
+          </button>
+          {sonido && (
+            <label className="notif-sonido-volumen">
+              Volumen
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={volumen}
+                onChange={alCambiarVolumen}
+                aria-label="Volumen del sonido de notificaciones"
+              />
+            </label>
+          )}
+        </div>
       </div>
 
       {items.length === 0 ? (
