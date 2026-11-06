@@ -224,6 +224,10 @@
   font-size: 0.95rem;
   text-decoration: none;
   cursor: pointer;
+  /* El reset global (a { all: unset }) deja box-sizing en content-box; sin
+     esto, width:100% + padding desborda el contenedor (p. ej. el resumen). */
+  box-sizing: border-box;
+  max-width: 100%;
   transition:
     background-color 180ms ease,
     color 180ms ease,

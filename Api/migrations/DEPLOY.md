@@ -35,13 +35,14 @@ Variables de Vercel o en `Api/.env.local` (no versionado).
 Se ejecutan en el **SQL Editor de Neon**, una por una, en este orden:
 
 ```
-001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010
+001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011
 ```
 
-De esa lista, lo nuevo de esta rama es **002 → 003 → 004 → 005 → 008 → 009**.
-`001` (login social), `006` (notificaciones) y `007` (campañas Gmail) ya deberían
-estar aplicadas; si no lo están, aplícalas antes en su turno. `010` (envíos desde
-Itagüí) se aplica sobre una base que ya tenga la 003.
+De esa lista, lo nuevo de esta rama es **002 → 003 → 004 → 005 → 008 → 009**,
+más **011** (teléfono y dirección del usuario). `001` (login social), `006`
+(notificaciones) y `007` (campañas Gmail) ya deberían estar aplicadas; si no lo
+están, aplícalas antes en su turno. `010` (envíos desde Itagüí) se aplica sobre
+una base que ya tenga la 003.
 
 > **Si ya las aplicaste durante el desarrollo de las fases, corre primero §1.0.**
 > La Fase E (endurecimiento) no cambió el esquema: solo usó columnas que ya
@@ -63,10 +64,12 @@ SELECT
   to_regclass('public.campaigns') IS NOT NULL                                                                                   AS m007_gmail,
   EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='channel')                        AS m008_ventas,
   (EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='estimatedDeliveryDays')
-    AND EXISTS (SELECT 1 FROM pg_indexes WHERE indexname='payments_one_approved_per_order'))                                   AS m009_wompi;
+    AND EXISTS (SELECT 1 FROM pg_indexes WHERE indexname='payments_one_approved_per_order'))                                   AS m009_wompi,
+  (EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='phone')
+    AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='address'))              AS m011_contacto;
 ```
 
-Las nueve deben dar `true`. Si alguna da `false`, aplicar ese archivo antes de
+Las diez deben dar `true`. Si alguna da `false`, aplicar ese archivo antes de
 seguir. Dos trampas conocidas:
 
 - **La 008 se salta con facilidad.** Sin `orders.channel` (NOT NULL) el checkout y
@@ -176,7 +179,18 @@ SELECT zone, label, "minKm", "maxKm", price, "isDefault", active
 En Vercel (§2) confirmar `WAREHOUSE_LAT=6.1724352` y `WAREHOUSE_LNG=-75.6093254`
 (centro de Itagüí). Si no se configuran, el código ya usa esos valores.
 
-### 1.9 Verificación final del esquema
+### 1.9 `011_user_address_phone.sql`  ← teléfono y dirección del usuario
+Agrega `usuarios.phone` y `usuarios.address`. "Mi perfil" los edita y el checkout
+los usa como valores por defecto (el cliente puede cambiarlos antes de pagar).
+
+```sql
+SELECT column_name, data_type, character_maximum_length
+  FROM information_schema.columns
+ WHERE table_name = 'usuarios' AND column_name IN ('phone', 'address');
+-- Deben salir 2 filas.
+```
+
+### 1.10 Verificación final del esquema
 
 ```sql
 -- Columnas nuevas

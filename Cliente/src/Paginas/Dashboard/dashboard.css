@@ -849,6 +849,11 @@ html[data-theme="dark"] .panel-logo {
   font-weight: 600;
 }
 
+/* La dirección ocupa todo el ancho de la rejilla de datos. */
+.perfil-campos .perfil-campo-ancho {
+  grid-column: 1 / -1;
+}
+
 .perfil-rol {
   display: flex;
   align-items: center;

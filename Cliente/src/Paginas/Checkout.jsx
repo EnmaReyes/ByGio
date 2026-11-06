@@ -301,6 +301,9 @@ const Checkout = () => {
         currentUser.username ||
         "",
       email: prev.email || currentUser.email || "",
+      // Teléfono y dirección guardados en "Mi perfil" como valores por defecto.
+      phone: prev.phone || currentUser.phone || "",
+      address: prev.address || currentUser.address || "",
     }));
   }, [currentUser]);
 

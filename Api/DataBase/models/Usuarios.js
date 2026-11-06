@@ -53,6 +53,16 @@ const Usuarios = sequelize.define(
     lastName: {
       type: DataTypes.STRING,
     },
+    // Datos de contacto del comprador. Se usan como valores por defecto en el
+    // checkout y se editan desde "Mi perfil".
+    phone: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
+    address: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     // Token de refresh de Gmail (cifrado) para enviar campañas por correo.
     // Null hasta que el admin autorice la aplicación.
     gmailRefreshToken: {

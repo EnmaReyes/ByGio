@@ -16,7 +16,7 @@ const issueSession = (res, user) => {
     expiresIn: TOKEN_EXPIRATION,
   });
 
-  const { password, ...userData } = user.toJSON();
+  const { password, gmailRefreshToken, ...userData } = user.toJSON();
   const production = isProduction();
 
   return res
@@ -127,7 +127,7 @@ const me = async (req, res) => {
     const userInfo = jwt.verify(token, JWT_SECRET);
 
     const user = await Usuarios.findByPk(userInfo.id, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "gmailRefreshToken"] },
     });
     if (!user) {
       return res.status(404).json("Usuario no encontrado");

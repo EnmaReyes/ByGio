@@ -38,10 +38,21 @@ const Perfil = () => {
   const { currentUser, refreshUserData } = useContext(AuthContext);
   const inputFileRef = useRef(null);
 
-  const [form, setForm] = useState({ name: "", lastName: "" });
+  const [form, setForm] = useState({
+    name: "",
+    lastName: "",
+    phone: "",
+    address: "",
+  });
   const [email, setEmail] = useState("");
   const [image, setImage] = useState(null);
-  const [initial, setInitial] = useState({ name: "", lastName: "", image: null });
+  const [initial, setInitial] = useState({
+    name: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    image: null,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -51,9 +62,16 @@ const Perfil = () => {
     const datos = {
       name: user?.name || "",
       lastName: user?.lastName || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
       image: user?.image || null,
     };
-    setForm({ name: datos.name, lastName: datos.lastName });
+    setForm({
+      name: datos.name,
+      lastName: datos.lastName,
+      phone: datos.phone,
+      address: datos.address,
+    });
     setImage(datos.image);
     setEmail(user?.email || "");
     setInitial(datos);
@@ -84,6 +102,8 @@ const Perfil = () => {
   const dirty =
     form.name !== initial.name ||
     form.lastName !== initial.lastName ||
+    form.phone !== initial.phone ||
+    form.address !== initial.address ||
     (image || null) !== (initial.image || null);
 
   const handleFile = async (event) => {
@@ -128,6 +148,8 @@ const Perfil = () => {
         {
           name: form.name.trim(),
           lastName: form.lastName.trim(),
+          phone: form.phone.trim(),
+          address: form.address.trim(),
           image,
         },
         { withCredentials: true },
@@ -137,6 +159,8 @@ const Perfil = () => {
       setInitial({
         name: form.name.trim(),
         lastName: form.lastName.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
         image: image || null,
       });
       window.dispatchEvent(new Event(NOTIFICACIONES_EVENT));
@@ -189,8 +213,9 @@ const Perfil = () => {
         <span className="etiqueta-seccion">Tu cuenta</span>
         <h1 className="panel-titulo-texto">Mi perfil</h1>
         <p className="texto-seccion">
-          Actualiza tu nombre y tu foto. El correo y el rol se gestionan por
-          seguridad y no se editan aquí.
+          Actualiza tus datos, tu teléfono y tu dirección. Los usamos como
+          valores por defecto al hacer una compra. El correo y el rol se
+          gestionan por seguridad y no se editan aquí.
         </p>
       </header>
 
@@ -270,6 +295,24 @@ const Perfil = () => {
               />
             </Form.Group>
 
+            <Form.Group controlId="perfilTelefono">
+              <Form.Label className="parrafos">Teléfono / WhatsApp</Form.Label>
+              <Form.Control
+                value={form.phone}
+                maxLength={30}
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="300 000 0000"
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, phone: event.target.value }))
+                }
+              />
+              <Form.Text className="parrafos">
+                Se usa para contactarte y como teléfono por defecto en tus
+                compras.
+              </Form.Text>
+            </Form.Group>
+
             <Form.Group controlId="perfilCorreo">
               <Form.Label className="parrafos">Correo</Form.Label>
               <Form.Control
@@ -279,6 +322,26 @@ const Perfil = () => {
               />
               <Form.Text className="parrafos">
                 El correo se usa para iniciar sesión y no se puede cambiar aquí.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group
+              controlId="perfilDireccion"
+              className="perfil-campo-ancho"
+            >
+              <Form.Label className="parrafos">Dirección</Form.Label>
+              <Form.Control
+                value={form.address}
+                maxLength={255}
+                autoComplete="street-address"
+                placeholder="Calle 00 # 00-00, barrio, referencias"
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, address: event.target.value }))
+                }
+              />
+              <Form.Text className="parrafos">
+                Dirección por defecto para tus envíos. Puedes cambiarla al
+                confirmar un pedido.
               </Form.Text>
             </Form.Group>
 
@@ -305,7 +368,12 @@ const Perfil = () => {
               className="btn-tema btn-tema--contorno"
               disabled={saving || !dirty}
               onClick={() => {
-                setForm({ name: initial.name, lastName: initial.lastName });
+                setForm({
+                  name: initial.name,
+                  lastName: initial.lastName,
+                  phone: initial.phone,
+                  address: initial.address,
+                });
                 setImage(initial.image);
               }}
             >

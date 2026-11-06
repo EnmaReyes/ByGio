@@ -2,13 +2,13 @@ const { Usuarios } = require("../DataBase/models/Usuarios.js");
 
 // Rutas protegidas por requireAuth: req.user = { id, admin }.
 // El perfil solo expone y permite editar datos no sensibles:
-// nombre, apellido e imagen. Nunca rol, correo, contrasena ni
-// identificadores sociales.
+// nombre, apellido, teléfono, dirección e imagen. Nunca rol, correo,
+// contrasena ni identificadores sociales.
 
 const userById = async (req, res) => {
   try {
     const user = await Usuarios.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "gmailRefreshToken"] },
     });
 
     if (!user) {
@@ -23,7 +23,7 @@ const userById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { name, lastName, image } = req.body || {};
+    const { name, lastName, image, phone, address } = req.body || {};
     const userUpdate = {};
 
     if (name !== undefined) {
@@ -31,6 +31,20 @@ const updateUser = async (req, res) => {
     }
     if (lastName !== undefined) {
       userUpdate.lastName = String(lastName).trim().slice(0, 150);
+    }
+    if (phone !== undefined) {
+      // null o cadena vacia borran el dato; si viene texto debe parecer un
+      // telefono (al menos 7 digitos), igual que valida el checkout.
+      const limpio = phone === null ? "" : String(phone).trim();
+      if (limpio && limpio.replace(/\D/g, "").length < 7) {
+        return res.status(400).json("Teléfono inválido");
+      }
+      userUpdate.phone = limpio.slice(0, 30) || null;
+    }
+    if (address !== undefined) {
+      // null o cadena vacia borran el dato.
+      const limpio = address === null ? "" : String(address).trim();
+      userUpdate.address = limpio.slice(0, 255) || null;
     }
     if (image !== undefined) {
       // null o cadena vacia quitan la foto; si viene texto, debe ser URL.
@@ -61,7 +75,7 @@ const updateUser = async (req, res) => {
     }
 
     const user = await Usuarios.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "gmailRefreshToken"] },
     });
 
     // Notificacion de actividad de cuenta (no bloquea si falla).
