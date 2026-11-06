@@ -37,6 +37,52 @@ const pickArticleFields = (body = {}) => {
   return data;
 };
 
+// `sizes` puede llegar como array o como JSON en texto.
+const toSizeArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+// Limpia las tallas: sin vacias, sin duplicados y en mayusculas.
+const cleanSizes = (value) => {
+  const seen = new Set();
+  const result = [];
+  for (const raw of toSizeArray(value)) {
+    const size = String(raw ?? "").trim().toUpperCase();
+    if (!size || seen.has(size)) continue;
+    seen.add(size);
+    result.push(size);
+  }
+  return result;
+};
+
+// Oversize y tallas son excluyentes: una prenda oversize se guarda con
+// sizes = [] y una basica nunca guarda tallas duplicadas o vacias.
+const normalizeSizesAndOversize = (data, currentOversize) => {
+  const oversize =
+    data.oversize !== undefined
+      ? Boolean(data.oversize)
+      : Boolean(currentOversize);
+
+  if (oversize) {
+    data.oversize = true;
+    data.sizes = [];
+  } else {
+    data.oversize = false;
+    if (data.sizes !== undefined) data.sizes = cleanSizes(data.sizes);
+  }
+
+  return data;
+};
+
 const parsePositivePrice = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
@@ -62,7 +108,7 @@ const comboPriceData = (articuloId, precio, precioAnterior) => ({
 
 const addArticle = async (req, res) => {
   try {
-    const data = pickArticleFields(req.body);
+    const data = normalizeSizesAndOversize(pickArticleFields(req.body), true);
     const esCombo = Boolean(data.combo);
 
     let precioCombo = null;
@@ -204,7 +250,10 @@ const updateArticle = async (req, res) => {
       return res.status(404).json("No se encontró el post para actualizar");
     }
 
-    const data = pickArticleFields(req.body);
+    const data = normalizeSizesAndOversize(
+      pickArticleFields(req.body),
+      article.oversize,
+    );
     const targetCombo =
       data.combo !== undefined ? Boolean(data.combo) : article.combo;
 

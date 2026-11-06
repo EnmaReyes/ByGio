@@ -2,6 +2,11 @@ export const CART_STORAGE_KEY = "bygio-cart";
 
 export const isDtfProduct = (product) => product.cartType === "dtf";
 
+/* Un combo es un articulo con `combo === true`. No es un producto aparte:
+   comparte id, tallas y precio propio con su articulo base. */
+export const isComboProduct = (product) =>
+  !isDtfProduct(product) && product?.combo === true;
+
 export const formatPrice = (value) =>
   `$${(Number(value) || 0).toLocaleString()}`;
 
@@ -65,7 +70,13 @@ export const cartItemTitle = (product) => {
 /* Detalles de la variante, en el orden en que se leen en el carrito. */
 export const cartItemDetails = (product) => {
   if (!isDtfProduct(product)) {
-    return [product?.talla ? `Talla: ${product.talla}` : ""].filter(Boolean);
+    const talla = product?.oversize
+      ? "Talla: Over Size"
+      : product?.talla
+        ? `Talla: ${product.talla}`
+        : "";
+
+    return [product?.combo ? "Combo" : "", talla].filter(Boolean);
   }
 
   return [

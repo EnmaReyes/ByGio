@@ -1,4 +1,11 @@
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Col, Form, Row } from "react-bootstrap";
 import axios from "axios";
@@ -19,6 +26,7 @@ import {
 } from "../Componentes/cartUtils";
 import { getApiErrorMessage } from "../Componentes/orderUtils";
 import { NOTIFICACIONES_EVENT } from "../Componentes/notificaciones";
+import { subscribeOrderRefresh } from "../Componentes/orderSync";
 import "./pedidos.css";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -144,11 +152,25 @@ const CheckoutGate = () => {
   );
 };
 
-const CheckoutSuccess = ({ order }) => {
+const CheckoutSuccess = ({ order, onRefresh }) => {
   const [paying, setPaying] = useState(false);
+
+  // Refresca el pedido cuando el pago se aprueba en la pestaña de Wompi, o al
+  // recuperar el foco, sin recargar la página a mano.
+  useEffect(() => {
+    if (!order?.id || !onRefresh) return;
+
+    return subscribeOrderRefresh(order.id, () => {
+      onRefresh();
+    });
+  }, [order?.id, onRefresh]);
 
   const payOnline = async () => {
     setPaying(true);
+
+    // Se abre la pestaña en el gesto del usuario (antes del await) para que el
+    // bloqueador de ventanas emergentes no la frene.
+    const tab = window.open("", "_blank");
 
     try {
       const res = await axios.post(
@@ -156,8 +178,16 @@ const CheckoutSuccess = ({ order }) => {
         null,
         { withCredentials: true },
       );
-      window.location.href = res.data.url;
+
+      if (tab && !tab.closed) {
+        tab.opener = null;
+        tab.location.href = res.data.url;
+      } else {
+        // El navegador bloqueó la pestaña: se navega en la actual.
+        window.location.href = res.data.url;
+      }
     } catch (err) {
+      if (tab && !tab.closed) tab.close();
       if (err.response?.status === 503) {
         toast.info(
           "El pago en línea todavía no está disponible. Te contactaremos para coordinar el pago.",
@@ -560,8 +590,23 @@ const Checkout = () => {
     }
   };
 
+  // Vuelve a pedir el pedido tras pagar para reflejar el estado sin recargar.
+  const refreshCreatedOrder = useCallback(async () => {
+    if (!createdOrder?.id) return;
+
+    try {
+      const res = await axios.get(`${API_URL}/api/orders/${createdOrder.id}`, {
+        withCredentials: true,
+      });
+      setCreatedOrder(res.data);
+    } catch {
+      // Sin sesión o sin red: se conserva el estado anterior.
+    }
+  }, [createdOrder?.id]);
+
   if (!currentUser) return <CheckoutGate />;
-  if (createdOrder) return <CheckoutSuccess order={createdOrder} />;
+  if (createdOrder)
+    return <CheckoutSuccess order={createdOrder} onRefresh={refreshCreatedOrder} />;
   if (!hydrating && allProducts.length === 0) return <CheckoutEmpty />;
 
   if (hydrating) {
@@ -716,8 +761,9 @@ const Checkout = () => {
 
               <div className="checkout-location">
                 <p className="checkout-help parrafos">
-                  Si estás en Medellín puedes compartir tu ubicación para calcular
-                  el envío por distancia. Solo la usamos para eso.
+                  Calculamos el envío por distancia desde nuestra bodega en
+                  Itagüí. Con la ciudad es suficiente; si compartes tu ubicación
+                  el cálculo es más exacto. Solo la usamos para eso.
                 </p>
                 <button
                   type="button"

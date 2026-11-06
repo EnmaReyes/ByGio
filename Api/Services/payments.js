@@ -191,6 +191,18 @@ const applyPaymentStatus = async ({
     order.paymentApprovedAt = new Date();
   }
 
+  // Un pago aprobado mueve el pedido de "pendiente_pago" a "pagado": deja de
+  // poder cancelarse y el panel lo refleja igual que una venta manual (ver
+  // Services/adminOrders.js). Solo se aplica una vez y nunca revierte un estado
+  // logistico ya avanzado.
+  const promoverAPagado =
+    nextStatus === PAYMENT_STATUS.APROBADO &&
+    order.status === ORDER_STATUS.PENDIENTE_PAGO;
+
+  if (promoverAPagado) {
+    order.status = ORDER_STATUS.PAGADO;
+  }
+
   // Detector de sobreventa: se mira ANTES de devolver el producto al catalogo,
   // porque restoreOrderStock vuelve a poner stock = true.
   const stockConflicts =
@@ -209,6 +221,20 @@ const applyPaymentStatus = async ({
   }
 
   await order.save({ transaction });
+
+  if (promoverAPagado) {
+    await OrderStatusHistory.create(
+      {
+        orderId: order.id,
+        kind: HISTORY_KIND.LOGISTICA,
+        fromStatus: ORDER_STATUS.PENDIENTE_PAGO,
+        toStatus: ORDER_STATUS.PAGADO,
+        changedByUserId: actorUserId || null,
+        note: "Pago aprobado.",
+      },
+      { transaction },
+    );
+  }
 
   // La alerta queda tambien en el historial del pedido para que se vea en el
   // panel sin depender de las notificaciones.

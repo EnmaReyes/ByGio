@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -10,6 +10,7 @@ import {
   getOrderStatusMeta,
   PAYMENT_STATUS_LABELS,
 } from "../Componentes/orderUtils";
+import { subscribeOrdersRefresh } from "../Componentes/orderSync";
 import "./pedidos.css";
 
 const LIMIT = 10;
@@ -115,21 +116,31 @@ const MisPedidos = () => {
 
   const filtroActivo = FILTROS.find((opcion) => opcion.id === filtro) || FILTROS[0];
 
-  const load = useCallback(
-    async (offset = 0) => {
-      const isFirstPage = offset === 0;
+  const ordersLenRef = useRef(0);
+  useEffect(() => {
+    ordersLenRef.current = orders.length;
+  }, [orders.length]);
 
-      if (isFirstPage) {
+  const load = useCallback(
+    async (offset = 0, { silent = false } = {}) => {
+      const isFirstPage = offset === 0;
+      // En una recarga silenciosa se piden tantos como hay visibles para no
+      // perder las páginas ya cargadas (el endpoint admite hasta 100).
+      const limit = silent
+        ? Math.min(Math.max(ordersLenRef.current, LIMIT), 100)
+        : LIMIT;
+
+      if (isFirstPage && !silent) {
         setLoading(true);
         setError("");
-      } else {
+      } else if (!isFirstPage) {
         setLoadingMore(true);
       }
 
       try {
         const res = await axios.get(`${API_URL}/api/orders`, {
           params: {
-            limit: LIMIT,
+            limit,
             offset,
             ...(filtroActivo.status && { status: filtroActivo.status }),
           },
@@ -144,14 +155,17 @@ const MisPedidos = () => {
         );
         setTotal(Number(data.total) || 0);
       } catch (err) {
-        setError(
-          getApiErrorMessage(
-            err,
-            "No pudimos cargar tus pedidos. Intenta de nuevo.",
-          ),
-        );
+        // Una recarga silenciosa no debe tumbar la lista ya visible.
+        if (!silent) {
+          setError(
+            getApiErrorMessage(
+              err,
+              "No pudimos cargar tus pedidos. Intenta de nuevo.",
+            ),
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
         setLoadingMore(false);
       }
     },
@@ -162,6 +176,16 @@ const MisPedidos = () => {
     if (!currentUser) return;
     window.scrollTo(0, 0);
     load(0);
+  }, [currentUser, load]);
+
+  // Recarga la lista cuando cambia un pedido en otra pestaña o al volver el foco
+  // a esta ventana, sin recargar la página a mano.
+  useEffect(() => {
+    if (!currentUser) return;
+
+    return subscribeOrdersRefresh(() => {
+      load(0, { silent: true });
+    });
   }, [currentUser, load]);
 
   if (!currentUser) return <OrdersGate />;

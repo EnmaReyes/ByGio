@@ -26,7 +26,14 @@ const obtenerTallas = (articulo) => {
 };
 
 const generarEnlaceWhatsApp = (articulo, telefono) => {
-  const talla = articulo?.oversize ? "Over size" : "S/M/L";
+  // Tallas reales del articulo: oversize no lleva tallas y un basico lista
+  // exactamente las que ofrece (antes estaba fijo en "S/M/L").
+  const tallas = obtenerTallas(articulo);
+  const talla = articulo?.oversize
+    ? "Over size"
+    : tallas.length > 0
+      ? tallas.join(" / ")
+      : "talla a convenir";
   const precio = getUnitPrice(articulo);
   const mensaje = `¡Hola!😁 Estoy interesado en:\n${articulo?.title}\nValor: $${precio.toLocaleString()} por unidad\n¿Está disponible en ${talla}?`;
   const imagen = obtenerImagen(articulo);

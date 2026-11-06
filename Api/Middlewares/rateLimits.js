@@ -34,6 +34,9 @@ const crearLimite = ({ windowMs, limit, message = MENSAJE_GENERICO }) => {
     limit,
     message,
     handler: responderLimite,
+    // Clave por usuario autenticado cuando lo hay (rutas de pedidos); en el
+    // resto de casos cae a la IP, normalizada para IPv6.
+    keyGenerator: porUsuarioOIp,
     standardHeaders: "draft-8",
     legacyHeaders: false,
   });

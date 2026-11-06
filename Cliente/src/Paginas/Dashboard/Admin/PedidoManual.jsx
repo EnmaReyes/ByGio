@@ -6,6 +6,7 @@ import { API_URL } from "../../../config";
 import {
   DTF_SIZE_LABELS,
   formatPrice,
+  getCartPreviewImage,
   getDtfVariant,
 } from "../../../Componentes/cartUtils";
 import { getApiErrorMessage } from "../../../Componentes/orderUtils";
@@ -63,6 +64,14 @@ const toArray = (value) => {
   return [];
 };
 
+// Un combo es un articulo con `combo === true`. Comparte el flujo de "articulo"
+// (mismo productType en la API, mismas tallas); solo cambia de donde se toma el
+// precio y cómo se muestra en el panel.
+const esTipoArticulo = (tipo) => tipo === "articulo" || tipo === "combo";
+
+// Tipo que se envia a la API. Los combos son articulos, no un tipo nuevo.
+const apiProductType = (tipo) => (tipo === "dtf" ? "dtf" : "articulo");
+
 const dtfLabel = (dtf) =>
   `Diseño DTF · ${dtf?.category?.name || "Sin categoría"}`;
 
@@ -82,7 +91,13 @@ const variantLabel = (item) => {
       .filter(Boolean)
       .join(" · ");
   }
-  return item.oversize ? "Talla Over Size" : `Talla ${item.size}`;
+
+  return [
+    item.esCombo ? "Combo" : "",
+    item.oversize ? "Talla Over Size" : item.size ? `Talla ${item.size}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 };
 
 const PedidoManual = () => {
@@ -172,16 +187,36 @@ const PedidoManual = () => {
     loadCatalog();
   }, [loadCatalog]);
 
-  const productos = tipoProducto === "articulo" ? articulos : dtfs;
+  // Artículos normales y combos salen del mismo endpoint (`combo` los separa).
+  const articulosNormales = useMemo(
+    () => articulos.filter((articulo) => articulo.combo !== true),
+    [articulos],
+  );
+  const combos = useMemo(
+    () => articulos.filter((articulo) => articulo.combo === true),
+    [articulos],
+  );
+
+  const productos =
+    tipoProducto === "dtf"
+      ? dtfs
+      : tipoProducto === "combo"
+        ? combos
+        : articulosNormales;
+
   const productoSeleccionado = useMemo(
     () => productos.find((p) => p.id === productoId) || null,
     [productos, productoId],
   );
 
   const tallasDisponibles =
-    tipoProducto === "articulo" && productoSeleccionado
+    esTipoArticulo(tipoProducto) && productoSeleccionado
       ? toArray(productoSeleccionado.sizes)
       : [];
+
+  const previewImage = productoSeleccionado
+    ? getCartPreviewImage(productoSeleccionado)
+    : "";
 
   const dtfSizesDisponibles =
     tipoProducto === "dtf" && productoSeleccionado
@@ -255,7 +290,7 @@ const PedidoManual = () => {
     setDtfSize("");
     const producto = productos.find((p) => p.id === value) || null;
     if (!producto) return;
-    if (tipoProducto === "articulo" && !producto.oversize) {
+    if (esTipoArticulo(tipoProducto) && !producto.oversize) {
       setTalla(toArray(producto.sizes)[0] || "");
     }
     if (tipoProducto === "dtf") {
@@ -271,7 +306,7 @@ const PedidoManual = () => {
     }
 
     let size = null;
-    if (tipoProducto === "articulo") {
+    if (esTipoArticulo(tipoProducto)) {
       if (!productoSeleccionado.oversize) {
         if (!talla) {
           setDraftError("Selecciona una talla.");
@@ -303,16 +338,16 @@ const PedidoManual = () => {
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random()}`,
-      productType: tipoProducto,
+      productType: apiProductType(tipoProducto),
+      esCombo: tipoProducto === "combo" || productoSeleccionado.combo === true,
       productId: productoSeleccionado.id,
       title:
         tipoProducto === "dtf"
           ? dtfLabel(productoSeleccionado)
           : productoSeleccionado.title,
-      oversize:
-        tipoProducto === "articulo"
-          ? Boolean(productoSeleccionado.oversize)
-          : false,
+      oversize: esTipoArticulo(tipoProducto)
+        ? Boolean(productoSeleccionado.oversize)
+        : false,
       size,
       dtfSize: tipoProducto === "dtf" ? dtfSize : null,
       shirtColor: tipoProducto === "dtf" ? shirtColor.trim() : "",
@@ -558,6 +593,7 @@ const PedidoManual = () => {
                         onChange={(e) => onTipoChange(e.target.value)}
                       >
                         <option value="articulo">Artículo</option>
+                        <option value="combo">Combo</option>
                         <option value="dtf">Crea DTF</option>
                       </Form.Select>
                     </Form.Group>
@@ -583,7 +619,48 @@ const PedidoManual = () => {
                       </Form.Select>
                     </Form.Group>
 
-                    {tipoProducto === "articulo" &&
+                    {esTipoArticulo(tipoProducto) && productoSeleccionado && (
+                      <div className="pedido-manual-preview">
+                        <div className="pedido-manual-preview-media">
+                          {previewImage ? (
+                            <img
+                              src={previewImage}
+                              alt=""
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className="pedido-manual-preview-vacia">
+                              Sin imagen
+                            </span>
+                          )}
+                        </div>
+                        <div className="pedido-manual-preview-info">
+                          <span className="pedido-manual-preview-titulo">
+                            {productoSeleccionado.title}
+                            {(tipoProducto === "combo" ||
+                              productoSeleccionado.combo) && (
+                              <span className="pedido-manual-combo-badge">
+                                Combo
+                              </span>
+                            )}
+                          </span>
+                          <span className="parrafos admin-muted">
+                            {tallasDisponibles.length > 0
+                              ? `Tallas: ${tallasDisponibles.join(" · ")}`
+                              : productoSeleccionado.oversize
+                                ? "Talla Over Size"
+                                : "Talla única"}
+                          </span>
+                          <span className="parrafos admin-muted">
+                            {draftUnitPrice > 0
+                              ? `Precio: ${formatPrice(draftUnitPrice)}`
+                              : "Sin precio configurado"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {esTipoArticulo(tipoProducto) &&
                       productoSeleccionado &&
                       !productoSeleccionado.oversize && (
                         <Form.Group controlId="pmTalla">
@@ -602,7 +679,7 @@ const PedidoManual = () => {
                         </Form.Group>
                       )}
 
-                    {tipoProducto === "articulo" &&
+                    {esTipoArticulo(tipoProducto) &&
                       productoSeleccionado &&
                       productoSeleccionado.oversize && (
                         <div className="pedido-manual-nota">

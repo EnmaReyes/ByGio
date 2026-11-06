@@ -24,6 +24,9 @@ const Articulos = sequelize.define(
       defaultValue: {},
       allowNull: false,
     },
+    // Tallas disponibles. Es excluyente con `oversize`: una prenda oversize no
+    // lleva tallas, por eso se permite un array vacio como valor valido (y es
+    // el default), en vez de forzar null o al menos un elemento.
     sizes: {
       type: DataTypes.JSON,
       defaultValue: [],

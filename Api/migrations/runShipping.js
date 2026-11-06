@@ -1,9 +1,9 @@
-// Runner local de la migracion 003 (envios y numeracion).
+// Runner local de la migracion de envios (003 + 010) y numeracion.
 // Uso: node migrations/runShipping.js   (ejecutar desde Api/)
 // Idempotente: seguro ejecutarlo varias veces.
 // Los precios DTF se migraron al esquema global; ver DataBase/ensurePricing.js.
 // Produccion (Neon) se migra a mano con
-// migrations/003_shipping_and_dtf_prices.sql.
+// migrations/003_shipping_and_dtf_prices.sql y migrations/010_shipping_itagui.sql.
 
 const { sequelize } = require("../DataBase/db.js");
 
@@ -41,19 +41,32 @@ const statements = [
      END IF;
    END $$;`,
 
+  // Esquema viejo: 'medellin' por distancia y Antioquia con tarifa plana.
+  // Se desactivan; el nuevo esquema cobra TODA Antioquia por distancia.
+  `UPDATE shipping_rates SET active = false, "updatedAt" = now() WHERE zone = 'medellin';`,
+  `UPDATE shipping_rates SET active = false, "updatedAt" = now()
+     WHERE zone = 'antioquia' AND "minKm" IS NULL AND "maxKm" IS NULL;`,
+
   `INSERT INTO shipping_rates (id, zone, label, "minKm", "maxKm", price, "isDefault", active, "createdAt", "updatedAt")
    SELECT gen_random_uuid(), v.zone, v.label, v.min_km, v.max_km, v.price, v.is_default, true, now(), now()
    FROM (VALUES
-     ('medellin',  'Medellín · 0 a 5 km',          0.0,  5.0,   8000, false),
-     ('medellin',  'Medellín · 5 a 10 km',         5.0, 10.0,  12000, true),
-     ('medellin',  'Medellín · 10 a 20 km',       10.0, 20.0,  18000, false),
-     ('medellin',  'Medellín · más de 20 km',     20.0, NULL,  25000, false),
-     ('antioquia', 'Antioquia (fuera de Medellín)', NULL, NULL, 20000, true),
-     ('nacional',  'Envío nacional',               NULL,  NULL, 30000, true)
+     ('antioquia', 'Antioquia · 0 a 5 km',      0.0,   5.0, 12000, false),
+     ('antioquia', 'Antioquia · 5 a 10 km',     5.0,  10.0, 17000, false),
+     ('antioquia', 'Antioquia · 10 a 20 km',   10.0,  20.0, 25000, false),
+     ('antioquia', 'Antioquia · más de 20 km', 20.0,  NULL, 28000, true),
+     ('nacional',  'Envío nacional',            NULL,  NULL, 22000, true)
    ) AS v(zone, label, min_km, max_km, price, is_default)
-   WHERE NOT EXISTS (
-     SELECT 1 FROM shipping_rates s WHERE s.zone = v.zone AND s.label = v.label
-   );`,
+   ON CONFLICT (zone, label) DO UPDATE
+     SET "minKm"     = EXCLUDED."minKm",
+         "maxKm"     = EXCLUDED."maxKm",
+         price       = EXCLUDED.price,
+         "isDefault" = EXCLUDED."isDefault",
+         active      = true,
+         "updatedAt" = now();`,
+
+  `UPDATE shipping_rates SET "isDefault" = false, "updatedAt" = now()
+     WHERE zone = 'antioquia' AND "isDefault" = true
+       AND label <> 'Antioquia · más de 20 km';`,
 
 ];
 

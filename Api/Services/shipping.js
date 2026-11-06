@@ -1,13 +1,21 @@
 const { ShippingRate } = require("../DataBase/models/index.js");
 const { DELIVERY_DAYS } = require("../DataBase/models/enums.js");
 const { WAREHOUSE_LAT, WAREHOUSE_LNG } = require("../config.js");
+const {
+  ANTIOQUIA_MUNICIPIOS,
+} = require("./data/antioquiaMunicipios.js");
 const HttpError = require("../Utils/HttpError.js");
 
+// Zonas de envio.
+//  - antioquia: rango por distancia (km) desde la bodega en Itagui.
+//  - nacional:  tarifa plana para el resto del pais.
+//  - medellin:  esquema anterior (bandas solo para Medellin). Ya no se genera,
+//               se conserva por compatibilidad con pedidos historicos.
 const ZONES = ["medellin", "antioquia", "nacional"];
 
 // Plazo prometido al comprador (dias habiles) segun la zona de envio.
-// Antioquia (Medellin incluido) = 3 dias; resto del pais = 10.
-// Se guarda como snapshot en el pedido al crearlo.
+// Antioquia = 3 dias; resto del pais = 10. Se guarda como snapshot en el
+// pedido al crearlo.
 const deliveryDaysForZone = (zone) =>
   zone === "medellin" || zone === "antioquia"
     ? DELIVERY_DAYS.ANTIOQUIA
@@ -21,18 +29,44 @@ const normalize = (value) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-// Zona segun departamento/ciudad:
-//  - Medellin  -> rangos por distancia
-//  - Antioquia (otro municipio) -> tarifa plana departamental
-//  - resto del pais -> tarifa plana nacional
-const resolveZone = ({ department, city }) => {
-  const dept = normalize(department);
-  const cityName = normalize(city);
+// Indice nombre-normalizado -> coordenadas del casco urbano. Se construye una
+// sola vez al cargar el modulo.
+const MUNICIPIO_COORDS = new Map(
+  ANTIOQUIA_MUNICIPIOS.map((m) => [
+    normalize(m.nombre),
+    { lat: m.lat, lng: m.lng },
+  ]),
+);
 
-  if (dept.includes("antioquia")) {
-    return cityName.includes("medellin") ? "medellin" : "antioquia";
+// Coordenadas de un municipio a partir del texto que escribe el cliente.
+// Primero busca coincidencia exacta; si no, una coincidencia parcial (por
+// ejemplo "san vicente" -> "San Vicente Ferrer"). Devuelve null si no lo
+// encuentra (municipio lejano): el cotizador caera en la tarifa por defecto.
+const coordsForCity = (city) => {
+  const key = normalize(city);
+  if (!key) return null;
+
+  const exact = MUNICIPIO_COORDS.get(key);
+  if (exact) return exact;
+
+  // Coincidencia parcial solo para textos razonables ("san vicente" ->
+  // "San Vicente Ferrer"), evitando fragmentos cortos que generen falsos
+  // positivos ("la" -> "La Estrella").
+  if (key.length < 4) return null;
+
+  for (const [name, coords] of MUNICIPIO_COORDS) {
+    if (key.includes(name) || name.includes(key)) return coords;
   }
-  return "nacional";
+
+  return null;
+};
+
+// Zona segun el departamento:
+//  - Antioquia -> rangos por distancia desde la bodega en Itagui
+//  - resto del pais -> tarifa plana nacional
+const resolveZone = ({ department }) => {
+  const dept = normalize(department);
+  return dept.includes("antioquia") ? "antioquia" : "nacional";
 };
 
 // Distancia en linea recta (haversine) entre el punto de despacho y el cliente
@@ -47,10 +81,17 @@ const haversineKm = (lat1, lng1, lat2, lng2) => {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-const isValidCoord = (value) => Number.isFinite(Number(value));
+const isValidCoord = (value) =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  Number.isFinite(Number(value));
 
-// Elige la tarifa aplicable. Las coordenadas son opcionales: si no llegan,
-// se usa la tarifa marcada como isDefault de la zona.
+// Elige la tarifa aplicable.
+// Orden de preferencia para ubicar al cliente:
+//   1. Coordenadas GPS que envie el checkout (mas exactas).
+//   2. Coordenadas del municipio (tabla ANTIOQUIA_MUNICIPIOS) para Antioquia.
+//   3. Tarifa marcada como isDefault (municipios lejanos / sin ubicacion).
 const quoteShipping = async ({
   department,
   city,
@@ -77,16 +118,22 @@ const quoteShipping = async ({
     throw new HttpError(503, "No hay tarifas de envío configuradas");
   }
 
-  const withCoords = isValidCoord(lat) && isValidCoord(lng);
+  let coords = null;
+  if (isValidCoord(lat) && isValidCoord(lng)) {
+    coords = { lat: Number(lat), lng: Number(lng) };
+  } else if (zone === "antioquia") {
+    coords = coordsForCity(city);
+  }
+
   let distanceKm = null;
   let rate = null;
 
-  if (withCoords) {
+  if (coords) {
     distanceKm = haversineKm(
       WAREHOUSE_LAT,
       WAREHOUSE_LNG,
-      Number(lat),
-      Number(lng),
+      coords.lat,
+      coords.lng,
     );
 
     rate = rates.find((r) => {
@@ -137,6 +184,7 @@ module.exports = {
   ZONES,
   normalize,
   resolveZone,
+  coordsForCity,
   haversineKm,
   deliveryDaysForZone,
   quoteShipping,
