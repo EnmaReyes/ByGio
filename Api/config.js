@@ -17,8 +17,6 @@ const FRONTEND_URL =
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const DB_DIALECT = process.env.DB_DIALECT || "postgres";
-
 const toNumber = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -45,6 +43,53 @@ const DATABASE_URL =
 
     return `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
   })();
+
+// Dialecto de Sequelize. Un valor invalido en DB_DIALECT (p. ej. "https" por
+// error en Vercel) antes tumbaba toda la funcion con "The dialect https is not
+// supported". Ahora la cadena de conexion manda: si DATABASE_URL es de Postgres
+// el dialecto es "postgres"; si no, se valida el valor explicito y se cae a
+// "postgres" con un aviso en vez de romper el arranque.
+const SUPPORTED_DIALECTS = new Set([
+  "postgres",
+  "mysql",
+  "mariadb",
+  "mssql",
+  "sqlite",
+  "db2",
+  "oracle",
+]);
+
+const inferDialectFromUrl = (url) => {
+  const raw = String(url || "").trim().toLowerCase();
+  if (raw.startsWith("postgres://") || raw.startsWith("postgresql://")) {
+    return "postgres";
+  }
+  if (raw.startsWith("mysql://")) return "mysql";
+  if (raw.startsWith("mariadb://")) return "mariadb";
+  if (raw.startsWith("mssql://") || raw.startsWith("sqlserver://")) {
+    return "mssql";
+  }
+  if (raw.startsWith("sqlite:")) return "sqlite";
+  return "";
+};
+
+const resolveDialect = (explicit, url) => {
+  const fromUrl = inferDialectFromUrl(url);
+  if (fromUrl) return fromUrl;
+
+  const raw = String(explicit || "").trim().toLowerCase();
+  const normalized = raw === "postgresql" ? "postgres" : raw;
+  if (!normalized) return "postgres";
+
+  if (SUPPORTED_DIALECTS.has(normalized)) return normalized;
+
+  console.warn(
+    `DB_DIALECT="${explicit}" no es un dialecto válido; se usa "postgres".`,
+  );
+  return "postgres";
+};
+
+const DB_DIALECT = resolveDialect(process.env.DB_DIALECT, DATABASE_URL);
 
 module.exports = {
   FRONTEND_URL,

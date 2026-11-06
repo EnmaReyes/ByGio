@@ -443,6 +443,10 @@ sociales se ocultan solos (no rompen la página).
   host equivocado. Dejarla vacía (se deduce por la llave) o usar
   `https://sandbox.wompi.co/v1` / `https://production.wompi.co/v1` según el
   ambiente.
+- **"The dialect https is not supported"**: `DB_DIALECT` en Vercel tiene un valor
+  inválido (p. ej. `https`). Debe ser `postgres` o quedar vacío. El código ya lo
+  corrige solo a partir de `DATABASE_URL`, pero conviene arreglar la variable y
+  redesplegar.
 - **Eventos perdidos** (webhook caído): el comprador puede verificar solo al
   volver, o el admin confirmar el pago a mano en el panel.
 
