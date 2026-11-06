@@ -101,6 +101,46 @@ const buildPriceFields = (price, source) => ({
   priceSource: source,
 });
 
+// Normaliza el porcentaje de descuento individual del articulo.
+// null/undefined/0 = sin descuento. Valores invalidos se tratan como 0
+// (la escritura ya valida en el modelo/controlador; aqui se defiende el
+// calculo para no romper listados si llega basura).
+const normalizarDescuentoPorcentaje = (value) => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 100) return 0;
+  return parsed;
+};
+
+// Unica fuente de verdad del calculo de descuento individual por articulo.
+// Recibe el precio efectivo ya resuelto (global/excepcion/combo) y el
+// porcentaje, y devuelve el precio final a cobrar junto con el desglose.
+// El porcentaje se aplica UNA sola vez, en el backend.
+const aplicarDescuento = (precioBase, descuentoPorcentaje) => {
+  const pct = normalizarDescuentoPorcentaje(descuentoPorcentaje);
+  const precioOriginal =
+    Number.isFinite(Number(precioBase)) && Number(precioBase) > 0
+      ? Math.round(Number(precioBase))
+      : 0;
+
+  if (pct === 0) {
+    return {
+      precioOriginal,
+      precioFinal: precioOriginal,
+      descuentoPorcentaje: 0,
+      descuentoUnitario: 0,
+    };
+  }
+
+  const precioFinal = Math.round((precioOriginal * (100 - pct)) / 100);
+
+  return {
+    precioOriginal,
+    precioFinal,
+    descuentoPorcentaje: pct,
+    descuentoUnitario: Math.max(precioOriginal - precioFinal, 0),
+  };
+};
+
 // Agrega los precios resueltos a una lista de articulos. Hace 2 consultas
 // en total, no una por producto.
 const decorateArticles = async (articulos, transaction) => {
@@ -151,9 +191,31 @@ const decorateArticles = async (articulos, transaction) => {
           : null;
     const effectiveFields = buildPriceFields(effective, effectiveSource);
 
+    // Descuento individual por articulo: se aplica sobre el precio efectivo
+    // ya resuelto (global o excepcion). Los combos quedan excluidos por
+    // decision de negocio, aunque traiga el campo marcado.
+    const descuentoPorcentaje = articulo.combo
+      ? 0
+      : normalizarDescuentoPorcentaje(articulo.descuentoPorcentaje);
+    const resultado = aplicarDescuento(
+      effectiveFields.precio,
+      descuentoPorcentaje,
+    );
+
     return {
       ...articulo,
       ...effectiveFields,
+      // `precio` pasa a ser el precio final con descuento (es lo que cobra
+      // carrito/checkout). `precioAnterior` muestra el precio original
+      // tachado cuando hay descuento activo.
+      precio: resultado.precioFinal || effectiveFields.precio,
+      precioAnterior:
+        resultado.descuentoPorcentaje > 0
+          ? resultado.precioOriginal
+          : effectiveFields.precioAnterior,
+      precioOriginal: resultado.precioOriginal || null,
+      descuentoPorcentaje: resultado.descuentoPorcentaje,
+      descuentoUnitario: resultado.descuentoUnitario,
       // Precio de la tarifa unitaria, por si la UI necesita mostrarlo
       // aunque el articulo sea combo.
       precioUnitario: unitFields.precio,
@@ -235,6 +297,8 @@ module.exports = {
   COMBO_TIPO,
   articleTipo,
   normalizePrevious,
+  normalizarDescuentoPorcentaje,
+  aplicarDescuento,
   resolvePrice,
   decorateArticles,
   decorateArticle,

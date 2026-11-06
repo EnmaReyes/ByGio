@@ -54,6 +54,18 @@ const Articulos = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+    // Descuento individual del articulo, en porcentaje entero (0-100).
+    // NULL/0 = sin descuento. Es independiente de la tarifa global
+    // (price_variants) y de las excepciones (product_prices): el porcentaje
+    // se aplica sobre el precio efectivo ya resuelto. NO se llama "descuento"
+    // porque esa columna era del esquema viejo y ensurePricing.js la elimina
+    // al arrancar en produccion. Los combos no usan descuento individual.
+    descuentoPorcentaje: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      validate: { min: 0, max: 100 },
+    },
     // Autor del articulo. Se declara explicitamente: antes solo existia como
     // efecto secundario de la asociacion belongsTo en Usuarios.js, lo que
     // hacia que el filtro por uid dependiera del orden de importacion.

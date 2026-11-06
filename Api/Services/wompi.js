@@ -407,6 +407,15 @@ const createCheckoutForOrder = async ({ orderId, userId }) => {
     throw new HttpError(409, "Este pedido ya está pagado");
   }
 
+  // Un pedido de total $0 (articulo al 100%) no se cobra en linea: Wompi no
+  // acepta montos en cero. Se confirma manualmente.
+  if (Number(order.total) <= 0) {
+    throw new HttpError(
+      409,
+      "Este pedido es gratuito (total $0): no se cobra en línea, confírmalo manualmente",
+    );
+  }
+
   // Reutiliza el intento pendiente si existe: recargar la pagina no debe
   // llenar la tabla de pagos ni cambiar la referencia que ya se mostro.
   let payment = await Payment.findOne({

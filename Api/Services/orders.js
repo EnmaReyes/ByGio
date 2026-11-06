@@ -397,7 +397,10 @@ const createOrderCore = async ({
     const discountTotal = computedDiscount + discount;
     const total = subtotal - discount + shippingCost;
 
-    if (total <= 0) {
+    // Un total de 0 es valido: un articulo al 100% (o un descuento manual que
+    // cubre el subtotal sin envio) produce un pedido gratuito. No se cobra
+    // online (Wompi no acepta 0) y se confirma a mano.
+    if (total < 0) {
       throw new HttpError(400, "El total del pedido es inválido");
     }
 

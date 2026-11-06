@@ -67,6 +67,12 @@ const getSchemaState = async (transaction) => {
        EXISTS (
          SELECT 1 FROM information_schema.columns
           WHERE table_schema = 'public'
+            AND table_name = 'articulos'
+            AND column_name = 'descuentoPorcentaje'
+       ) AS "hasArticleDiscount",
+       EXISTS (
+         SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
             AND table_name = 'dtfs'
             AND column_name = 'uid'
        ) AS "hasDtfUid",
@@ -95,6 +101,7 @@ const needsMigration = (state) =>
   (state.hasOrderItems && !state.hasPriceSnapshot) ||
   (state.hasArticles && !state.hasCombo) ||
   (state.hasArticles && !state.hasArticleUid) ||
+  (state.hasArticles && !state.hasArticleDiscount) ||
   (state.hasDtfs && !state.hasDtfUid) ||
   state.hasLegacyCost ||
   state.hasLegacyDiscount ||
@@ -388,6 +395,32 @@ const applySchema = async (transaction, state) => {
       await sequelize.query("ALTER TABLE articulos ADD COLUMN uid UUID", {
         transaction,
       });
+    }
+
+    // Descuento individual por articulo (porcentaje entero 0-100, NULL = sin
+    // descuento). La columna NO se llama "descuento": ese nombre era del
+    // esquema viejo y esta misma funcion lo elimina (hasLegacyDiscount).
+    if (!state.hasArticleDiscount) {
+      await sequelize.query(
+        "ALTER TABLE articulos ADD COLUMN \"descuentoPorcentaje\" INTEGER",
+        { transaction },
+      );
+      await sequelize.query(
+        `DO $discount$
+         BEGIN
+           IF NOT EXISTS (
+             SELECT 1 FROM pg_constraint
+              WHERE conrelid = 'articulos'::regclass
+                AND conname = 'articulos_descuento_porcentaje_check'
+           ) THEN
+             ALTER TABLE articulos
+               ADD CONSTRAINT articulos_descuento_porcentaje_check
+               CHECK ("descuentoPorcentaje" IS NULL OR "descuentoPorcentaje" BETWEEN 0 AND 100);
+           END IF;
+         END
+         $discount$`,
+        { transaction },
+      );
     }
   }
 

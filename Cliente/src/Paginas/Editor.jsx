@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { API_URL } from "../config";
 import { useContextProvaider } from "../context/ContextProvaider";
+import { formatPrice } from "../Componentes/cartUtils";
 import useEnVista from "../hooks/useEnVista";
 
 const BASE_URL = API_URL;
@@ -61,6 +62,15 @@ const Editor = () => {
   const [precioCombo, setPrecioCombo] = useState(state?.precioCombo ?? "");
   const [precioAnteriorCombo, setPrecioAnteriorCombo] = useState(
     state?.precioAnteriorCombo ?? "",
+  );
+  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(
+    state?.descuentoPorcentaje ?? "",
+  );
+  // Precio base (original) conocido al editar: la API devuelve `precio` ya
+  // con descuento y `precioOriginal` sin aplicar. Solo se usa para el
+  // previsualizador; el calculo real lo hace el backend.
+  const precioBase = Number(
+    state?.precioOriginal ?? state?.precioAnterior ?? state?.precio,
   );
 
   const esEdicion = Boolean(state);
@@ -204,6 +214,16 @@ const Editor = () => {
       return;
     }
 
+    // Descuento individual: entero 0-100. Los combos lo ignoran (el backend
+    // tambien lo fuerza a null).
+    if (!combo && descuentoPorcentaje !== "") {
+      const pct = Number(descuentoPorcentaje);
+      if (!Number.isInteger(pct) || pct < 0 || pct > 100) {
+        toast.error("El descuento debe ser un porcentaje entre 0 y 100.");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -235,6 +255,10 @@ const Editor = () => {
         stock,
         destacadas,
         combo,
+        descuentoPorcentaje:
+          combo || descuentoPorcentaje === ""
+            ? null
+            : Number(descuentoPorcentaje),
         ...(combo && {
           precioCombo: Number(precioCombo),
           precioAnteriorCombo:
@@ -518,7 +542,13 @@ const Editor = () => {
                 <Link to="/admin/precios" className="enlace-seccion">
                   Precios globales
                 </Link>
-                . Aquí solo se define el precio propio si el artículo es combo.
+                . Aquí solo se define el precio propio si el artículo es combo
+                y su descuento individual. Para ver todos los artículos con
+                descuento, entra a{" "}
+                <Link to="/admin/descuentos" className="enlace-seccion">
+                  Descuentos
+                </Link>
+                .
               </p>
             </div>
 
@@ -600,6 +630,53 @@ const Editor = () => {
                 </div>
               </div>
             )}
+
+            <div className="editor-admin-condicional">
+              <div className="editor-admin-fila">
+                <div className="editor-admin-campo">
+                  <label
+                    className="editor-admin-campo-etiqueta"
+                    htmlFor="editor-admin-descuento"
+                  >
+                    Descuento individual (%)
+                  </label>
+                  <input
+                    id="editor-admin-descuento"
+                    className="form-control"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    inputMode="numeric"
+                    value={descuentoPorcentaje}
+                    onChange={(e) => setDescuentoPorcentaje(e.target.value)}
+                    placeholder="0 = sin descuento"
+                    disabled={loading || combo}
+                  />
+                  <span className="editor-admin-contador-caracteres">
+                    Opcional · se aplica sobre el precio de la tarifa global
+                  </span>
+                </div>
+              </div>
+
+              {combo ? (
+                <span className="editor-admin-contador-caracteres">
+                  Los artículos combo no llevan descuento individual.
+                </span>
+              ) : (
+                precioBase > 0 &&
+                Number(descuentoPorcentaje) > 0 && (
+                  <span className="editor-admin-contador-caracteres">
+                    {`Original ${formatPrice(precioBase)} → Final ${formatPrice(
+                      Math.round(
+                        (precioBase * (100 - Number(descuentoPorcentaje))) /
+                          100,
+                      ),
+                    )} (-${descuentoPorcentaje}%)`}
+                  </span>
+                )
+              )}
+            </div>
           </div>
 
           <div className="editor-admin-grupo">

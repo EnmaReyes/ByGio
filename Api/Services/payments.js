@@ -85,7 +85,9 @@ const manualReference = (order) => `MAN-${order.orderNumber}`;
 
 const toCents = (total) => {
   const cents = Math.round(Number(total) * 100);
-  if (!Number.isFinite(cents) || cents <= 0) {
+  // 0 es valido (pedido gratuito manual: queda registrado con monto 0).
+  // El cobro en linea de un total 0 lo bloquea wompi.js antes de llegar aqui.
+  if (!Number.isFinite(cents) || cents < 0) {
     throw new HttpError(409, "El pedido no tiene un total válido para cobrar");
   }
   return cents;

@@ -73,11 +73,19 @@ const TarjetaProducto = ({ articulo, mostrarDescuento = false, indice = 0 }) => 
   );
 
   const precioAnterior = getPreviousPrice(articulo);
-  const porcentaje = mostrarDescuento
-    ? calcularPorcentaje(precioAnterior, precio)
-    : 0;
+  // Descuento individual por articulo (viene del backend ya calculado). Se
+  // muestra en cualquier rejilla, sin depender de `mostrarDescuento` (que
+  // queda solo para el precio anterior historico de combos/ofertas).
+  const descuentoPorcentaje = Number(articulo?.descuentoPorcentaje) || 0;
+  const porcentaje =
+    descuentoPorcentaje > 0
+      ? Math.round(descuentoPorcentaje)
+      : mostrarDescuento
+        ? calcularPorcentaje(precioAnterior, precio)
+        : 0;
 
-  const tieneDescuento = mostrarDescuento && precioAnterior > precio;
+  const tieneDescuento =
+    (descuentoPorcentaje > 0 || mostrarDescuento) && precioAnterior > precio;
 
   const tieneStock = articulo?.stock !== false;
 

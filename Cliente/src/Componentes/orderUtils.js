@@ -1,6 +1,20 @@
 // Etiquetas y helpers de pedidos compartidos por checkout, "mis pedidos"
 // y el panel de administracion.
 
+// Descuento individual aplicado a una linea (snapshot del pedido). Lee
+// `priceSnapshot` para que un cambio posterior del % no altere lo mostrado.
+// Los pedidos viejos no traen estos campos: devuelven null.
+export const getItemDiscount = (item) => {
+  const snapshot = item?.priceSnapshot || {};
+  const pct = Math.round(Number(snapshot.descuentoPorcentaje) || 0);
+  if (pct <= 0) return null;
+  return {
+    pct,
+    original: Number(snapshot.precioOriginal) || 0,
+    final: Number(snapshot.precioFinal ?? item?.unitPrice) || 0,
+  };
+};
+
 export const ORDER_STATUS_META = {
   pendiente_pago: { label: "Pendiente de pago", tone: "pending" },
   pagado: { label: "Pagado", tone: "paid" },

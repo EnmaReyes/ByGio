@@ -11,6 +11,7 @@ import {
   formatDateTime,
   getApiErrorMessage,
   getChannelLabel,
+  getItemDiscount,
   getOrderStatusMeta,
   getPaymentMethodLabel,
   ORDER_STATUS_META,
@@ -322,7 +323,9 @@ const AdminPedidoDetalle = () => {
             <h2 className="checkout-section-title titulos">Productos</h2>
 
             <ul className="checkout-items">
-              {items.map((item) => (
+              {items.map((item) => {
+                const dto = getItemDiscount(item);
+                return (
                 <li key={item.id} className="checkout-item">
                   {item.imageUrl && (
                     <div className="checkout-item-image">
@@ -334,15 +337,23 @@ const AdminPedidoDetalle = () => {
                       {item.quantity} × {item.title}
                     </strong>
                     <small className="parrafos">{itemVariant(item)}</small>
-                    <small className="parrafos">
-                      {formatPrice(item.unitPrice)} c/u
-                    </small>
+                    {dto ? (
+                      <small className="parrafos">
+                        <s>{formatPrice(dto.original)} c/u</s>{" "}
+                        {formatPrice(item.unitPrice)} c/u · -{dto.pct}%
+                      </small>
+                    ) : (
+                      <small className="parrafos">
+                        {formatPrice(item.unitPrice)} c/u
+                      </small>
+                    )}
                   </div>
                   <strong className="checkout-item-total titulos">
                     {formatPrice(item.lineTotal)}
                   </strong>
                 </li>
-              ))}
+                );
+              })}
             </ul>
 
             <div className="checkout-totals">

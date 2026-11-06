@@ -27,6 +27,7 @@ import PedidoDetalle from "./Paginas/PedidoDetalle";
 import AdminPedidos from "./Paginas/Admin/AdminPedidos";
 import AdminPedidoDetalle from "./Paginas/Admin/AdminPedidoDetalle";
 import AdminPrice from "./Paginas/Admin/AdminPrice";
+import AdminDescuentos from "./Paginas/Admin/AdminDescuentos";
 import DashboardLayout, {
   RutaAdmin,
 } from "./Paginas/Dashboard/DashboardLayout";
@@ -168,6 +169,10 @@ const router = createBrowserRouter(
           element: <AdminPrice />,
         },
         {
+          path: "/admin/descuentos",
+          element: <AdminDescuentos />,
+        },
+        {
           path: "/:id",
           element: <Articulo />,
         },
@@ -260,6 +265,14 @@ const router = createBrowserRouter(
           element: (
             <RutaAdmin>
               <AdminPrice />
+            </RutaAdmin>
+          ),
+        },
+        {
+          path: "admin/descuentos",
+          element: (
+            <RutaAdmin>
+              <AdminDescuentos />
             </RutaAdmin>
           ),
         },

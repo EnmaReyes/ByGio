@@ -8,6 +8,7 @@ const {
   articleTipo,
   resolvePrice,
   COMBO_TIPO,
+  aplicarDescuento,
   decorateArticle,
   decorateDtf,
 } = require("./prices.js");
@@ -120,7 +121,20 @@ const resolveArticle = async (item, transaction) => {
     );
   }
 
-  const unitPrice = Number(price.precio);
+  // unitPrice es el precio FINAL con descuento (si aplica); el desglose
+  // completo queda congelado en priceSnapshot para que un cambio posterior
+  // del porcentaje no altere este pedido.
+  const resultado = articulo.combo
+    ? aplicarDescuento(Number(price.precio), 0)
+    : aplicarDescuento(Number(price.precio), articulo.descuentoPorcentaje);
+  const unitPrice = resultado.precioFinal;
+  const snapshot = {
+    ...buildPriceSnapshot(price, "articulo", tipo, kind),
+    precioOriginal: resultado.precioOriginal,
+    precioFinal: resultado.precioFinal,
+    descuentoPorcentaje: resultado.descuentoPorcentaje,
+    descuentoUnitario: resultado.descuentoUnitario,
+  };
   const decorated = await decorateArticle(articulo, transaction);
 
   return {
@@ -139,13 +153,11 @@ const resolveArticle = async (item, transaction) => {
       quantity,
       lineTotal: unitPrice * quantity,
       productSnapshot: decorated,
-      priceSnapshot: buildPriceSnapshot(
-        price,
-        "articulo",
-        tipo,
-        kind,
-      ),
+      priceSnapshot: snapshot,
     },
+    // El descuento de articulo ya viene incluido en unitPrice/lineTotal y en
+    // el subtotal; NO se suma a discountTotal para no restarlo dos veces.
+    // discountTotal queda reservado al descuento manual en COP (ventas manuales).
     discount: 0,
   };
 };

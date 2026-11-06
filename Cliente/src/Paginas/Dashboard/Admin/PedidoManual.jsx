@@ -169,7 +169,14 @@ const PedidoManual = () => {
       ]);
       const arts = Array.isArray(artsRes.data) ? artsRes.data : [];
       const dtfList = Array.isArray(dtfsRes.data) ? dtfsRes.data : [];
-      setArticulos(arts.filter((a) => a.stock && Number(a.precio) > 0));
+      // Incluye articulos al 100% (precio final $0) para ventas manuales.
+      setArticulos(
+        arts.filter(
+          (a) =>
+            a.stock &&
+            (Number(a.precio) > 0 || Number(a.descuentoPorcentaje) > 0),
+        ),
+      );
       setDtfs(
         dtfList.filter((d) => d.stock && availableDtfSizes(d).length > 0),
       );
@@ -323,7 +330,14 @@ const PedidoManual = () => {
       return;
     }
 
-    if (draftUnitPrice <= 0) {
+    // Un articulo al 100% queda en $0 pero es vendible (venta manual).
+    const esGratuitoConPrecio =
+      Number(productoSeleccionado?.descuentoPorcentaje) > 0 &&
+      Number(
+        productoSeleccionado?.precioOriginal ??
+          productoSeleccionado?.precioAnterior,
+      ) > 0;
+    if (draftUnitPrice <= 0 && !esGratuitoConPrecio) {
       setDraftError("Ese producto no tiene un precio configurado.");
       return;
     }
@@ -652,9 +666,19 @@ const PedidoManual = () => {
                                 : "Talla única"}
                           </span>
                           <span className="parrafos admin-muted">
-                            {draftUnitPrice > 0
-                              ? `Precio: ${formatPrice(draftUnitPrice)}`
-                              : "Sin precio configurado"}
+                            {Number(productoSeleccionado?.descuentoPorcentaje) >
+                            0
+                              ? `Precio: ${formatPrice(draftUnitPrice)} (antes ${formatPrice(
+                                  Number(
+                                    productoSeleccionado.precioOriginal ??
+                                      productoSeleccionado.precioAnterior,
+                                  ) || 0,
+                                )}, -${Number(
+                                  productoSeleccionado.descuentoPorcentaje,
+                                )}%)`
+                              : draftUnitPrice > 0
+                                ? `Precio: ${formatPrice(draftUnitPrice)}`
+                                : "Sin precio configurado"}
                           </span>
                         </div>
                       </div>

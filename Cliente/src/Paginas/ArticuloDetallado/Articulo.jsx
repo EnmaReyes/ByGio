@@ -146,10 +146,11 @@ const QuantitySelector = ({ quantity, onIncrement, onDecrement }) => (
 
 /* Precio como en Sabina: una línea debajo del título. El total
    manda (unidades × precio) y la unidad queda como nota. */
-const PriceInfo = ({ price, previousPrice, quantity }) => {
+const PriceInfo = ({ price, previousPrice, quantity, descuentoPorcentaje }) => {
   const unitario = Number(price) || 0;
   const anterior = Number(previousPrice) || 0;
-  const hayDescuento = anterior > unitario && unitario > 0;
+  const pct = Math.round(Number(descuentoPorcentaje) || 0);
+  const hayDescuento = anterior > unitario && anterior > 0;
 
   return (
     <p className="detalle-precio">
@@ -161,6 +162,10 @@ const PriceInfo = ({ price, previousPrice, quantity }) => {
         <s className="detalle-precio-anterior">
           {formatearPrecio(anterior * quantity)}
         </s>
+      )}
+
+      {pct > 0 && hayDescuento && (
+        <span className="tarjeta-badge">-{pct}%</span>
       )}
 
       {quantity > 1 && (
@@ -381,6 +386,7 @@ const Articulo = () => {
                   price={getUnitPrice(selected)}
                   previousPrice={getPreviousPrice(selected)}
                   quantity={conteo}
+                  descuentoPorcentaje={selected?.descuentoPorcentaje}
                 />
 
                 <div className="detalle-opciones">

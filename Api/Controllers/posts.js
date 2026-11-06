@@ -25,7 +25,20 @@ const ARTICLE_FIELDS = [
   "stock",
   "destacadas",
   "combo",
+  "descuentoPorcentaje",
 ];
+
+// Valida el porcentaje de descuento individual: null/0 = sin descuento.
+// Retorna { ok: true, value } o { ok: false } para responder 400.
+const parseDescuentoPorcentaje = (value) => {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (value === null || value === "") return { ok: true, value: null };
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+    return { ok: false };
+  }
+  return { ok: true, value: parsed === 0 ? null : parsed };
+};
 
 // Construye el objeto de escritura solo con los campos enviados, para no
 // borrar datos existentes cuando el panel hace un PUT parcial.
@@ -110,6 +123,16 @@ const addArticle = async (req, res) => {
   try {
     const data = normalizeSizesAndOversize(pickArticleFields(req.body), true);
     const esCombo = Boolean(data.combo);
+
+    // Descuento individual: los combos quedan excluidos por decision de
+    // negocio, por eso se ignora aunque venga en el cuerpo.
+    const descuento = parseDescuentoPorcentaje(req.body.descuentoPorcentaje);
+    if (!descuento.ok) {
+      return res
+        .status(400)
+        .json("El descuento debe ser un porcentaje entero entre 0 y 100");
+    }
+    data.descuentoPorcentaje = esCombo ? null : (descuento.value ?? null);
 
     let precioCombo = null;
     let precioAnteriorCombo = null;
@@ -256,6 +279,22 @@ const updateArticle = async (req, res) => {
     );
     const targetCombo =
       data.combo !== undefined ? Boolean(data.combo) : article.combo;
+
+    // Descuento individual: los combos quedan excluidos (se borra el
+    // porcentaje si el articulo pasa a ser combo). Solo se toca cuando el
+    // cliente envia el campo, para no pisar datos en PUT parciales.
+    if (req.body.descuentoPorcentaje !== undefined) {
+      const descuento = parseDescuentoPorcentaje(req.body.descuentoPorcentaje);
+      if (!descuento.ok) {
+        await transaction.rollback();
+        return res
+          .status(400)
+          .json("El descuento debe ser un porcentaje entero entre 0 y 100");
+      }
+      data.descuentoPorcentaje = targetCombo ? null : (descuento.value ?? null);
+    } else if (targetCombo && article.descuentoPorcentaje) {
+      data.descuentoPorcentaje = null;
+    }
 
     let comboData = null;
 

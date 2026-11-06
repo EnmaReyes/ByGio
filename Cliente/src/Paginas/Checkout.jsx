@@ -241,14 +241,21 @@ const CheckoutSuccess = ({ order, onRefresh }) => {
 
           <ReservationHint />
 
-          <button
-            type="button"
-            className="btn-tema btn-tema--primario checkout-pay-button"
-            disabled={paying}
-            onClick={payOnline}
-          >
-            {paying ? "Abriendo Wompi…" : "Pagar en línea"}
-          </button>
+          {Number(order.total) <= 0 ? (
+            <p className="parrafos" role="status">
+              Este pedido es gratuito (total $0): no se cobra en línea. Te
+              contactaremos para coordinar la entrega.
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="btn-tema btn-tema--primario checkout-pay-button"
+              disabled={paying}
+              onClick={payOnline}
+            >
+              {paying ? "Abriendo Wompi…" : "Pagar en línea"}
+            </button>
+          )}
 
           <div className="checkout-gate-actions">
             <Link
