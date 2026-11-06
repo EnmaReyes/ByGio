@@ -3,9 +3,9 @@ const { sequelize } = require("../db.js");
 const { v4: uuidv4 } = require("uuid");
 
 // Tarifa de envio.
-//  - Medellin: rangos por distancia (km) desde el punto de despacho
-//  - Antioquia (fuera de Medellin): tarifa plana (minKm/maxKm NULL)
-//  - Nacional: tarifa plana
+//  - Antioquia: rangos por distancia (km) desde la bodega en Itagui.
+//  - Nacional:  tarifa plana.
+//  - Medellin:  esquema anterior (conservado por pedidos historicos).
 // El costo SIEMPRE se resuelve en el backend; el cliente nunca envia el valor.
 const ShippingRate = sequelize.define(
   "ShippingRate",

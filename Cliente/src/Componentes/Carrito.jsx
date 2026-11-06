@@ -201,7 +201,8 @@ const Carrito = ({
         }
 
         const imageUrl = getCartPreviewImage(p);
-        return `${p.cantidad} ${p.title}\nTalla: ${p.talla}\nValor: $${getUnitPrice(p).toLocaleString()}${imageUrl ? `\nImagen:\n${imageUrl}` : ""}`;
+        const detalles = cartItemDetails(p).join("\n");
+        return `${p.cantidad} ${p.title}${detalles ? `\n${detalles}` : ""}\nValor: $${getUnitPrice(p).toLocaleString()}${imageUrl ? `\nImagen:\n${imageUrl}` : ""}`;
       })
       .join("\n\n")}`;
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;

@@ -14,6 +14,10 @@ import {
   PAYMENT_STATUS_LABELS,
 } from "../Componentes/orderUtils";
 import { notify } from "../Componentes/toastConfig/toastconfigs";
+import {
+  notifyOrderUpdated,
+  subscribeOrderRefresh,
+} from "../Componentes/orderSync";
 import "./pedidos.css";
 
 // (La deteccion de cambios de estado se hace en el backend, que crea
@@ -38,8 +42,14 @@ const itemVariant = (item) => {
       .join(" · ");
   }
 
-  if (item.oversize) return "Talla Over Size";
-  return item.size ? `Talla ${item.size}` : "";
+  const label = item.oversize
+    ? "Talla Over Size"
+    : item.size
+      ? `Talla ${item.size}`
+      : "";
+  return [item.productSnapshot?.combo ? "Combo" : "", label]
+    .filter(Boolean)
+    .join(" · ");
 };
 
 const StatusSteps = ({ status }) => {
@@ -81,23 +91,29 @@ const PedidoDetalle = () => {
   const [paying, setPaying] = useState(false);
   const verifiedRef = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      setError("");
 
-    try {
-      const res = await axios.get(`${API_URL}/api/orders/${id}`, {
-        withCredentials: true,
-      });
-      setOrder(res.data);
-    } catch (err) {
-      setError(
-        getApiErrorMessage(err, "No pudimos cargar este pedido. Intenta de nuevo."),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+      try {
+        const res = await axios.get(`${API_URL}/api/orders/${id}`, {
+          withCredentials: true,
+        });
+        setOrder(res.data);
+      } catch (err) {
+        setError(
+          getApiErrorMessage(
+            err,
+            "No pudimos cargar este pedido. Intenta de nuevo.",
+          ),
+        );
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [id],
+  );
 
   useEffect(() => {
     if (!currentUser) return;
@@ -105,16 +121,19 @@ const PedidoDetalle = () => {
     load();
   }, [currentUser, load]);
 
-  // Vuelta desde Wompi: ?pago=wompi&id=<transacción>. Se consulta el estado
-  // real en el servidor (nunca se confía en los parámetros de la URL) y se
-  // recarga el pedido. El webhook sigue siendo la fuente de verdad; esto solo
-  // evita que el comprador vea "pendiente" cuando el cobro ya se hizo.
+  // Vuelta desde Wompi: Wompi agrega ?id=<transacción> a la URL de retorno. Se
+  // consulta el estado real en el servidor (nunca se confía en los parámetros
+  // de la URL) y se recarga el pedido. El webhook sigue siendo la fuente de
+  // verdad; esto solo evita que el comprador vea "pendiente" cuando el cobro ya
+  // se hizo.
   useEffect(() => {
     if (!currentUser || verifiedRef.current) return;
-    if (searchParams.get("pago") !== "wompi") return;
+
+    const transactionId = searchParams.get("id") || undefined;
+    // ?pago=wompi se mantiene por compatibilidad con enlaces antiguos.
+    if (!transactionId && searchParams.get("pago") !== "wompi") return;
 
     verifiedRef.current = true;
-    const transactionId = searchParams.get("id") || undefined;
 
     if (!transactionId) {
       load();
@@ -129,6 +148,8 @@ const PedidoDetalle = () => {
           { withCredentials: true },
         );
         toast.success("Actualizamos el estado de tu pago");
+        // Avisa a la pestaña del sitio (la que abrió Wompi) para que refresque.
+        notifyOrderUpdated(id);
       } catch {
         toast.info("Todavía estamos confirmando tu pago. Actualiza en unos segundos.");
       } finally {
@@ -136,6 +157,16 @@ const PedidoDetalle = () => {
       }
     })();
   }, [currentUser, id, load, searchParams]);
+
+  // Refresca el pedido cuando se paga en otra pestaña (pestaña nueva de Wompi) o
+  // al recuperar el foco, sin que el usuario tenga que recargar a mano.
+  useEffect(() => {
+    if (!currentUser || !id) return;
+
+    return subscribeOrderRefresh(id, () => {
+      load({ silent: true });
+    });
+  }, [currentUser, id, load]);
 
   if (!currentUser) {
     return (
@@ -199,7 +230,7 @@ const PedidoDetalle = () => {
               <button
                 type="button"
                 className="btn-tema btn-tema--primario"
-                onClick={load}
+                onClick={() => load()}
               >
                 Reintentar
               </button>
@@ -224,15 +255,27 @@ const PedidoDetalle = () => {
   const payOnline = async () => {
     setPaying(true);
 
+    // Se abre la pestaña en el gesto del usuario (antes del await) para que el
+    // bloqueador de ventanas emergentes no la frene.
+    const tab = window.open("", "_blank");
+
     try {
       const res = await axios.post(
         `${API_URL}/api/orders/${id}/payment`,
         null,
         { withCredentials: true },
       );
-      // Wompi Web Checkout: se sale del sitio y se vuelve a este pedido.
-      window.location.href = res.data.url;
+
+      // Wompi Web Checkout se abre en una pestaña nueva; esta queda en el sitio.
+      if (tab && !tab.closed) {
+        tab.opener = null;
+        tab.location.href = res.data.url;
+      } else {
+        // El navegador bloqueó la pestaña: se navega en la actual.
+        window.location.href = res.data.url;
+      }
     } catch (err) {
+      if (tab && !tab.closed) tab.close();
       if (err.response?.status === 503) {
         toast.info(
           "El pago en línea todavía no está disponible. Escríbenos por WhatsApp para coordinar el pago.",

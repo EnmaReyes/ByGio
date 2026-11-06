@@ -612,6 +612,12 @@ const cancelOrder = async ({ orderId, user }) => {
     if (!user.admin && order.userId !== user.id) {
       throw new HttpError(403, "No tienes permisos sobre este pedido");
     }
+    if (
+      order.paymentStatus === PAYMENT_STATUS.APROBADO ||
+      order.paymentStatus === PAYMENT_STATUS.REEMBOLSADO
+    ) {
+      throw new HttpError(409, "No se puede cancelar un pedido con pago aprobado");
+    }
     if (order.status !== ORDER_STATUS.PENDIENTE_PAGO) {
       throw new HttpError(409, "Solo se pueden cancelar pedidos pendientes de pago");
     }

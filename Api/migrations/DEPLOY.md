@@ -35,12 +35,47 @@ Variables de Vercel o en `Api/.env.local` (no versionado).
 Se ejecutan en el **SQL Editor de Neon**, una por una, en este orden:
 
 ```
-001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009
+001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010
 ```
 
 De esa lista, lo nuevo de esta rama es **002 → 003 → 004 → 005 → 008 → 009**.
 `001` (login social), `006` (notificaciones) y `007` (campañas Gmail) ya deberían
-estar aplicadas; si no lo están, aplícalas antes en su turno.
+estar aplicadas; si no lo están, aplícalas antes en su turno. `010` (envíos desde
+Itagüí) se aplica sobre una base que ya tenga la 003.
+
+> **Si ya las aplicaste durante el desarrollo de las fases, corre primero §1.0.**
+> La Fase E (endurecimiento) no cambió el esquema: solo usó columnas que ya
+> existían, así que no hay ninguna migración nueva que aplicar por hoy.
+
+### 1.0 Diagnóstico rápido: ¿qué falta?
+
+Una sola consulta dice el estado de las nueve. Pegar en el SQL Editor de Neon:
+
+```sql
+SELECT
+  EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='googleId')                     AS m001_social,
+  to_regclass('public.order_items') IS NOT NULL AND to_regclass('public.payments') IS NOT NULL                                 AS m002_ecommerce,
+  to_regclass('public.order_number_seq') IS NOT NULL AND to_regclass('public.shipping_rates') IS NOT NULL                      AS m003_envios,
+  to_regclass('public.price_variants') IS NOT NULL AND to_regclass('public.product_prices') IS NOT NULL                        AS m004_precios,
+  EXISTS (SELECT 1 FROM pg_constraint WHERE conname='payments_status_check'
+            AND pg_get_constraintdef(oid) LIKE '%en_revision%')                                                               AS m005_align,
+  to_regclass('public.notificaciones') IS NOT NULL                                                                             AS m006_notif,
+  to_regclass('public.campaigns') IS NOT NULL                                                                                   AS m007_gmail,
+  EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='channel')                        AS m008_ventas,
+  (EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='estimatedDeliveryDays')
+    AND EXISTS (SELECT 1 FROM pg_indexes WHERE indexname='payments_one_approved_per_order'))                                   AS m009_wompi;
+```
+
+Las nueve deben dar `true`. Si alguna da `false`, aplicar ese archivo antes de
+seguir. Dos trampas conocidas:
+
+- **La 008 se salta con facilidad.** Sin `orders.channel` (NOT NULL) el checkout y
+  el panel de pedidos fallan con error de SQL, porque el modelo la escribe en
+  cada pedido.
+- **Comprobar la base correcta.** `sequelize.sync()` crea estas columnas en
+  desarrollo, así que en local pueden existir aunque en Neon no. Lo que importa
+  es la base que usa el `DATABASE_URL` de Vercel; si hay varias ramas en Neon,
+  confirmar que el diagnóstico se corrió sobre la de producción.
 
 Reglas generales:
 - Cada archivo es **idempotente**: si ya estaba aplicado, no rompe nada.
@@ -74,13 +109,13 @@ tarifas de ejemplo. Verificación:
 
 ```sql
 SELECT last_value FROM order_number_seq;                       -- devuelve 1
-SELECT zone, label, cost FROM shipping_rates ORDER BY zone;    -- 3 filas (medellin, antioquia, nacional)
+SELECT zone, label, price FROM shipping_rates ORDER BY zone;   -- 6 filas (medellin x4, antioquia, nacional)
 ```
 
 Revisar que las tarifas cargadas sean las reales. Si no, ajustarlas:
 
 ```sql
-UPDATE shipping_rates SET cost = <valor_real> WHERE zone = 'nacional';
+UPDATE shipping_rates SET price = <valor_real> WHERE zone = 'nacional';
 ```
 
 ### 1.4 `004_global_prices.sql`
@@ -127,7 +162,21 @@ SELECT "orderId", count(*) FROM payments
 Si devuelve filas, **no ejecutes el archivo**: resolver antes esos pedidos
 (reembolsar el intento sobrante).
 
-### 1.8 Verificación final del esquema
+### 1.8 `010_shipping_itagui.sql`  ← tarifas de envío por distancia
+Desplaza la bodega a **Itagüí** y cobra **toda Antioquia por distancia**
+(0-5, 5-10, 10-20 y +20 km); el resto del país mantiene tarifa plana. Desactiva
+el esquema anterior (`medellin` por distancia y la tarifa plana de Antioquia).
+
+```sql
+SELECT zone, label, "minKm", "maxKm", price, "isDefault", active
+  FROM shipping_rates WHERE active ORDER BY zone, "minKm" NULLS LAST;
+-- Esperado: 4 filas de 'antioquia' + 1 de 'nacional'.
+```
+
+En Vercel (§2) confirmar `WAREHOUSE_LAT=6.1724352` y `WAREHOUSE_LNG=-75.6093254`
+(centro de Itagüí). Si no se configuran, el código ya usa esos valores.
+
+### 1.9 Verificación final del esquema
 
 ```sql
 -- Columnas nuevas
@@ -199,9 +248,16 @@ Settings → Environment Variables → Production (y Preview si se usa).
 | `WOMPI_INTEGRITY_SECRET` | `prod_integrity_...` |
 | `WOMPI_EVENTS_SECRET` | `prod_events_...` |
 | `WOMPI_ENV` | `prod` |
+| `WOMPI_REDIRECT_URL` | (opcional) URL pública de retorno; vacío = `FRONTEND_URL` (ver nota de localhost) |
 
-`WOMPI_BASE_URL` se deduce solo (`pub_prod_` → `https://production.wompi.co/v1`).
-No configurarla salvo que se esté probando a propósito.
+`WOMPI_BASE_URL` se deduce solo a partir de la llave pública y **no debe
+configurarse a mano**: `pub_prod_` → `https://production.wompi.co/v1`,
+`pub_test_` → `https://sandbox.wompi.co/v1`. El host `https://api.wompi.co/v1`
+**rechaza** las llaves (responde `401`): no usarlo.
+
+Wompi (CloudFront/WAF) **bloquea con 403 las redirecciones a `localhost`**. En
+producción `FRONTEND_URL` ya es público, así que no hay nada que hacer; al probar
+en local hay que fijar `WOMPI_REDIRECT_URL` a un túnel público (ver §4).
 
 **Login social y correo**
 
@@ -221,7 +277,7 @@ No configurarla salvo que se esté probando a propósito.
 | `TRUST_PROXY` | (vacío) | se deduce: `1` en producción, apagado en local |
 | `WOMPI_EVENT_MAX_AGE_SECONDS` | `86400` | eventos más viejos se registran como `evento_antiguo` (no se descartan) |
 | `DTF_PRICE_BASICO` / `DTF_PRICE_OVERSIZE` | `22000` / `32000` | precio DTF por defecto |
-| `WAREHOUSE_LAT` / `WAREHOUSE_LNG` | `6.2442` / `-75.5812` | punto de despacho para calcular el envío |
+| `WAREHOUSE_LAT` / `WAREHOUSE_LNG` | `6.1724352` / `-75.6093254` | punto de despacho (Itagüí) para calcular el envío |
 | `DB_CONNECT_ATTEMPTS` | (vacío) | reintentos de conexión al despertar Neon |
 | `DB_DEBUG` | **no poner** | solo para diagnóstico: expone el error real de la base en `/health` |
 
@@ -258,16 +314,33 @@ sociales se ocultan solos (no rompen la página).
 - [ ] **Eventos**: agregar la URL
       `https://<dominio-de-la-api>/api/payments/webhook`
       con el evento **`transaction.updated`**.
-- [ ] Confirmar que la URL de redirección es la del sitio (§1 de la API ya arma
-      `https://<FRONTEND_URL>/mis-pedidos/<id>?pago=wompi`; debe estar en
-      dominios permitidos del comercio si Wompi lo exige).
+- [ ] Redirección: la API arma `https://<FRONTEND_URL>/mis-pedidos/<id>` (sin
+      query) y Wompi le agrega su propio `?id=<transacción>` al volver; el cliente
+      detecta la vuelta por ese `id`. **No agregar parámetros propios** a la URL
+      de retorno: Wompi los concatena con `?` y rompe el parseo.
 - [ ] Métodos de pago habilitados: tarjeta, Nequi, PSE (los que el negocio acepte).
 
 **Prueba en sandbox primero** (llaves `pub_test_` en `Api/.env.local`, no en Vercel):
-Wompi no puede llamar a `localhost`, así que el webhook no llegará; el respaldo
-es el botón de verificación (la página del pedido llama sola a
-`POST /api/orders/:id/payment/verify` al volver). Con dominio real, el webhook
-toma el relevo y ambos caminos son idempotentes entre sí.
+
+1. `WOMPI_ENV=test` y `WOMPI_BASE_URL` **vacío** (así apunta a
+   `https://sandbox.wompi.co/v1`). El host `api.wompi.co` responde `401` con
+   llaves de prueba.
+2. Instala cloudflared y levanta los dos túneles con el script del repo:
+   - `winget install --id Cloudflare.cloudflared`
+   - `cd Api; npm run tunnel` → abre túneles a la API (3000) y al frontend
+     (5173) e imprime las dos URLs públicas y los valores exactos a pegar.
+3. Configura los valores que imprime el script:
+   - En `Api/.env.local`: `WOMPI_REDIRECT_URL=https://<tu-tunel-web>` y reinicia
+     la API. Wompi **bloquea con 403** las redirecciones a localhost; si se deja
+     en localhost, `POST /api/orders/:id/payment` responde `503` con un mensaje
+     que lo explica (en vez de mandar al comprador al 403 de CloudFront).
+   - En el panel de Wompi, *URL de Eventos*:
+     `https://<tu-tunel-api>/api/payments/webhook`. **Ese campo solo acepta
+     HTTPS con dominio real** (rechaza `http` y `localhost`).
+   (Los túneles cambian de URL cada vez que se reinician.)
+4. Aun sin webhook, el respaldo funciona: al volver, la página del pedido llama
+   sola a `POST /api/orders/:id/payment/verify`. Con dominio real, el webhook
+   toma el relevo y ambos caminos son idempotentes entre sí.
 
 ---
 
@@ -313,8 +386,10 @@ toma el relevo y ambos caminos son idempotentes entre sí.
 - [ ] DTF sin franela queda **bloqueado** en el checkout web (la franela es obligatoria);
       en el panel admin la venta manual sí lo acepta.
 - [ ] "Pagar en línea" redirige a `checkout.wompi.co` con la referencia del pedido.
-- [ ] Pagar con un monto mínimo real (o en sandbox) y volver al sitio:
-      el pedido pasa a **pago aprobado** y el producto vuelve a estar disponible (`stock = true`).
+- [ ] Pagar con un monto mínimo real (o en sandbox) y volver al sitio: la URL es
+      `<FRONTEND_URL>/mis-pedidos/<id>?id=<transacción>`, el pedido pasa a
+      **pagado** (pago aprobado) y el producto vuelve a estar disponible (`stock = true`).
+- [ ] Un pedido ya pagado **no** se puede cancelar desde "Mis pedidos".
 - [ ] Log del webhook en Vercel: línea `{"scope":"wompi.webhook","resultado":"aplicado",...}`.
 - [ ] Cancelar un pedido `pendiente_pago` funciona y avisa al cliente.
 
@@ -346,6 +421,14 @@ toma el relevo y ambos caminos son idempotentes entre sí.
 - **Wompi en problemas**: borrar las llaves `WOMPI_*` de Vercel y redesplegar.
   Los endpoints de pago en línea responden `503` y el checkout sigue con el
   flujo manual (transferencia/Nequi por WhatsApp).
+- **403 de CloudFront al entrar a pagar**: la `redirect-url` apunta a
+  `localhost`/IP privada (Wompi la bloquea). En local, fijar
+  `WOMPI_REDIRECT_URL` con un túnel público; en producción, revisar que
+  `FRONTEND_URL` sea el dominio público.
+- **`401` al verificar una transacción**: `WOMPI_BASE_URL` está apuntando a un
+  host equivocado. Dejarla vacía (se deduce por la llave) o usar
+  `https://sandbox.wompi.co/v1` / `https://production.wompi.co/v1` según el
+  ambiente.
 - **Eventos perdidos** (webhook caído): el comprador puede verificar solo al
   volver, o el admin confirmar el pago a mano en el panel.
 

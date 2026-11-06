@@ -20,6 +20,7 @@ const {
   WOMPI_ENV,
   WOMPI_BASE_URL,
   WOMPI_CHECKOUT_URL,
+  WOMPI_REDIRECT_URL,
   WOMPI_EVENT_MAX_AGE_SECONDS,
 } = require("../config.js");
 
@@ -70,6 +71,44 @@ const logWebhook = (resultado, datos = {}, nivel = "info") => {
 // saltarse la ventana. Se toleran 5 minutos de desfase.
 const FUTURE_TOLERANCE_SECONDS = 300;
 
+// Normaliza la etiqueta de ambiente que manda Wompi. Los valores conocidos son
+// "test" y "prod", pero se toleran sinonimos para no descartar eventos reales
+// si Wompi cambia la etiqueta (p. ej. "production"/"live"). Un valor
+// desconocido se devuelve tal cual para poder avisar en el log.
+const normalizeEnvironment = (value) => {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+  if (["prod", "production", "live"].includes(raw)) return "prod";
+  if (["test", "sandbox", "development", "dev"].includes(raw)) return "test";
+  return raw;
+};
+
+const KNOWN_ENVIRONMENTS = new Set(["prod", "test"]);
+
+// Wompi (su CloudFront/WAF) responde 403 si la URL de retorno apunta a
+// localhost o a una IP privada. Se detecta aqui para devolver un mensaje claro
+// en lugar de mandar al comprador a una pagina de error de CloudFront.
+const isLocalHost = (value) => {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host.endsWith(".localhost") ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+    );
+  } catch {
+    return false;
+  }
+};
+
+// Base de la URL de retorno. WOMPI_REDIRECT_URL permite usar un tunel publico
+// al probar en local (donde FRONTEND_URL es localhost y Wompi lo bloquea).
+const redirectBase = () => (WOMPI_REDIRECT_URL || FRONTEND_URL || "").replace(/\/$/, "");
+
 const eventAgeSeconds = (timestamp) => {
   const seconds = Number(timestamp);
   if (!Number.isFinite(seconds) || seconds <= 0) return null;
@@ -100,7 +139,12 @@ const buildCheckoutUrl = ({ reference, amountInCents, currency, orderId }) => {
       amountInCents,
       currency,
     }),
-    "redirect-url": `${FRONTEND_URL}/mis-pedidos/${orderId}?pago=wompi`,
+    // Sin cadena de consulta: al volver, Wompi agrega su propio `?id=<id de
+    // transacción>`. Si ya hubiera un `?pago=...`, Wompi lo concatenaría mal
+    // (quedaría "pago=wompi?id=...") y el cliente no detectaría el retorno.
+    // El cliente detecta la vuelta por la presencia de `id`; el webhook sigue
+    // siendo la fuente de verdad.
+    "redirect-url": `${redirectBase()}/mis-pedidos/${orderId}`,
   });
 
   return `${WOMPI_CHECKOUT_URL}?${params.toString()}`;
@@ -331,9 +375,21 @@ const createCheckoutForOrder = async ({ orderId, userId }) => {
   if (!isCheckoutConfigured()) {
     throw new HttpError(503, "El pago en línea no está disponible todavía");
   }
-  if (!FRONTEND_URL) {
+
+  const base = redirectBase();
+  if (!base) {
     // Sin esto Wompi redirigiria a "undefined/mis-pedidos/..." tras el cobro.
-    throw new HttpError(503, "Falta configurar FRONTEND_URL en el servidor");
+    throw new HttpError(
+      503,
+      "Falta configurar FRONTEND_URL (o WOMPI_REDIRECT_URL) en el servidor",
+    );
+  }
+  if (isLocalHost(base)) {
+    // Wompi responde 403 en el checkout cuando el redirect es localhost.
+    throw new HttpError(
+      503,
+      "Wompi bloquea el pago cuando la URL de retorno es localhost. Configura WOMPI_REDIRECT_URL con una URL pública (por ejemplo un túnel) para probar el pago en línea.",
+    );
   }
 
   const order = await Order.findOne({ where: { id: orderId, userId } });
@@ -444,10 +500,21 @@ const handleWebhook = async (event, headerChecksum) => {
   }
 
   // Un evento del sandbox no debe tocar datos de produccion ni al reves.
-  const environment = String(event.environment || "").toLowerCase();
-  if (environment && environment !== WOMPI_ENV) {
-    logWebhook("ignorado", { ...resumen, motivo: "ambiente_distinto" });
-    return { received: true, ignored: "ambiente_distinto" };
+  const eventEnv = normalizeEnvironment(event.environment);
+  const expectedEnv = normalizeEnvironment(WOMPI_ENV);
+  if (eventEnv && eventEnv !== expectedEnv) {
+    // Si el valor no es uno conocido, la firma (firmada con el secreto del
+    // ambiente) ya garantiza que el evento es del ambiente correcto: se deja
+    // pasar y solo se deja constancia en el log.
+    if (KNOWN_ENVIRONMENTS.has(eventEnv)) {
+      logWebhook("ignorado", { ...resumen, motivo: "ambiente_distinto" });
+      return { received: true, ignored: "ambiente_distinto" };
+    }
+    logWebhook(
+      "aviso",
+      { ...resumen, motivo: "ambiente_desconocido", environment: eventEnv },
+      "warn",
+    );
   }
 
   if (!providerTransaction) {

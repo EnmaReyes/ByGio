@@ -157,7 +157,8 @@ const Order = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    // 'medellin' | 'antioquia' | 'nacional' — determina la tarifa de envio
+    // 'antioquia' | 'nacional' (y 'medellin' historico) — determina la
+    // tarifa de envio. Antioquia se cobra por distancia desde Itagui.
     shippingZone: {
       type: DataTypes.STRING(50),
       allowNull: true,

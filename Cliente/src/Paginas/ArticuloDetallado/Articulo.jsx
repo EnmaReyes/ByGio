@@ -6,11 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import {
-  Link,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Col, Container, Row } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -39,10 +35,7 @@ import useConfirmacion from "../../hooks/useConfirmacion";
 import ArticulosSimilares from "./ArticulosSimilares";
 import BandaEditorial from "../../Componentes/BandaEditorial";
 import BandaBeneficios from "../../Componentes/BandaBeneficios";
-import {
-  getPreviousPrice,
-  getUnitPrice,
-} from "../../Componentes/cartUtils";
+import { getPreviousPrice, getUnitPrice } from "../../Componentes/cartUtils";
 
 const URL = API_URL;
 
@@ -92,7 +85,11 @@ const SizeSelector = ({ sizes, oversize, selectedSize, onSizeChange }) => (
     {oversize ? (
       <p className="detalle-talla-unica">Oversize</p>
     ) : (
-      <div className="detalle-tallas" role="group" aria-labelledby="detalle-talla">
+      <div
+        className="detalle-tallas"
+        role="group"
+        aria-labelledby="detalle-talla"
+      >
         {sizes?.map((size) => (
           <button
             key={size}
@@ -202,7 +199,9 @@ const Articulo = () => {
   const postid = location.pathname.split("/")[1];
   const [selected, setSelected] = useState({});
   const [conteo, setConteo] = useState(1);
-  const [medidas, setMedidas] = useState("S");
+  // Sin talla fija por defecto: se resuelve con las tallas reales del articulo
+  // (un combo puede existir solo en M/L). Ver el efecto de abajo.
+  const [medidas, setMedidas] = useState("");
   const [loading, setLoading] = useState(true);
   const { currentUser } = useContext(AuthContext);
   const PhoneNumber = import.meta.env.VITE_NUMBER_PHONE;
@@ -239,6 +238,21 @@ const Articulo = () => {
       : selected.img || [];
   }, [selected.img]);
 
+  // Talla inicial = talla real del articulo. Si la talla previa sigue siendo
+  // valida se conserva; si no, se prefiere "S" cuando exista (comportamiento
+  // de siempre para articulos normales) y, si no, la primera disponible. Nunca
+  // se fija una talla que el articulo no ofrezca: un combo puede no tener "S".
+  useEffect(() => {
+    if (loading || !selected?.id || selected.oversize) return;
+
+    const lista = Array.isArray(sizes) ? sizes.filter(Boolean) : [];
+    setMedidas((prev) => {
+      if (lista.includes(prev)) return prev;
+      if (lista.includes("S")) return "S";
+      return lista[0] || "";
+    });
+  }, [loading, selected?.id, selected?.oversize, sizes]);
+
   // Contexto del carrito
   const {
     allProducts,
@@ -255,6 +269,17 @@ const Articulo = () => {
   // Agregar al carrito con lógica limpia
   const handleAddToCart = useCallback(() => {
     if (selected?.stock === false) return;
+
+    // Nunca agregar una talla que el articulo no ofrece (antes se colaba "S").
+    const listaTallas = Array.isArray(sizes) ? sizes : [];
+    if (
+      !selected?.oversize &&
+      listaTallas.length > 0 &&
+      !listaTallas.includes(medidas)
+    ) {
+      toast.error("Selecciona una talla disponible");
+      return;
+    }
 
     const existingProduct = allProducts.find(
       (item) => item.id === selected.id && item.talla === medidas,
@@ -284,6 +309,7 @@ const Articulo = () => {
     selected,
     conteo,
     medidas,
+    sizes,
     total,
     countProducts,
     setAllProducts,
@@ -429,11 +455,10 @@ const Articulo = () => {
                 </div>
 
                 <ul className="detalle-puntos">
-                  <li>{selected.oversize ? "Corte oversize" : "Corte básico"}</li>
                   <li>
-                    {sizes.length
-                      ? `Tallas ${sizes.join(" · ")}`
-                      : "Talla única"}
+                    {selected.oversize
+                      ? "Corte oversize"
+                      : `Tallas ${sizes.join(" · ")}`}
                   </li>
                   <li>Envío nacional</li>
                   <li>Diseño DTF disponible</li>
@@ -465,8 +490,15 @@ const Articulo = () => {
                 {/* Acciones de administrador */}
                 {currentUser?.admin && (
                   <div className="admin-actions d-flex gap-2 p-3 rounded-3">
-                    <Link to="/editor?edit=2" state={selected} className="btn-admin">
-                      <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />
+                    <Link
+                      to="/editor?edit=2"
+                      state={selected}
+                      className="btn-admin"
+                    >
+                      <FontAwesomeIcon
+                        icon={faPenToSquare}
+                        aria-hidden="true"
+                      />
                       Editar
                     </Link>
 

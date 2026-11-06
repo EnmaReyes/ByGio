@@ -33,8 +33,14 @@ const itemVariant = (item) => {
       .join(" · ");
   }
 
-  if (item.oversize) return "Talla Over Size";
-  return item.size ? `Talla ${item.size}` : "";
+  const label = item.oversize
+    ? "Talla Over Size"
+    : item.size
+      ? `Talla ${item.size}`
+      : "";
+  return [item.productSnapshot?.combo ? "Combo" : "", label]
+    .filter(Boolean)
+    .join(" · ");
 };
 
 const AdminPedidoDetalle = () => {

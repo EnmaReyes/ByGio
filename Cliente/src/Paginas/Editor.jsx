@@ -11,6 +11,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { API_URL } from "../config";
+import { useContextProvaider } from "../context/ContextProvaider";
 import useEnVista from "../hooks/useEnVista";
 
 const BASE_URL = API_URL;
@@ -32,6 +33,7 @@ const parseJsonValue = (value) => {
 const Editor = () => {
   const navigate = useNavigate();
   const state = useLocation().state;
+  const { getArticulos } = useContextProvaider();
 
   const [title, setTitle] = useState(state?.title || "");
   const [description, setDescription] = useState(state?.desc || "");
@@ -48,7 +50,7 @@ const Editor = () => {
 
   const parsedSizes = parseJsonValue(state?.sizes);
   const [sizes, setSizes] = useState(
-    Array.isArray(parsedSizes) ? parsedSizes : ["S", "M", "L"],
+    Array.isArray(parsedSizes) ? parsedSizes : ["M/L"],
   );
 
   const [overSize, setOverSize] = useState(state?.oversize ?? false);
@@ -56,9 +58,7 @@ const Editor = () => {
   const [loading, setLoading] = useState(false);
   const [destacadas, setDestacadas] = useState(state?.destacadas ?? false);
   const [combo, setCombo] = useState(state?.combo ?? false);
-  const [precioCombo, setPrecioCombo] = useState(
-    state?.precioCombo ?? "",
-  );
+  const [precioCombo, setPrecioCombo] = useState(state?.precioCombo ?? "");
   const [precioAnteriorCombo, setPrecioAnteriorCombo] = useState(
     state?.precioAnteriorCombo ?? "",
   );
@@ -136,6 +136,19 @@ const Editor = () => {
     setSelectedImageIndex(index);
   };
 
+  // Normaliza las tallas antes de enviarlas: sin vacias, sin duplicados y en
+  // mayusculas. Un articulo oversize nunca lleva tallas (array vacio).
+  const tallasNormalizadas = () =>
+    overSize
+      ? []
+      : Array.from(
+          new Set(
+            sizes
+              .map((size) => String(size).trim().toUpperCase())
+              .filter(Boolean),
+          ),
+        );
+
   const addSizeField = () => setSizes([...sizes, ""]);
 
   const deleteSizeField = (index) =>
@@ -164,8 +177,16 @@ const Editor = () => {
   const handleClick = async (e) => {
     e.preventDefault();
 
-    if (!title || !description || !sizes.some((size) => size)) {
+    if (!title || !description) {
       toast.error("Falta información para subir el artículo!");
+      return;
+    }
+
+    // Oversize y tallas son excluyentes: solo se exige talla en corte basico.
+    if (!overSize && !sizes.some((size) => size)) {
+      toast.error(
+        "Agrega al menos una talla o marca el artículo como Oversize.",
+      );
       return;
     }
 
@@ -209,7 +230,7 @@ const Editor = () => {
         title,
         desc: description,
         img: validUrls,
-        sizes,
+        sizes: tallasNormalizadas(),
         oversize: overSize,
         stock,
         destacadas,
@@ -240,6 +261,14 @@ const Editor = () => {
         error: "Error al subir el artículo",
       });
 
+      // Refresca el catálogo compartido para que el artículo nuevo o editado
+      // aparezca al navegar, sin recargar la página a mano.
+      try {
+        await getArticulos("");
+      } catch {
+        // Si falla, el catálogo se recargará en la próxima visita.
+      }
+
       navigate("/");
     } catch (err) {
       console.error("Error al realizar la solicitud:", err);
@@ -256,12 +285,18 @@ const Editor = () => {
     }
   };
 
+  const onchangesize = () => {
+    const siguiente = !overSize;
+    setOverSize(siguiente);
+    // Oversize y tallas son excluyentes: al activarlo se limpian las tallas y
+    // al desactivarlo se parte de la talla por defecto del front.
+    setSizes(siguiente ? [] : ["M/L"]);
+  };
+
   return (
     <section
       ref={refContenido}
-      className={`editor-admin revelar${
-        contenidoEnVista ? " is-visible" : ""
-      }`}
+      className={`editor-admin revelar${contenidoEnVista ? " is-visible" : ""}`}
       aria-labelledby="editor-admin-titulo"
     >
       <header
@@ -292,10 +327,7 @@ const Editor = () => {
 
       <div className="editor-admin-cuerpo">
         {/* Galería: vista previa + miniaturas */}
-        <div
-          className="editor-admin-media revelar-linea"
-          style={{ "--i": 1 }}
-        >
+        <div className="editor-admin-media revelar-linea" style={{ "--i": 1 }}>
           <div className="editor-admin-lienzo" data-vacia={!imagenVista}>
             {imagenVista ? (
               <img
@@ -306,15 +338,10 @@ const Editor = () => {
               />
             ) : (
               <div className="editor-admin-vacio">
-                <span
-                  className="editor-admin-vacio-icono"
-                  aria-hidden="true"
-                >
+                <span className="editor-admin-vacio-icono" aria-hidden="true">
                   <FontAwesomeIcon icon={faImage} />
                 </span>
-                <p className="editor-admin-vacio-titulo">
-                  Sube tus imágenes
-                </p>
+                <p className="editor-admin-vacio-titulo">Sube tus imágenes</p>
                 <p className="editor-admin-vacio-texto">
                   JPG, PNG o WebP · hasta {MAX_IMAGENES} imágenes
                 </p>
@@ -326,9 +353,7 @@ const Editor = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    handleImageChange(e, selectedImageIndex)
-                  }
+                  onChange={(e) => handleImageChange(e, selectedImageIndex)}
                   disabled={loading}
                 />
                 <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />
@@ -439,8 +464,8 @@ const Editor = () => {
             <div className="editor-admin-grupo-cabecera">
               <h2 className="editor-admin-grupo-titulo">Información</h2>
               <p className="editor-admin-ayuda">
-                El nombre y la descripción aparecen en el catálogo y en la
-                ficha del producto.
+                El nombre y la descripción aparecen en el catálogo y en la ficha
+                del producto.
               </p>
             </div>
 
@@ -498,10 +523,7 @@ const Editor = () => {
             </div>
 
             <div className="editor-admin-opciones">
-              <label
-                className="editor-admin-opcion"
-                data-activa={combo}
-              >
+              <label className="editor-admin-opcion" data-activa={combo}>
                 <span className="editor-admin-opcion-texto">
                   <strong>Combo</strong>
                   <small>Precio propio por varias prendas</small>
@@ -515,10 +537,7 @@ const Editor = () => {
                 />
               </label>
 
-              <label
-                className="editor-admin-opcion"
-                data-activa={overSize}
-              >
+              <label className="editor-admin-opcion" data-activa={overSize}>
                 <span className="editor-admin-opcion-texto">
                   <strong>Oversize</strong>
                   <small>Corte amplio</small>
@@ -527,7 +546,7 @@ const Editor = () => {
                   className="editor-admin-interruptor"
                   type="checkbox"
                   checked={overSize}
-                  onChange={() => setOverSize(!overSize)}
+                  onChange={() => onchangesize()}
                   disabled={loading}
                 />
               </label>
@@ -570,9 +589,7 @@ const Editor = () => {
                       min="0"
                       inputMode="numeric"
                       value={precioAnteriorCombo}
-                      onChange={(e) =>
-                        setPrecioAnteriorCombo(e.target.value)
-                      }
+                      onChange={(e) => setPrecioAnteriorCombo(e.target.value)}
                       placeholder="Opcional"
                       disabled={loading}
                     />
@@ -594,10 +611,7 @@ const Editor = () => {
             </div>
 
             <div className="editor-admin-opciones">
-              <label
-                className="editor-admin-opcion"
-                data-activa={stock}
-              >
+              <label className="editor-admin-opcion" data-activa={stock}>
                 <span className="editor-admin-opcion-texto">
                   <strong>Stock</strong>
                   <small>Disponible para comprar</small>
@@ -611,10 +625,7 @@ const Editor = () => {
                 />
               </label>
 
-              <label
-                className="editor-admin-opcion"
-                data-activa={destacadas}
-              >
+              <label className="editor-admin-opcion" data-activa={destacadas}>
                 <span className="editor-admin-opcion-texto">
                   <strong>Destacadas</strong>
                   <small>Aparece en la portada</small>
@@ -634,47 +645,57 @@ const Editor = () => {
             <div className="editor-admin-grupo-cabecera">
               <h2 className="editor-admin-grupo-titulo">Tallas</h2>
               <p className="editor-admin-ayuda">
-                Escribe cada talla y añade todas las que necesites.
+                Oversize y tallas son excluyentes: elige uno de los dos. Escribe
+                cada talla y añade todas las que necesites.
               </p>
             </div>
 
-            <div className="editor-admin-tallas">
-              {sizes.map((size, index) => (
-                <div className="editor-admin-talla" key={index}>
-                  <input
-                    type="text"
-                    value={size}
-                    onChange={(e) => {
-                      const newSizes = [...sizes];
-                      newSizes[index] = e.target.value.toUpperCase();
-                      setSizes(newSizes);
-                    }}
-                    placeholder={`Talla ${index + 1}`}
-                    aria-label={`Talla ${index + 1}`}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    className="editor-admin-talla-eliminar"
-                    onClick={() => deleteSizeField(index)}
-                    disabled={loading}
-                    aria-label={`Eliminar talla ${index + 1}`}
-                  >
-                    <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
+            {overSize && (
+              <p className="editor-admin-ayuda" role="status">
+                El artículo está marcado como Oversize, así que no se eligen
+                tallas.
+              </p>
+            )}
 
-              <button
-                type="button"
-                className="btn-tema btn-tema--contorno btn-tema--pequeno editor-admin-anadir-talla"
-                onClick={addSizeField}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
-                Talla
-              </button>
-            </div>
+            {!overSize && (
+              <div className="editor-admin-tallas">
+                {sizes.map((size, index) => (
+                  <div className="editor-admin-talla" key={index}>
+                    <input
+                      type="text"
+                      value={size}
+                      onChange={(e) => {
+                        const newSizes = [...sizes];
+                        newSizes[index] = e.target.value.toUpperCase();
+                        setSizes(newSizes);
+                      }}
+                      placeholder={`Talla ${index + 1}`}
+                      aria-label={`Talla ${index + 1}`}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="editor-admin-talla-eliminar"
+                      onClick={() => deleteSizeField(index)}
+                      disabled={loading}
+                      aria-label={`Eliminar talla ${index + 1}`}
+                    >
+                      <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="btn-tema btn-tema--contorno btn-tema--pequeno editor-admin-anadir-talla"
+                  onClick={addSizeField}
+                  disabled={loading}
+                >
+                  <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+                  Talla
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="editor-admin-acciones">

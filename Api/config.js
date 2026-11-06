@@ -62,9 +62,9 @@ module.exports = {
   DTF_PRICE_BASICO: toNumber(process.env.DTF_PRICE_BASICO, 22000),
   DTF_PRICE_OVERSIZE: toNumber(process.env.DTF_PRICE_OVERSIZE, 32000),
 
-  // Punto de despacho para calcular la distancia de envio (Medellin)
-  WAREHOUSE_LAT: toNumber(process.env.WAREHOUSE_LAT, 6.2442),
-  WAREHOUSE_LNG: toNumber(process.env.WAREHOUSE_LNG, -75.5812),
+  // Punto de despacho para calcular la distancia de envio (bodega en Itagui).
+  WAREHOUSE_LAT: toNumber(process.env.WAREHOUSE_LAT, 6.1724352),
+  WAREHOUSE_LNG: toNumber(process.env.WAREHOUSE_LNG, -75.6093254),
 
   // Reserva de stock (bloqueo temporal durante el pago).
   // Apagada por defecto: con stock booleano esconde el producto de un carrito
@@ -109,6 +109,12 @@ module.exports = {
       : "https://production.wompi.co/v1"),
 
   WOMPI_CHECKOUT_URL: "https://checkout.wompi.co/p/",
+
+  // URL publica de retorno tras el cobro. Wompi (CloudFront/WAF) bloquea las
+  // redirecciones a localhost con un 403, asi que al probar en local hay que
+  // apuntar esto a un tunel publico aunque FRONTEND_URL siga siendo localhost.
+  // Vacia = se usa FRONTEND_URL.
+  WOMPI_REDIRECT_URL: (process.env.WOMPI_REDIRECT_URL || "").trim(),
 
   // Los eventos vencidos (replay de una peticion vieja) se rechazan. Wompi
   // reintenta sus eventos durante horas, por eso la ventana es amplia.
